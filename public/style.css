@@ -978,25 +978,252 @@ footer {
   gap: 1.5rem;
 }
 
-/* Responsiveness */
+/* ==========================================================================
+   NEXT-LEVEL MOBILE UI/UX SYSTEM
+   Optimized for iPhones, Androids, touch targets, and mobile cards
+   ========================================================================== */
+
+/* Prevent iOS input auto-zoom by ensuring minimum 16px font size on inputs */
+input, select, textarea {
+  font-size: 16px !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch micro-interactions */
+.btn:active, .dept-pill:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.1s ease;
+}
+
+/* Horizontal edge mask for scrolling department pills */
+.dept-bar {
+  mask-image: linear-gradient(to right, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%);
+}
+
+/* Mobile Floating Bottom Action Bar */
+.mobile-bottom-bar {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  .hero {
-    padding: 2.5rem 0 1.5rem;
+  :root {
+    --header-height: 60px;
   }
-  .dept-header {
-    flex-direction: column;
-    align-items: flex-start;
+
+  body {
+    padding-bottom: 70px; /* Space for floating bottom bar */
+  }
+
+  .wrap {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Compact modern mobile navbar */
+  .navbar {
+    height: var(--header-height);
+  }
+
+  .brand-logo {
+    font-size: 1.05rem;
     gap: 0.5rem;
   }
-  .search-controls {
-    flex-direction: column;
-    align-items: stretch;
+
+  .brand-badge {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.85rem;
   }
-  .faculty-grid {
-    grid-template-columns: 1fr;
+
+  .nav-links {
+    gap: 0.4rem;
   }
+
+  .nav-links .btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  /* Hero Section on Mobile */
+  .hero {
+    padding: 2rem 0 1.5rem !important;
+  }
+
+  .hero h1 {
+    font-size: 1.75rem !important;
+    letter-spacing: -0.02em;
+  }
+
+  .hero p {
+    font-size: 0.95rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  #heroSubmitBtn, #copyLinkBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Department section header */
+  .dept-section {
+    padding: 2rem 0 0.5rem;
+    scroll-margin-top: 110px;
+  }
+
+  .dept-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .dept-name {
+    font-size: 1.15rem;
+  }
+
+  .dept-code-tag {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.55rem;
+  }
+
+  /* NEXT-LEVEL MOBILE FACULTY CARD (Horizontal Profile Card) */
+  .faculty-card {
+    padding: 1.1rem;
+    border-radius: var(--radius-lg);
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    grid-gap: 1rem;
+    align-items: start;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .faculty-card .photo-wrapper {
+    margin: 0;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .faculty-card .passport-photo,
+  .faculty-card .photo-placeholder {
+    width: 100px;
+    height: 133px;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .faculty-card .faculty-info {
+    text-align: left;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .faculty-card .faculty-name {
+    font-size: 1.1rem;
+    line-height: 1.25;
+  }
+
+  .faculty-card .faculty-role {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .faculty-card .faculty-dept-badge {
+    align-self: flex-start;
+    margin-bottom: 0.4rem;
+  }
+
+  .faculty-card .faculty-meta-list {
+    grid-column: 1 / -1;
+    margin-top: 0.85rem;
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .faculty-card .card-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .faculty-card .card-actions .btn {
+    flex: 1;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  /* Floating Bottom Bar */
+  .mobile-bottom-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--surface-border);
+    padding: 0.6rem 1rem;
+    gap: 0.6rem;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  [data-theme="dark"] .mobile-bottom-bar {
+    background: rgba(15, 23, 42, 0.94);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-bottom-bar .btn {
+    flex: 1;
+    font-size: 0.875rem;
+    padding: 0.65rem;
+    border-radius: var(--radius-md);
+  }
+
+  /* Form Container on Mobile */
+  .register-container {
+    margin: 1rem auto 5rem !important;
+    padding: 0 0.85rem !important;
+  }
+
+  .form-card {
+    padding: 1.25rem !important;
+    border-radius: var(--radius-lg);
+  }
+
+  .file-dropzone {
+    padding: 1rem !important;
+  }
+
+  /* Modal on Mobile */
+  .modal-box {
+    margin: auto 0.5rem;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+
+  .modal-footer {
+    padding: 0.85rem 1.25rem;
+  }
+
+  /* Footer on mobile */
+  footer {
+    padding: 2rem 0;
+  }
+
   .footer-inner {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
   }
 }
