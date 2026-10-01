@@ -50,6 +50,10 @@ app.use(express.static(__dirname));
 
 // Ensure database-backed API routes wait for MongoDB, including on Vercel.
 app.use('/api', async (req, res, next) => {
+  if (['/admin/login', '/admin/logout', '/admin/me'].includes(req.path)) {
+    return next();
+  }
+
   try {
     await connectDB();
     next();
