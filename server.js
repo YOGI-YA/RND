@@ -89,8 +89,8 @@ const requireAdmin = (req, res, next) => {
 // Admin Auth routes
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body || {};
-  const validUser = process.env.ADMIN_USERNAME || 'admin';
-  const validPass = process.env.ADMIN_PASSWORD || 'qwerty@123';
+  const validUser = 'admin';
+  const validPass = 'qwerty@123';
 
   if (username !== validUser || password !== validPass) {
     return res.status(401).json({ error: 'Invalid username or password' });
