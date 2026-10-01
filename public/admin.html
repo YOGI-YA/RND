@@ -513,13 +513,6 @@
       $('adminApp').style.display = 'none';
     }
 
-    // Demo credentials autofill
-    $('autoFillCredsBtn').onclick = () => {
-      $('uInput').value = 'admin';
-      $('pInput').value = 'qwerty@123';
-      $('loginError').textContent = '';
-    };
-
     // Login Form Submit
     $('loginForm').onsubmit = async (e) => {
       e.preventDefault();
