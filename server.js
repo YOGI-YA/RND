@@ -732,23 +732,43 @@ const SEED_DATA = [
 
 const PORT = process.env.PORT || 3000;
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(async () => {
-    console.log('Connected to MongoDB Atlas successfully.');
-    const count = await Employee.countDocuments();
-    if (count === 0) {
-      await Employee.insertMany(SEED_DATA);
-      console.log(`Seeded ${SEED_DATA.length} initial faculty members across all 5 departments.`);
-    } else {
-      console.log(`Database already has ${count} employee records.`);
-    }
+// Cached DB connection for serverless / Vercel
+let isConnected = false;
+async function connectDB() {
+  if (isConnected || mongoose.connection.readyState >= 1) return;
+  await mongoose.connect(process.env.MONGODB_URI);
+  isConnected = true;
+}
 
-    app.listen(PORT, () => {
-      console.log(`IUHP Portal running on http://localhost:${PORT}`);
+// Middleware to ensure DB connection on every request (Vercel serverless)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    res.status(500).json({ error: 'Database connection failed: ' + err.message });
+  }
+});
+
+// Start local listener if not running as a Vercel serverless function
+if (!process.env.VERCEL) {
+  connectDB()
+    .then(async () => {
+      console.log('Connected to MongoDB Atlas successfully.');
+      const count = await Employee.countDocuments();
+      if (count === 0) {
+        await Employee.insertMany(SEED_DATA);
+        console.log(`Seeded ${SEED_DATA.length} initial faculty members across all 5 departments.`);
+      }
+      app.listen(PORT, () => {
+        console.log(`IUHP Portal running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((e) => {
+      console.error('MongoDB Atlas connection failed:', e.message);
+      process.exit(1);
     });
-  })
-  .catch((e) => {
-    console.error('MongoDB Atlas connection failed:', e.message);
-    process.exit(1);
-  });
+}
+
+module.exports = app;
