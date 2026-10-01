@@ -214,7 +214,7 @@
             Share this link via WhatsApp or Email so faculty members can submit their details, passport photo, and resume individually.
           </p>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
+        <div class="share-link-actions" style="display:flex;gap:0.5rem;align-items:center;">
           <input type="text" id="shareUrlBox" readonly style="font-size:0.85rem;padding:0.45rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--surface-border);background:var(--surface);width:260px;" value="">
           <button class="btn btn-sm btn-primary" onclick="copyAdminShareUrl()" id="copyAdminShareBtn">
             📋 Copy Share Link
@@ -313,7 +313,7 @@
         <div class="modal-body">
           <input type="hidden" id="editEmpId" name="id">
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div class="form-group">
               <label for="empName">Full Name *</label>
               <input type="text" id="empName" name="name" class="form-control" required placeholder="e.g. Dr. Rahul Sharma">
@@ -331,7 +331,7 @@
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div class="form-group">
               <label for="empDesignation">Designation *</label>
               <input type="text" id="empDesignation" name="designation" class="form-control" required placeholder="e.g. Professor & Head">
@@ -343,7 +343,7 @@
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div class="form-group">
               <label for="empDate">Date of Joining *</label>
               <input type="date" id="empDate" name="joiningDate" class="form-control" required>
@@ -630,35 +630,35 @@
         const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
 
         return `
-          <tr>
-            <td>
+          <tr class="employee-row">
+            <td data-label="Photo">
               ${emp.photoUrl ? `
                 <img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}" title="Standard 3:4 Passport Photograph">
               ` : `
                 <div class="table-photo-empty">3:4 Photo</div>
               `}
             </td>
-            <td>
+            <td data-label="Name">
               <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${esc(emp.name)}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);">${esc(emp.designation || 'Faculty Member')}</div>
             </td>
-            <td>
+            <td data-label="Qualification">
               <span style="font-weight:600;color:var(--brand-primary);font-size:0.85rem;">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span>
             </td>
-            <td>
+            <td data-label="Department">
               <span class="dept-code-tag" style="font-size:0.8rem;padding:0.2rem 0.5rem;background:var(--dept-${(emp.department||'').toLowerCase()}-bg, #e2e8f0);color:var(--dept-${(emp.department||'').toLowerCase()}, #0f4c5c);">
                 ${esc(emp.department)}
               </span>
             </td>
-            <td><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
-            <td><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
-            <td>${esc(dateStr)}</td>
-            <td>
+            <td data-label="Contact"><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
+            <td data-label="Email"><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
+            <td data-label="Joined">${esc(dateStr)}</td>
+            <td data-label="Resume">
               <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;">
                 📄 View PDF
               </a>
             </td>
-            <td style="text-align:right;">
+            <td data-label="Actions" style="text-align:right;">
               <div style="display:inline-flex;gap:0.4rem;">
                 <button class="btn btn-sm btn-outline" onclick="openEditModal('${esc(emp._id)}')">Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${esc(emp._id)}', '${esc(emp.name)}')">Delete</button>

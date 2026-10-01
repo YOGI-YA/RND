@@ -48,6 +48,17 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
+// Ensure database-backed API routes wait for MongoDB, including on Vercel.
+app.use('/api', async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    res.status(500).json({ error: 'Database connection failed: ' + err.message });
+  }
+});
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -739,17 +750,6 @@ async function connectDB() {
   await mongoose.connect(process.env.MONGODB_URI);
   isConnected = true;
 }
-
-// Middleware to ensure DB connection on every request (Vercel serverless)
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    res.status(500).json({ error: 'Database connection failed: ' + err.message });
-  }
-});
 
 // Start local listener if not running as a Vercel serverless function
 if (!process.env.VERCEL) {

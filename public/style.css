@@ -1227,3 +1227,331 @@ input, select, textarea {
     gap: 1rem;
   }
 }
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 116px;
+  }
+
+  body {
+    padding-bottom: 0;
+  }
+
+  .navbar {
+    height: auto;
+    min-height: var(--header-height);
+  }
+
+  .navbar .nav-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .navbar .nav-links {
+    flex: 0 0 100%;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .navbar .nav-links .btn {
+    min-height: 44px;
+  }
+
+  .dept-bar {
+    top: var(--header-height);
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .search-controls {
+    align-items: stretch;
+  }
+
+  .grid-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .search-input-wrap {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .search-controls > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dept-title-group,
+  .dept-title-group > div {
+    min-width: 0;
+  }
+
+  .dept-title-group {
+    align-items: flex-start;
+  }
+
+  .dept-name {
+    overflow-wrap: anywhere;
+  }
+
+  .btn {
+    min-height: 44px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .card-actions .btn {
+    min-height: 44px;
+  }
+
+  .modal-backdrop {
+    padding: 0.5rem;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .modal-box {
+    max-height: calc(100dvh - 1rem);
+    overscroll-behavior: contain;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+  }
+
+  .modal-footer .btn {
+    flex: 1 1 auto;
+  }
+
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .toast {
+    width: 100%;
+  }
+
+  .login-container {
+    margin: 4vh auto;
+    padding: 0 1rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+  }
+
+  .demo-pill {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .demo-pill > div {
+    flex: 1 1 100%;
+  }
+
+  #adminApp main.wrap {
+    padding-top: 1rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .admin-header .admin-bar-wrap > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .stat-card {
+    min-width: 0;
+    padding: 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+    overflow-wrap: anywhere;
+  }
+
+  .share-link-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .share-link-actions #shareUrlBox {
+    flex: 1 1 100%;
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .share-link-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .admin-toolbar {
+    align-items: stretch;
+  }
+
+  .action-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-group > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .filter-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #deptFilter,
+  #adminSearchInput {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px;
+  }
+
+  .admin-header ~ main .table-card {
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .admin-header ~ main .table-responsive {
+    overflow: visible;
+  }
+
+  .admin-header ~ main .admin-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .admin-header ~ main .admin-table thead {
+    display: none;
+  }
+
+  .admin-header ~ main .admin-table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .admin-header ~ main .admin-table .employee-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-header ~ main .admin-table .employee-row td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.6rem 0.45rem;
+    border-bottom: 1px solid var(--surface-border-subtle);
+    overflow-wrap: anywhere;
+  }
+
+  .admin-header ~ main .admin-table .employee-row td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .admin-header ~ main .admin-table .employee-row td[data-label="Name"],
+  .admin-header ~ main .admin-table .employee-row td[data-label="Qualification"],
+  .admin-header ~ main .admin-table .employee-row td[data-label="Actions"] {
+    grid-column: 1 / -1;
+  }
+
+  .admin-header ~ main .admin-table .employee-row td[data-label="Photo"] {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .admin-header ~ main .admin-table .employee-row td[data-label="Actions"] > div {
+    display: flex !important;
+    width: 100%;
+  }
+
+  .admin-header ~ main .admin-table .employee-row td[data-label="Actions"] .btn {
+    flex: 1;
+  }
+
+  .admin-header ~ main .admin-table tbody > tr:not(.employee-row) {
+    display: block;
+  }
+
+  .admin-header ~ main .admin-table tbody > tr:not(.employee-row) td {
+    display: block;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar .nav-links .nav-label {
+    display: none;
+  }
+
+  .navbar .nav-links > a {
+    min-width: 44px;
+    padding: 0.65rem;
+  }
+
+  .navbar .nav-links #facultyJoinBtn,
+  .navbar .nav-links #adminNavBtn {
+    width: 44px;
+    padding: 0.65rem;
+  }
+
+  .form-card,
+  .login-card {
+    padding: 1rem !important;
+  }
+
+  .action-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .action-group > :first-child {
+    grid-column: auto;
+  }
+
+  .stat-card {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .employee-row .table-photo,
+  .employee-row .table-photo-empty {
+    width: 40px;
+    height: 54px;
+  }
+}
