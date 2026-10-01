@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IUHP - Faculty & Staff Directory</title>
+  <meta name="description" content="Explore faculty profiles, contact details, standard passport photographs, and resumes across FPS, FMS, FLA, FOL, and FST departments.">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="wrap nav-inner">
+      <a href="/" class="brand-logo" id="homeLogo">
+        <span class="brand-badge">IUHP</span>
+        <span>Faculty & Staff Directory</span>
+      </a>
+
+      <div class="nav-links">
+        <button class="btn btn-outline btn-icon" id="themeToggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <a href="/register" class="btn btn-accent" id="facultyJoinBtn" title="Faculty members can submit their details individually">
+          📝 Faculty Registration
+        </a>
+        <a href="/admin" class="btn btn-primary" id="adminNavBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5z"></path></svg>
+          Admin Portal
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Department Filter Bar -->
+  <nav class="dept-bar" aria-label="Department navigation">
+    <div class="wrap">
+      <div class="dept-pill-list" id="deptFilterList">
+        <button class="dept-pill active" data-dept="ALL" id="pillAll">
+          <span>All Departments</span>
+          <span class="count-badge" id="countAll">0</span>
+        </button>
+        <!-- Populated dynamically: FPS, FMS, FLA, FOL, FST -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- Clean Elegant Hero Section -->
+  <section class="hero" style="padding:3rem 0 2rem;text-align:center;">
+    <div class="wrap" style="max-width:820px;margin:0 auto;">
+      <div style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--brand-light);color:var(--brand-primary);padding:0.35rem 0.85rem;border-radius:var(--radius-full);font-size:0.8rem;font-weight:700;margin-bottom:1rem;border:1px solid rgba(15,76,92,0.15);">
+        <span>🏛️ Academic Portal</span>
+        <span>•</span>
+        <span id="heroTotalCount">Loading...</span>
+      </div>
+      <h1 style="font-size:clamp(2rem, 4.5vw, 3rem);line-height:1.2;margin-bottom:0.75rem;">
+        IUHP Faculty Directory
+      </h1>
+      <p style="font-size:1.05rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">
+        Faculty profiles across five departments: <strong>FPS</strong>, <strong>FMS</strong>, <strong>FLA</strong>, <strong>FOL</strong>, and <strong>FST</strong>.
+      </p>
+
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;align-items:center;margin-bottom:2rem;">
+        <a href="/register" class="btn btn-primary" style="padding:0.7rem 1.4rem;" id="heroSubmitBtn">
+          ✍️ Submit Faculty Details
+        </a>
+        <button class="btn btn-outline" onclick="copyShareableLink()" id="copyLinkBtn">
+          🔗 Copy Link for Faculty
+        </button>
+      </div>
+
+      <!-- Search Controls -->
+      <div class="search-controls" style="margin-top:0;">
+          <div class="search-input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="directorySearch" class="search-input" placeholder="Search by faculty name, email, department, or designation..." autocomplete="off">
+          </div>
+
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button class="btn btn-outline" id="clearSearchBtn" style="display:none;">Clear</button>
+            <div style="display:flex;border:1px solid var(--surface-border);border-radius:var(--radius-md);overflow:hidden;">
+              <button class="btn btn-sm btn-outline active" id="viewModeGrid" title="Grid View" style="border:none;border-radius:0;">Grid</button>
+              <button class="btn btn-sm btn-outline" id="viewModeTable" title="List View" style="border:none;border-radius:0;">Table</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Directory Container -->
+  <main class="wrap" style="padding-top:1.5rem;padding-bottom:4rem;" id="mainContent">
+    <div id="loadingState" style="text-align:center;padding:4rem 0;color:var(--text-muted);">
+      <div style="font-size:2rem;margin-bottom:1rem;">⏳</div>
+      <p style="font-size:1.1rem;font-weight:600;">Loading faculty directory...</p>
+    </div>
+
+    <div id="emptySearchState" style="display:none;text-align:center;padding:4rem 0;">
+      <div style="font-size:2.5rem;margin-bottom:1rem;">🔍</div>
+      <h3>No faculty members found</h3>
+      <p style="color:var(--text-muted);margin-top:0.5rem;">Try adjusting your search keywords or selecting a different department filter.</p>
+      <button class="btn btn-outline" style="margin-top:1rem;" onclick="resetSearch()">Reset Filters</button>
+    </div>
+
+    <!-- Department Sections are Rendered Here -->
+    <div id="sectionsContainer"></div>
+  </main>
+
+  <!-- Faculty Profile Detail Modal -->
+  <div class="modal-backdrop" id="facultyModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalName">Faculty Profile</h3>
+        <button class="modal-close" onclick="closeModal('facultyModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Injected via JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('facultyModal')">Close</button>
+        <a href="#" target="_blank" rel="noopener" class="btn btn-primary" id="modalResumeBtn">
+          📄 View Full Resume (PDF)
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap footer-inner">
+      <div>
+        <strong style="color:var(--text-primary);font-size:1rem;">IUHP Employee & Faculty Directory</strong>
+        <p style="margin-top:0.25rem;">Standardized passport photograph directory across FPS, FMS, FLA, FOL, & FST.</p>
+      </div>
+      <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+        <a href="/api/admin/template.xlsx" class="btn btn-sm btn-outline">
+          📥 Download Google Sheets Template (.xlsx)
+        </a>
+        <a href="/admin" style="font-weight:600;">Admin Sign In &rarr;</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Global state
+    let state = {
+      departments: ['FPS', 'FMS', 'FLA', 'FOL', 'FST'],
+      departmentDetails: {},
+      employees: [],
+      activeDept: 'ALL',
+      searchQuery: '',
+      viewMode: 'grid', // 'grid' or 'table'
+    };
+
+    const DEPT_NAMES = {
+      FPS: 'Faculty of Pharmaceutical Sciences',
+      FMS: 'Faculty of Management Studies',
+      FLA: 'Faculty of Liberal Arts',
+      FOL: 'Faculty of Law',
+      FST: 'Faculty of Science & Technology',
+    };
+
+    const DEPT_ICONS = {
+      FPS: '💊',
+      FMS: '📊',
+      FLA: '🎨',
+      FOL: '⚖️',
+      FST: '💻',
+    };
+
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
+    // Theme handling
+    const initTheme = () => {
+      const saved = localStorage.getItem('iuhp_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeIcon(saved);
+    };
+
+    const updateThemeIcon = (theme) => {
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    };
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('iuhp_theme', next);
+      updateThemeIcon(next);
+    });
+
+    // View mode switchers
+    document.getElementById('viewModeGrid').addEventListener('click', () => {
+      state.viewMode = 'grid';
+      document.getElementById('viewModeGrid').classList.add('active');
+      document.getElementById('viewModeTable').classList.remove('active');
+      renderSections();
+    });
+
+    document.getElementById('viewModeTable').addEventListener('click', () => {
+      state.viewMode = 'table';
+      document.getElementById('viewModeTable').classList.add('active');
+      document.getElementById('viewModeGrid').classList.remove('active');
+      renderSections();
+    });
+
+    // Fetch public directory
+    async function loadDirectory() {
+      try {
+        const res = await fetch('/api/public/employees');
+        if (!res.ok) throw new Error('Failed to load faculty directory');
+        const data = await res.json();
+
+        state.departments = data.departments || ['FPS', 'FMS', 'FLA', 'FOL', 'FST'];
+        state.departmentDetails = data.departmentDetails || {};
+        state.employees = data.employees || [];
+
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('heroTotalCount').textContent = `${state.employees.length} Registered Faculty`;
+        document.getElementById('countAll').textContent = state.employees.length;
+
+        renderDepartmentPills();
+        renderSections();
+      } catch (err) {
+        document.getElementById('loadingState').innerHTML = `
+          <div style="color:var(--danger);font-weight:600;font-size:1.1rem;">⚠️ ${esc(err.message)}</div>
+          <button class="btn btn-outline" style="margin-top:1rem;" onclick="loadDirectory()">Retry</button>
+        `;
+      }
+    }
+
+    // Render department pills in the sticky nav
+    function renderDepartmentPills() {
+      const pillList = document.getElementById('deptFilterList');
+      const pillsHtml = state.departments.map(d => {
+        const count = state.employees.filter(e => e.department === d).length;
+        const icon = DEPT_ICONS[d] || '🏛️';
+        return `
+          <button class="dept-pill ${state.activeDept === d ? 'active' : ''}" data-dept="${d}" id="pill-${d}">
+            <span>${icon} ${d}</span>
+            <span class="count-badge">${count}</span>
+          </button>
+        `;
+      }).join('');
+
+      pillList.innerHTML = `
+        <button class="dept-pill ${state.activeDept === 'ALL' ? 'active' : ''}" data-dept="ALL" id="pillAll">
+          <span>All Departments</span>
+          <span class="count-badge" id="countAll">${state.employees.length}</span>
+        </button>
+        ${pillsHtml}
+      `;
+
+      // Pill click listener
+      pillList.querySelectorAll('.dept-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const dept = btn.getAttribute('data-dept');
+          setActiveDepartment(dept);
+        });
+      });
+    }
+
+    function setActiveDepartment(dept) {
+      state.activeDept = dept;
+      document.querySelectorAll('.dept-pill').forEach(b => {
+        if (b.getAttribute('data-dept') === dept) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+
+      renderSections();
+
+      if (dept !== 'ALL') {
+        const sec = document.getElementById(`section-${dept}`);
+        if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Search input handler
+    const searchInput = document.getElementById('directorySearch');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value.toLowerCase().trim();
+      clearBtn.style.display = state.searchQuery ? 'inline-flex' : 'none';
+      renderSections();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      resetSearch();
+    });
+
+    window.resetSearch = function() {
+      searchInput.value = '';
+      state.searchQuery = '';
+      clearBtn.style.display = 'none';
+      state.activeDept = 'ALL';
+      renderDepartmentPills();
+      renderSections();
+    };
+
+    // Filter employees based on activeDept and searchQuery
+    function getFilteredEmployees() {
+      return state.employees.filter(emp => {
+        const matchesDept = state.activeDept === 'ALL' || emp.department === state.activeDept;
+        if (!matchesDept) return false;
+
+        if (!state.searchQuery) return true;
+        const q = state.searchQuery;
+        const name = (emp.name || '').toLowerCase();
+        const email = (emp.email || '').toLowerCase();
+        const contact = (emp.contact || '').toLowerCase();
+        const dept = (emp.department || '').toLowerCase();
+        const desig = (emp.designation || '').toLowerCase();
+        const qual = (emp.highestQualification || '').toLowerCase();
+
+        return name.includes(q) || email.includes(q) || contact.includes(q) || dept.includes(q) || desig.includes(q) || qual.includes(q);
+      });
+    }
+
+    // Render Department Sections
+    function renderSections() {
+      const container = document.getElementById('sectionsContainer');
+      const emptyState = document.getElementById('emptySearchState');
+      const filtered = getFilteredEmployees();
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      emptyState.style.display = 'none';
+
+      // Group by department
+      const deptsToDisplay = state.activeDept === 'ALL' ? state.departments : [state.activeDept];
+
+      const html = deptsToDisplay.map(dept => {
+        const deptEmployees = filtered.filter(e => e.department === dept);
+        if (deptEmployees.length === 0 && state.searchQuery) {
+          return ''; // Hide empty departments during search
+        }
+
+        const deptMeta = state.departmentDetails[dept] || {};
+        const fullName = deptMeta.name || DEPT_NAMES[dept] || dept;
+        const icon = deptMeta.icon || DEPT_ICONS[dept] || '🏛️';
+        const color = deptMeta.color || '#0f4c5c';
+
+        return `
+          <section class="dept-section" id="section-${dept}" style="--card-accent: ${color};">
+            <div class="dept-header">
+              <div class="dept-title-group">
+                <span class="dept-code-tag" style="background:${deptMeta.bg || 'rgba(15,76,92,0.1)'};color:${color};">
+                  ${icon} ${dept}
+                </span>
+                <div>
+                  <h2 class="dept-name">${esc(fullName)}</h2>
+                  <div class="dept-meta-count">${deptEmployees.length} Faculty Member${deptEmployees.length === 1 ? '' : 's'}</div>
+                </div>
+              </div>
+            </div>
+
+            ${state.viewMode === 'grid' 
+              ? renderGridCards(deptEmployees, color)
+              : renderTableView(deptEmployees, color)
+            }
+          </section>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Render Grid Cards with standard 3:4 passport photos
+    function renderGridCards(employees, accentColor) {
+      if (!employees || employees.length === 0) {
+        return '<p style="color:var(--text-muted);font-style:italic;padding:1rem 0;">No faculty members currently listed in this section.</p>';
+      }
+
+      return `
+        <div class="faculty-grid">
+          ${employees.map(emp => {
+            const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+            const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+            const qualification = emp.highestQualification || 'Post-Graduate';
+
+            return `
+              <div class="faculty-card" style="--card-accent: ${accentColor};">
+                <div class="photo-wrapper">
+                  ${emp.photoUrl ? `
+                    <img src="${esc(emp.photoUrl)}" alt="Passport photograph of ${esc(emp.name)}" class="passport-photo" loading="lazy">
+                  ` : `
+                    <div class="photo-placeholder">
+                      <span style="font-size:1.5rem;margin-bottom:0.25rem;">📷</span>
+                      <span>Passport Photo</span>
+                      <small style="opacity:0.7;">(3:4 Portrait)</small>
+                    </div>
+                  `}
+                </div>
+
+                <div class="faculty-info">
+                  <h3 class="faculty-name">${esc(emp.name)}</h3>
+                  <div class="faculty-role">${esc(emp.designation || 'Faculty Member')}</div>
+                  
+                  <div style="font-size:0.8rem;color:var(--brand-primary);font-weight:700;margin-bottom:0.5rem;background:var(--bg-secondary);padding:0.2rem 0.5rem;border-radius:var(--radius-sm);display:inline-block;align-self:center;">
+                    🎓 ${esc(qualification)}
+                  </div>
+
+                  <div class="faculty-dept-badge" style="background:${accentColor}18;color:${accentColor};border:1px solid ${accentColor}30;">
+                    ${esc(emp.department)}
+                  </div>
+
+                  <div class="faculty-meta-list">
+                    <div class="faculty-meta-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                      <a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a>
+                    </div>
+                    <div class="faculty-meta-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      <a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a>
+                    </div>
+                    <div class="faculty-meta-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      <span>Joined: ${esc(joiningStr)}</span>
+                    </div>
+                  </div>
+
+                  <div class="card-actions">
+                    <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-resume" title="Open Faculty Resume PDF">
+                      📄 Resume (PDF)
+                    </a>
+                    <button class="btn btn-sm btn-outline" onclick="openFacultyModal('${esc(emp._id || emp.email)}')">
+                      Profile
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // Render Table View
+    function renderTableView(employees, accentColor) {
+      return `
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width:70px;">Photo</th>
+                  <th>Faculty Name</th>
+                  <th>Designation</th>
+                  <th>Highest Qualification</th>
+                  <th>Contact</th>
+                  <th>Email</th>
+                  <th>Date Joined</th>
+                  <th>Resume</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${employees.map(emp => {
+                  const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
+                  const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+                  return `
+                    <tr>
+                      <td>
+                        ${emp.photoUrl 
+                          ? `<img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}">`
+                          : `<div class="table-photo-empty">3:4 Photo</div>`
+                        }
+                      </td>
+                      <td>
+                        <strong style="color:var(--text-primary);">${esc(emp.name)}</strong>
+                      </td>
+                      <td>${esc(emp.designation || 'Faculty Member')}</td>
+                      <td><span style="font-weight:600;color:var(--brand-primary);">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span></td>
+                      <td><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
+                      <td><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
+                      <td>${esc(dateStr)}</td>
+                      <td>
+                        <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">
+                          📄 PDF
+                        </a>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Faculty Modal
+    window.openFacultyModal = function(idOrEmail) {
+      const emp = state.employees.find(e => (e._id && e._id === idOrEmail) || e.email === idOrEmail);
+      if (!emp) return;
+
+      const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+      const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+      const deptName = DEPT_NAMES[emp.department] || emp.department;
+
+      document.getElementById('modalName').textContent = emp.name;
+      document.getElementById('modalResumeBtn').href = resumeUrl;
+
+      document.getElementById('modalBody').innerHTML = `
+        <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
+          <div style="flex-shrink:0;text-align:center;">
+            ${emp.photoUrl ? `
+              <img src="${esc(emp.photoUrl)}" class="passport-photo" style="width:140px;height:186px;margin:0 auto;" alt="${esc(emp.name)}">
+            ` : `
+              <div class="photo-placeholder" style="width:140px;height:186px;margin:0 auto;">
+                <span>📷 No Photo</span>
+                <small>3:4 Standard</small>
+              </div>
+            `}
+            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">Standard 3:4 Passport Portrait</div>
+          </div>
+
+          <div style="flex:1;min-width:240px;">
+            <div style="margin-bottom:0.75rem;">
+              <span class="brand-badge" style="background:var(--brand-primary);">${esc(emp.department)}</span>
+              <span style="font-weight:600;margin-left:0.5rem;color:var(--text-secondary);">${esc(deptName)}</span>
+            </div>
+
+            <h2 style="font-size:1.5rem;margin-bottom:0.25rem;">${esc(emp.name)}</h2>
+            <div style="color:var(--text-muted);font-weight:600;margin-bottom:0.5rem;">${esc(emp.designation || 'Faculty Member')}</div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--brand-primary);margin-bottom:1.25rem;">
+              🎓 Highest Qualification: ${esc(emp.highestQualification || 'Post-Graduate')}
+            </div>
+
+            <div style="display:grid;gap:0.75rem;font-size:0.95rem;">
+              <div>
+                <strong style="color:var(--text-secondary);">Highest Qualification:</strong>
+                <div>${esc(emp.highestQualification || 'Post-Graduate')}</div>
+              </div>
+
+              <div>
+                <strong style="color:var(--text-secondary);">Contact Number:</strong>
+                <div><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></div>
+              </div>
+
+              <div>
+                <strong style="color:var(--text-secondary);">Official Email:</strong>
+                <div><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></div>
+              </div>
+
+              <div>
+                <strong style="color:var(--text-secondary);">Date of Joining:</strong>
+                <div>${esc(joiningStr)}</div>
+              </div>
+
+              <div>
+                <strong style="color:var(--text-secondary);">Curriculum Vitae / Resume:</strong>
+                <div style="margin-top:0.25rem;">
+                  <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" style="color:var(--brand-primary);font-weight:600;">
+                    🔗 Open Verified PDF Document &rarr;
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('facultyModal').classList.add('open');
+    };
+
+    window.closeModal = function(id) {
+      document.getElementById(id).classList.remove('open');
+    };
+
+    // Copy shareable link helper
+    window.copyShareableLink = function() {
+      const shareUrl = window.location.origin + '/register';
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        const btn = document.getElementById('copyLinkBtn');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✅ Link Copied! Send to Faculty';
+        btn.classList.add('btn-primary');
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.classList.remove('btn-primary');
+        }, 3000);
+      }).catch(() => {
+        prompt('Copy this link to share with faculty:', window.location.origin + '/register');
+      });
+    };
+
+    // Initialize
+    initTheme();
+    loadDirectory();
+  </script>
+</body>
+</html>

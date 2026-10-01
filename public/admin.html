@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Portal - IUHP Faculty Management</title>
+  <meta name="description" content="Administrative control panel for IUHP employee and faculty directory. Manage records, upload passport photos to Cloudinary, and export Google Sheets with embedded photo formulas.">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+  <style>
+    .admin-header {
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--surface-border);
+      background: var(--surface);
+    }
+    .admin-bar-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .admin-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0 1rem;
+    }
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .login-container {
+      max-width: 440px;
+      margin: 10vh auto;
+      padding: 0 1.5rem;
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      padding: 2.25rem;
+    }
+    .demo-pill {
+      background: var(--bg-secondary);
+      border: 1px dashed var(--surface-border);
+      border-radius: var(--radius-md);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .badge-admin {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- 1. LOGIN SCREEN (Shown if unauthenticated) -->
+  <!-- ========================================== -->
+  <div id="loginSection" class="login-container">
+    <div class="login-card">
+      <div style="text-align:center;margin-bottom:1.75rem;">
+        <span class="brand-badge" style="font-size:1.1rem;padding:0.5rem 0.9rem;">IUHP</span>
+        <h1 style="font-size:1.6rem;margin-top:1rem;">Administrator Access</h1>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.35rem;">
+          Sign in to manage faculty directory, upload Cloudinary assets, and export spreadsheets.
+        </p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="uInput">Username</label>
+          <input type="text" id="uInput" class="form-control" required placeholder="admin" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="pInput">Password</label>
+          <input type="password" id="pInput" class="form-control" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <div id="loginError" style="color:var(--danger);font-size:0.875rem;margin-bottom:1rem;min-height:1.2em;font-weight:600;"></div>
+
+        <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="width:100%;padding:0.75rem;">
+          Sign In to Admin Panel
+        </button>
+      </form>
+
+      <div class="demo-pill">
+        <div>
+          <strong>Default Credentials:</strong><br>
+          Username: <code>admin</code> | Password: <code>qwerty@123</code>
+        </div>
+        <button class="btn btn-sm btn-outline" id="autoFillCredsBtn" type="button">Auto-fill</button>
+      </div>
+
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="/" style="font-size:0.85rem;color:var(--text-muted);">&larr; Back to Public Directory</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. ADMIN DASHBOARD (Shown if authenticated) -->
+  <!-- ========================================== -->
+  <div id="adminApp" style="display:none;min-height:100vh;flex-direction:column;">
+    
+    <!-- Admin Topbar -->
+    <header class="admin-header">
+      <div class="wrap admin-bar-wrap">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span class="brand-badge">IUHP</span>
+          <div>
+            <div style="font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
+              Admin Control Panel
+              <span class="badge-admin">Admin Role</span>
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Database: MongoDB Atlas | Storage: Cloudinary (emp2mv8y)</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <button class="btn btn-outline btn-icon" id="adminThemeToggle" title="Toggle Theme">
+            <span id="adminThemeIcon">🌙</span>
+          </button>
+          <a href="/" class="btn btn-outline" target="_blank" title="Open Public Directory in New Tab">
+            🌐 View Public Site
+          </a>
+          <button class="btn btn-danger btn-sm" id="logoutBtn">
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Admin Workspace -->
+    <main class="wrap" style="padding-top:2rem;padding-bottom:4rem;flex:1;">
+      
+      <!-- Stats KPI Cards -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#e0f2fe;color:#0284c7;">👥</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statTotal">0</span>
+            <span class="stat-label">Total Faculty</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7;color:#d97706;">💊</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statFPS">0</span>
+            <span class="stat-label">FPS Department</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d1fae5;color:#059669;">📊</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statFMS">0</span>
+            <span class="stat-label">FMS Department</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;">🎨</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statFLA">0</span>
+            <span class="stat-label">FLA Department</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fee2e2;color:#dc2626;">⚖️</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statFOL">0</span>
+            <span class="stat-label">FOL Department</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#e0f2fe;color:#0ea5e9;">💻</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statFST">0</span>
+            <span class="stat-label">FST Department</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shareable Link Banner for Faculty Data Intake -->
+      <div style="background:linear-gradient(135deg, rgba(15,76,92,0.08) 0%, rgba(224,159,62,0.12) 100%);border:1px solid rgba(15,76,92,0.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div style="font-weight:700;font-size:1rem;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem;">
+            <span>📢</span> Faculty Intake Link for Data Collection
+          </div>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.2rem;">
+            Share this link via WhatsApp or Email so faculty members can submit their details, passport photo, and resume individually.
+          </p>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input type="text" id="shareUrlBox" readonly style="font-size:0.85rem;padding:0.45rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--surface-border);background:var(--surface);width:260px;" value="">
+          <button class="btn btn-sm btn-primary" onclick="copyAdminShareUrl()" id="copyAdminShareBtn">
+            📋 Copy Share Link
+          </button>
+          <a href="/register" target="_blank" class="btn btn-sm btn-outline">
+            Open Form ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="admin-toolbar">
+        <div class="action-group">
+          <button class="btn btn-primary" id="openAddModalBtn">
+            ➕ Add Faculty Member
+          </button>
+          
+          <!-- Download Spreadsheets -->
+          <a class="btn btn-accent" id="exportXlsxBtn" href="/api/admin/export.xlsx" title="Download Excel/Google Sheets with embedded cell photos">
+            📗 Download Google Sheet (.xlsx)
+          </a>
+
+          <a class="btn btn-outline" id="exportCsvBtn" href="/api/admin/export.csv" title="Download CSV">
+            📄 Download CSV
+          </a>
+
+          <a class="btn btn-outline" href="/api/admin/template.xlsx" title="Download Blank Google Sheets Template with 100 rows and sized cells">
+            📋 Download Blank Template
+          </a>
+        </div>
+
+        <div class="filter-group">
+          <!-- Department Filter -->
+          <select id="deptFilter" class="form-control" style="width:auto;min-width:160px;">
+            <option value="">All Departments</option>
+            <option value="FPS">FPS - Pharmaceutical</option>
+            <option value="FMS">FMS - Management</option>
+            <option value="FLA">FLA - Liberal Arts</option>
+            <option value="FOL">FOL - Law</option>
+            <option value="FST">FST - Science & Tech</option>
+          </select>
+
+          <!-- Search Input -->
+          <input type="text" id="adminSearchInput" class="form-control" placeholder="Search records..." style="width:auto;min-width:200px;">
+        </div>
+      </div>
+
+
+      <!-- Employees Management Table -->
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width:65px;">Photo</th>
+                <th>Name & Designation</th>
+                <th>Highest Qualification</th>
+                <th>Department</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Joined Date</th>
+                <th>Resume</th>
+                <th style="text-align:right;width:150px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+              <tr><td colspan="9" style="text-align:center;padding:2rem;">Loading faculty records...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer style="margin-top:auto;">
+      <div class="wrap footer-inner">
+        <div>IUHP Faculty Administration Dashboard &bull; Secured with JWT Authentication</div>
+        <div>
+          <a href="/api/admin/template.xlsx">Get Google Sheets Template (.xlsx)</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. ADD / EDIT EMPLOYEE MODAL               -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="employeeModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Faculty Member</h3>
+        <button class="modal-close" onclick="closeModal('employeeModal')">&times;</button>
+      </div>
+
+      <form id="employeeForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          <input type="hidden" id="editEmpId" name="id">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label for="empName">Full Name *</label>
+              <input type="text" id="empName" name="name" class="form-control" required placeholder="e.g. Dr. Rahul Sharma">
+            </div>
+
+            <div class="form-group">
+              <label for="empDept">Department *</label>
+              <select id="empDept" name="department" class="form-control" required>
+                <option value="FPS">FPS - Pharmaceutical Sciences</option>
+                <option value="FMS">FMS - Management Studies</option>
+                <option value="FLA">FLA - Liberal Arts</option>
+                <option value="FOL">FOL - Law</option>
+                <option value="FST">FST - Science & Technology</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label for="empDesignation">Designation *</label>
+              <input type="text" id="empDesignation" name="designation" class="form-control" required placeholder="e.g. Professor & Head">
+            </div>
+
+            <div class="form-group">
+              <label for="empQualification">Highest Qualification *</label>
+              <input type="text" id="empQualification" name="highestQualification" class="form-control" required placeholder="e.g. Ph.D., M.Tech, M.Pharm, MBA, LL.M.">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label for="empDate">Date of Joining *</label>
+              <input type="date" id="empDate" name="joiningDate" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label for="empContact">Contact Number *</label>
+              <input type="tel" id="empContact" name="contact" class="form-control" required placeholder="+91 98765 43210">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="empEmail">Official Email *</label>
+            <input type="email" id="empEmail" name="email" class="form-control" required placeholder="name@iuhp.edu.in">
+          </div>
+
+          <!-- Photograph Upload with Live Preview (Passport 3:4 Standard) -->
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label>Passport Photograph (Standard 3:4 Portrait, JPG/PNG)</label>
+            <div class="file-dropzone" id="photoDropzone">
+              <input type="file" id="photoInput" name="photo" accept="image/*">
+              <div id="photoDropContent">
+                <div style="font-size:1.5rem;margin-bottom:0.25rem;">📷</div>
+                <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop photograph</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem;">
+                  Automatically standardized to 3:4 passport ratio with Cloudinary face centering
+                </div>
+              </div>
+              <div class="dropzone-preview" id="photoPreviewContainer" style="display:none;">
+                <img id="photoPreviewImg" class="preview-thumb" alt="Preview">
+                <div style="margin-left:0.75rem;text-align:left;">
+                  <span id="photoPreviewName" style="font-size:0.85rem;font-weight:600;display:block;"></span>
+                  <button type="button" class="btn btn-sm btn-outline" style="margin-top:0.35rem;" onclick="clearPhotoSelection()">Change Photo</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resume PDF Upload -->
+          <div class="form-group" style="margin-top:0.5rem;">
+            <label>Resume / Curriculum Vitae (PDF)</label>
+            <div class="file-dropzone" id="resumeDropzone">
+              <input type="file" id="resumeInput" name="resume" accept="application/pdf">
+              <div id="resumeDropContent">
+                <div style="font-size:1.5rem;margin-bottom:0.25rem;">📄</div>
+                <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop Resume PDF</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem;">
+                  Leave blank to automatically link the official university sample resume
+                </div>
+              </div>
+              <div class="dropzone-preview" id="resumePreviewContainer" style="display:none;">
+                <div style="font-size:1.75rem;margin-right:0.5rem;">📑</div>
+                <div style="text-align:left;">
+                  <span id="resumePreviewName" style="font-size:0.85rem;font-weight:600;display:block;"></span>
+                  <button type="button" class="btn btn-sm btn-outline" style="margin-top:0.35rem;" onclick="clearResumeSelection()">Change PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="formError" style="color:var(--danger);font-size:0.875rem;margin-top:0.5rem;font-weight:600;min-height:1.2em;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('employeeModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveEmployeeBtn">
+            Save Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. DELETE CONFIRMATION MODAL               -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="deleteModal">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-header">
+        <h3>Confirm Deletion</h3>
+        <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to permanently remove <strong id="deleteEmpName">this employee</strong> from the directory?</p>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Delete Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script Logic -->
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
+    let employeesList = [];
+    let deleteTargetId = null;
+
+    // Toast notification helper
+    function showToast(message, type = 'success') {
+      const container = $('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span>${type === 'success' ? '✅' : '⚠️'}</span><span>${esc(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Theme handling
+    const initTheme = () => {
+      const saved = localStorage.getItem('iuhp_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', saved);
+      $('adminThemeIcon').textContent = saved === 'dark' ? '☀️' : '🌙';
+    };
+
+    $('adminThemeToggle').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('iuhp_theme', next);
+      $('adminThemeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    // Check Admin Authentication
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/admin/me');
+        if (res.ok) {
+          showAdminApp();
+        } else {
+          showLoginScreen();
+        }
+      } catch {
+        showLoginScreen();
+      }
+    }
+
+    function showAdminApp() {
+      $('loginSection').style.display = 'none';
+      $('adminApp').style.display = 'flex';
+      $('shareUrlBox').value = window.location.origin + '/register';
+      loadStats();
+      loadEmployees();
+    }
+
+    window.copyAdminShareUrl = function() {
+      const url = window.location.origin + '/register';
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = $('copyAdminShareBtn');
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = orig, 2500);
+        showToast('Intake link copied! Share with faculty.');
+      }).catch(() => {
+        prompt('Copy this link to send to faculty:', url);
+      });
+    };
+
+    function showLoginScreen() {
+      $('loginSection').style.display = 'block';
+      $('adminApp').style.display = 'none';
+    }
+
+    // Demo credentials autofill
+    $('autoFillCredsBtn').onclick = () => {
+      $('uInput').value = 'admin';
+      $('pInput').value = 'qwerty@123';
+      $('loginError').textContent = '';
+    };
+
+    // Login Form Submit
+    $('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      $('loginError').textContent = '';
+      $('loginSubmitBtn').disabled = true;
+      $('loginSubmitBtn').textContent = 'Authenticating...';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: $('uInput').value.trim(),
+            password: $('pInput').value,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showAdminApp();
+          showToast('Welcome back, Administrator!');
+        } else {
+          $('loginError').textContent = data.error || 'Login failed';
+        }
+      } catch (err) {
+        $('loginError').textContent = err.message || 'Server error';
+      } finally {
+        $('loginSubmitBtn').disabled = false;
+        $('loginSubmitBtn').textContent = 'Sign In to Admin Panel';
+      }
+    };
+
+    // Logout
+    $('logoutBtn').onclick = async () => {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      showLoginScreen();
+      showToast('You have signed out.');
+    };
+
+    // Load Stats
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/stats');
+        if (!res.ok) return;
+        const stats = await res.json();
+        $('statTotal').textContent = stats.total || 0;
+        $('statFPS').textContent = stats.byDept?.FPS || 0;
+        $('statFMS').textContent = stats.byDept?.FMS || 0;
+        $('statFLA').textContent = stats.byDept?.FLA || 0;
+        $('statFOL').textContent = stats.byDept?.FOL || 0;
+        $('statFST').textContent = stats.byDept?.FST || 0;
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+      }
+    }
+
+    // Load Employees
+    async function loadEmployees() {
+      const dept = $('deptFilter').value;
+      const q = $('adminSearchInput').value.trim();
+
+      // Update export links to respect active filters
+      const params = new URLSearchParams();
+      if (dept) params.set('department', dept);
+      if (q) params.set('q', q);
+      const queryStr = params.toString() ? '?' + params.toString() : '';
+
+      $('exportXlsxBtn').href = '/api/admin/export.xlsx' + queryStr;
+      $('exportCsvBtn').href = '/api/admin/export.csv' + queryStr;
+
+      try {
+        const res = await fetch('/api/admin/employees' + queryStr);
+        if (res.status === 401) {
+          showLoginScreen();
+          return;
+        }
+
+        employeesList = await res.json();
+        renderTable(employeesList);
+      } catch (err) {
+        $('employeeTableBody').innerHTML = `
+          <tr><td colspan="8" style="color:var(--danger);text-align:center;padding:2rem;">
+            Failed to load records: ${esc(err.message)}
+          </td></tr>
+        `;
+      }
+    }
+
+    // Render Table
+    function renderTable(list) {
+      const tbody = $('employeeTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);">
+            No employee records found. Click <strong>"Add Faculty Member"</strong> to add one.
+          </td></tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map(emp => {
+        const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
+        const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+
+        return `
+          <tr>
+            <td>
+              ${emp.photoUrl ? `
+                <img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}" title="Standard 3:4 Passport Photograph">
+              ` : `
+                <div class="table-photo-empty">3:4 Photo</div>
+              `}
+            </td>
+            <td>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${esc(emp.name)}</div>
+              <div style="font-size:0.8rem;color:var(--text-muted);">${esc(emp.designation || 'Faculty Member')}</div>
+            </td>
+            <td>
+              <span style="font-weight:600;color:var(--brand-primary);font-size:0.85rem;">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span>
+            </td>
+            <td>
+              <span class="dept-code-tag" style="font-size:0.8rem;padding:0.2rem 0.5rem;background:var(--dept-${(emp.department||'').toLowerCase()}-bg, #e2e8f0);color:var(--dept-${(emp.department||'').toLowerCase()}, #0f4c5c);">
+                ${esc(emp.department)}
+              </span>
+            </td>
+            <td><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
+            <td><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
+            <td>${esc(dateStr)}</td>
+            <td>
+              <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;">
+                📄 View PDF
+              </a>
+            </td>
+            <td style="text-align:right;">
+              <div style="display:inline-flex;gap:0.4rem;">
+                <button class="btn btn-sm btn-outline" onclick="openEditModal('${esc(emp._id)}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${esc(emp._id)}', '${esc(emp.name)}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Filter & Search events
+    $('deptFilter').onchange = loadEmployees;
+    let searchTimeout;
+    $('adminSearchInput').oninput = () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(loadEmployees, 300);
+    };
+
+    // Modal helpers
+    window.openModal = (id) => $(id).classList.add('open');
+    window.closeModal = (id) => $(id).classList.remove('open');
+
+    // Add Modal open
+    $('openAddModalBtn').onclick = () => {
+      $('modalTitle').textContent = 'Add New Faculty Member';
+      $('editEmpId').value = '';
+      $('employeeForm').reset();
+      clearPhotoSelection();
+      clearResumeSelection();
+      $('formError').textContent = '';
+      openModal('employeeModal');
+    };
+
+    // Photo input live preview
+    $('photoInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          $('photoPreviewImg').src = ev.target.result;
+          $('photoPreviewName').textContent = file.name;
+          $('photoPreviewContainer').style.display = 'flex';
+          $('photoDropContent').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    window.clearPhotoSelection = () => {
+      $('photoInput').value = '';
+      $('photoPreviewImg').src = '';
+      $('photoPreviewName').textContent = '';
+      $('photoPreviewContainer').style.display = 'none';
+      $('photoDropContent').style.display = 'block';
+    };
+
+    // Resume input preview
+    $('resumeInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        $('resumePreviewName').textContent = file.name;
+        $('resumePreviewContainer').style.display = 'flex';
+        $('resumeDropContent').style.display = 'none';
+      }
+    };
+
+    window.clearResumeSelection = () => {
+      $('resumeInput').value = '';
+      $('resumePreviewName').textContent = '';
+      $('resumePreviewContainer').style.display = 'none';
+      $('resumeDropContent').style.display = 'block';
+    };
+
+    // Save Employee (Create or Update)
+    $('employeeForm').onsubmit = async (e) => {
+      e.preventDefault();
+      $('formError').textContent = '';
+      const saveBtn = $('saveEmployeeBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Uploading to Cloudinary & Saving...';
+
+      const empId = $('editEmpId').value;
+      const formData = new FormData(e.target);
+
+      try {
+        const url = empId ? `/api/admin/employees/${empId}` : '/api/admin/employees';
+        const method = empId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          closeModal('employeeModal');
+          showToast(empId ? 'Faculty record updated successfully!' : 'New faculty member added to directory!');
+          loadStats();
+          loadEmployees();
+        } else {
+          $('formError').textContent = data.error || 'Failed to save employee';
+        }
+      } catch (err) {
+        $('formError').textContent = err.message || 'Network or server error';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Record';
+      }
+    };
+
+    // Edit Modal
+    window.openEditModal = (id) => {
+      const emp = employeesList.find(e => e._id === id);
+      if (!emp) return;
+
+      $('modalTitle').textContent = 'Edit Faculty Member: ' + emp.name;
+      $('editEmpId').value = emp._id;
+      $('empName').value = emp.name || '';
+      $('empDept').value = emp.department || 'FPS';
+      $('empDesignation').value = emp.designation || '';
+      $('empQualification').value = emp.highestQualification || '';
+      $('empContact').value = emp.contact || '';
+      $('empEmail').value = emp.email || '';
+      $('empDate').value = emp.joiningDate ? new Date(emp.joiningDate).toISOString().slice(0, 10) : '';
+
+      clearPhotoSelection();
+      if (emp.photoUrl) {
+        $('photoPreviewImg').src = emp.photoUrl;
+        $('photoPreviewName').textContent = 'Current Cloudinary Photo';
+        $('photoPreviewContainer').style.display = 'flex';
+        $('photoDropContent').style.display = 'none';
+      }
+
+      clearResumeSelection();
+      if (emp.resumeUrl) {
+        $('resumePreviewName').textContent = 'Current Resume Linked (PDF)';
+        $('resumePreviewContainer').style.display = 'flex';
+        $('resumeDropContent').style.display = 'none';
+      }
+
+      $('formError').textContent = '';
+      openModal('employeeModal');
+    };
+
+    // Delete Modal
+    window.openDeleteModal = (id, name) => {
+      deleteTargetId = id;
+      $('deleteEmpName').textContent = `"${name}"`;
+      openModal('deleteModal');
+    };
+
+    $('confirmDeleteBtn').onclick = async () => {
+      if (!deleteTargetId) return;
+      $('confirmDeleteBtn').disabled = true;
+
+      try {
+        const res = await fetch(`/api/admin/employees/${deleteTargetId}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          closeModal('deleteModal');
+          showToast('Employee removed from directory.');
+          loadStats();
+          loadEmployees();
+        } else {
+          const err = await res.json();
+          alert('Delete failed: ' + (err.error || 'Server error'));
+        }
+      } catch (e) {
+        alert('Network error during deletion');
+      } finally {
+        $('confirmDeleteBtn').disabled = false;
+        deleteTargetId = null;
+      }
+    };
+
+    // Close on backdrop click
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('open');
+      });
+    });
+
+    // Initialize
+    initTheme();
+    checkAuth();
+  </script>
+</body>
+</html>
