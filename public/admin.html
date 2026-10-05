@@ -122,25 +122,29 @@
     <!-- Admin Topbar -->
     <header class="admin-header">
       <div class="wrap admin-bar-wrap">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
+        <div style="display:flex;align-items:center;gap:0.85rem;">
           <span class="brand-badge">IUHP</span>
           <div>
-            <div style="font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
+            <div style="font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
               Admin Control Panel
-              <span class="badge-admin">Admin Role</span>
+              <span class="badge-admin">Administrator</span>
+              <span style="display:inline-flex;align-items:center;gap:0.35rem;background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius-full);padding:0.15rem 0.6rem;font-size:0.72rem;font-weight:700;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;animation:pulse 2s infinite;"></span>
+                Cloudinary & MongoDB Live
+              </span>
             </div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">Database: MongoDB Atlas | Storage: Cloudinary (emp2mv8y)</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.15rem;">The ICFAI University, Himachal Pradesh • Faculty & Employee Records Management</div>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:0.75rem;">
-          <button class="btn btn-outline btn-icon" id="adminThemeToggle" title="Toggle Theme">
+          <button class="btn btn-outline btn-icon" id="adminThemeToggle" title="Toggle Light/Dark Theme">
             <span id="adminThemeIcon">🌙</span>
           </button>
           <a href="/" class="btn btn-outline" target="_blank" title="Open Public Directory in New Tab">
-            🌐 View Public Site
+            🌐 View Public Directory
           </a>
-          <button class="btn btn-danger btn-sm" id="logoutBtn">
+          <button class="btn btn-danger btn-sm" id="logoutBtn" title="Sign out of Admin panel">
             Sign Out
           </button>
         </div>
@@ -148,71 +152,71 @@
     </header>
 
     <!-- Main Admin Workspace -->
-    <main class="wrap" style="padding-top:2rem;padding-bottom:4rem;flex:1;">
+    <main class="wrap" style="padding-top:1.75rem;padding-bottom:4rem;flex:1;">
       
       <!-- Stats KPI Cards -->
       <div class="stats-grid" id="statsGrid">
-        <div class="stat-card">
+        <div class="stat-card" style="border-top:3px solid #0284c7;">
           <div class="stat-icon" style="background:#e0f2fe;color:#0284c7;">👥</div>
           <div class="stat-info">
             <span class="stat-value" id="statTotal">0</span>
             <span class="stat-label">Total Faculty</span>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="border-top:3px solid #d97706;">
           <div class="stat-icon" style="background:#fef3c7;color:#d97706;">💊</div>
           <div class="stat-info">
             <span class="stat-value" id="statFPS">0</span>
-            <span class="stat-label">FPS Department</span>
+            <span class="stat-label">FPS (Pharmacy)</span>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="border-top:3px solid #059669;">
           <div class="stat-icon" style="background:#d1fae5;color:#059669;">📊</div>
           <div class="stat-info">
             <span class="stat-value" id="statFMS">0</span>
-            <span class="stat-label">FMS Department</span>
+            <span class="stat-label">FMS (Management)</span>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="border-top:3px solid #7c3aed;">
           <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;">🎨</div>
           <div class="stat-info">
             <span class="stat-value" id="statFLA">0</span>
-            <span class="stat-label">FLA Department</span>
+            <span class="stat-label">FLA (Liberal Arts)</span>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="border-top:3px solid #dc2626;">
           <div class="stat-icon" style="background:#fee2e2;color:#dc2626;">⚖️</div>
           <div class="stat-info">
             <span class="stat-value" id="statFOL">0</span>
-            <span class="stat-label">FOL Department</span>
+            <span class="stat-label">FOL (Law)</span>
           </div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="border-top:3px solid #0ea5e9;">
           <div class="stat-icon" style="background:#e0f2fe;color:#0ea5e9;">💻</div>
           <div class="stat-info">
             <span class="stat-value" id="statFST">0</span>
-            <span class="stat-label">FST Department</span>
+            <span class="stat-label">FST (Science & Tech)</span>
           </div>
         </div>
       </div>
 
       <!-- Shareable Link Banner for Faculty Data Intake -->
-      <div style="background:linear-gradient(135deg, rgba(15,76,92,0.08) 0%, rgba(224,159,62,0.12) 100%);border:1px solid rgba(15,76,92,0.2);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div class="share-banner-card">
         <div>
-          <div style="font-weight:700;font-size:1rem;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem;">
-            <span>📢</span> Faculty Intake Link for Data Collection
+          <div style="font-weight:700;font-size:1.05rem;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem;">
+            <span>📢</span> Faculty Self-Service Intake Link
           </div>
-          <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.2rem;">
-            Share this link via WhatsApp or Email so faculty members can submit their details, passport photo, and resume individually.
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.25rem;">
+            Share this official portal link so faculty members can submit or update their passport photo and CV on Cloudinary.
           </p>
         </div>
-        <div class="share-link-actions" style="display:flex;gap:0.5rem;align-items:center;">
-          <input type="text" id="shareUrlBox" readonly style="font-size:0.85rem;padding:0.45rem 0.75rem;border-radius:var(--radius-md);border:1px solid var(--surface-border);background:var(--surface);width:260px;" value="">
+        <div class="share-link-actions" style="display:flex;gap:0.65rem;align-items:center;">
+          <input type="text" id="shareUrlBox" readonly style="font-size:0.85rem;padding:0.5rem 0.85rem;border-radius:var(--radius-md);border:1px solid var(--surface-border);background:var(--surface);width:260px;font-weight:500;" value="">
           <button class="btn btn-sm btn-primary" onclick="copyAdminShareUrl()" id="copyAdminShareBtn">
-            📋 Copy Share Link
+            📋 Copy Link
           </button>
           <a href="/register" target="_blank" class="btn btn-sm btn-outline">
-            Open Form ↗
+            Open Intake ↗
           </a>
         </div>
       </div>
@@ -220,27 +224,31 @@
       <!-- Action Toolbar -->
       <div class="admin-toolbar">
         <div class="action-group">
-          <button class="btn btn-primary" id="openAddModalBtn">
+          <button class="btn btn-primary" id="openAddModalBtn" style="font-weight:700;box-shadow:0 2px 8px rgba(15,76,92,0.25);">
             ➕ Add Faculty Member
+          </button>
+
+          <button class="btn btn-outline" id="refreshBtn" onclick="loadEmployees()" title="Refresh records list">
+            🔄 Refresh
           </button>
           
           <!-- Download Spreadsheets -->
           <a class="btn btn-accent" id="exportXlsxBtn" href="/api/admin/export.xlsx" title="Download Excel/Google Sheets with embedded cell photos">
-            📗 Download Google Sheet (.xlsx)
+            📗 Google Sheet (.xlsx)
           </a>
 
           <a class="btn btn-outline" id="exportCsvBtn" href="/api/admin/export.csv" title="Download CSV">
-            📄 Download CSV
+            📄 CSV
           </a>
 
-          <a class="btn btn-outline" href="/api/admin/template.xlsx" title="Download Blank Google Sheets Template with 100 rows and sized cells">
-            📋 Download Blank Template
+          <a class="btn btn-outline" href="/api/admin/template.xlsx" title="Download Blank Google Sheets Template">
+            📋 Template
           </a>
         </div>
 
         <div class="filter-group">
           <!-- Department Filter -->
-          <select id="deptFilter" class="form-control" style="width:auto;min-width:160px;">
+          <select id="deptFilter" class="form-control" style="width:auto;min-width:170px;">
             <option value="">All Departments</option>
             <option value="FPS">FPS - Pharmaceutical</option>
             <option value="FMS">FMS - Management</option>
@@ -249,11 +257,14 @@
             <option value="FST">FST - Science & Tech</option>
           </select>
 
-          <!-- Search Input -->
-          <input type="text" id="adminSearchInput" class="form-control" placeholder="Search records..." style="width:auto;min-width:200px;">
+          <!-- Search Input with Clear Button -->
+          <div style="position:relative;display:flex;align-items:center;">
+            <input type="text" id="adminSearchInput" class="form-control" placeholder="Search name, email, role..." style="width:auto;min-width:240px;padding-left:2rem;padding-right:4rem;">
+            <span style="position:absolute;left:0.65rem;color:var(--text-muted);font-size:0.85rem;pointer-events:none;">🔍</span>
+            <span id="searchCountBadge" style="position:absolute;right:0.65rem;font-size:0.75rem;color:var(--text-muted);font-weight:700;background:var(--bg-secondary);padding:2px 6px;border-radius:4px;"></span>
+          </div>
         </div>
       </div>
-
 
       <!-- Employees Management Table -->
       <div class="table-card">
@@ -261,7 +272,7 @@
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="width:65px;">Photo</th>
+                <th style="width:70px;">Photo</th>
                 <th>Name & Designation</th>
                 <th>Highest Qualification</th>
                 <th>Department</th>
@@ -269,7 +280,7 @@
                 <th>Email</th>
                 <th>Joined Date</th>
                 <th>Resume</th>
-                <th style="text-align:right;width:150px;">Actions</th>
+                <th style="text-align:right;width:240px;">Actions & Alerts</th>
               </tr>
             </thead>
             <tbody id="employeeTableBody">
@@ -283,7 +294,7 @@
     <!-- Footer -->
     <footer style="margin-top:auto;">
       <div class="wrap footer-inner">
-        <div>IUHP Faculty Administration Dashboard &bull; Secured with JWT Authentication</div>
+        <div>IUHP Faculty Administration Dashboard &bull; Secured with JWT Authentication &bull; Cloudinary Asset Pipeline</div>
         <div>
           <a href="/api/admin/template.xlsx">Get Google Sheets Template (.xlsx)</a>
         </div>
@@ -383,7 +394,7 @@
                 <div style="font-size:1.5rem;margin-bottom:0.25rem;">📄</div>
                 <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop Resume PDF *</div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem;">
-                  Select the faculty member's official PDF resume file
+                  Select the faculty member's official PDF resume file (stored on Cloudinary)
                 </div>
               </div>
               <div class="dropzone-preview" id="resumePreviewContainer" style="display:none;">
@@ -420,7 +431,7 @@
       </div>
       <div class="modal-body">
         <p>Are you sure you want to permanently remove <strong id="deleteEmpName">this employee</strong> from the directory?</p>
-        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">This action cannot be undone.</p>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">This action will also clean up associated Cloudinary assets.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancel</button>
@@ -429,62 +440,101 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 5. QUALITY ALERT / REVISION REQUEST MODAL  -->
-  <!-- ========================================== -->
+  <!-- ================================================================= -->
+  <!-- 5. FACULTY COMMUNICATION MODAL (THANK YOU & REVISION ALERTS)     -->
+  <!-- ================================================================= -->
   <div class="modal-backdrop" id="alertModal">
-    <div class="modal-box" style="max-width:560px;">
+    <div class="modal-box" style="max-width:600px;">
       <div class="modal-header">
         <h3 id="alertModalTitle" style="display:flex;align-items:center;gap:0.5rem;">
-          <span>⚠️</span> Send Profile Revision Alert
+          <span>✉️</span> Faculty Notification & Alert
         </h3>
         <button class="modal-close" onclick="closeModal('alertModal')">&times;</button>
       </div>
       <form id="alertForm">
         <div class="modal-body">
           <input type="hidden" id="alertEmpId">
+          
           <div style="background:var(--bg-secondary);border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.875rem;">
-            <div><strong>Recipient:</strong> <span id="alertRecipientName"></span></div>
+            <div><strong>Recipient:</strong> <span id="alertRecipientName" style="color:var(--text-primary);font-weight:700;"></span></div>
             <div style="color:var(--text-muted);margin-top:0.2rem;"><strong>Official Email:</strong> <span id="alertRecipientEmail"></span></div>
           </div>
 
-          <label style="font-weight:700;font-size:0.875rem;margin-bottom:0.5rem;display:block;">Select Revision Preset Issue *</label>
-          
-          <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;">
-            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--surface-border);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;" class="alert-option-card">
-              <input type="radio" name="alertType" value="photo" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
-              <div>
-                <strong style="font-size:0.9rem;display:block;">📸 1. Professional Photograph Issue</strong>
-                <span style="font-size:0.78rem;color:var(--text-muted);">Photograph is casual, blurry, or not in standard 3:4 passport ratio with plain background.</span>
-              </div>
-            </label>
-
-            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--surface-border);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;" class="alert-option-card">
-              <input type="radio" name="alertType" value="resume" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
-              <div>
-                <strong style="font-size:0.9rem;display:block;">📄 2. Resume Must Follow Official Template</strong>
-                <span style="font-size:0.78rem;color:var(--text-muted);">CV must follow the official academic reference template with complete degrees, teaching/research experience & publications.</span>
-              </div>
-            </label>
-
-            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--brand-primary);border-radius:var(--radius-md);background:rgba(15,76,92,0.04);cursor:pointer;" class="alert-option-card">
-              <input type="radio" name="alertType" value="both" checked style="margin-top:0.2rem;" onchange="updateAlertPreview()">
-              <div>
-                <strong style="font-size:0.9rem;display:block;color:var(--brand-primary);">🔄 3. Combine Both (Photograph & Resume Template)</strong>
-                <span style="font-size:0.78rem;color:var(--text-muted);">Both the passport photograph (3:4 portrait) and academic resume (must follow official example template) require updates.</span>
-              </div>
-            </label>
+          <!-- Dual Tab Switcher: Message / Verification vs Revision Alert -->
+          <div class="modal-tab-group">
+            <button type="button" class="modal-tab-btn tab-thankyou active" id="tabThankyouBtn" onclick="switchAlertTab('thankyou')">
+              <span>✉️</span> Send Message / Notice
+            </button>
+            <button type="button" class="modal-tab-btn tab-revision" id="tabRevisionBtn" onclick="switchAlertTab('revision')">
+              <span>⚠️</span> Request Revision
+            </button>
           </div>
 
-          <!-- Custom Remarks -->
+          <!-- Section A: Official Message & Approval Options (Active by Default) -->
+          <div id="thankyouOptionsBlock">
+            <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.5rem;display:block;color:var(--text-primary);">
+              Select Message / Notification Type *
+            </label>
+            <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;">
+              <label class="alert-option-card selected-success" id="card-thankyou">
+                <input type="radio" name="alertType" value="thankyou" checked style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;color:#059669;">✅ 1. Profile Verified & Approved (Official Notice)</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Notify faculty that their profile, 3:4 passport photo & CV are verified and active in the directory.</span>
+                </div>
+              </label>
+
+              <label class="alert-option-card" id="card-welcome">
+                <input type="radio" name="alertType" value="welcome" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;">🎓 2. Welcome & Directory Onboarding Notice</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Welcome new faculty and confirm their published status across official university records.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section B: Revision Request Options (Shown when Revision Tab is clicked) -->
+          <div id="revisionOptionsBlock" style="display:none;">
+            <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.5rem;display:block;color:var(--text-primary);">
+              Select Revision Preset Issue *
+            </label>
+            <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;">
+              <label class="alert-option-card" id="card-photo">
+                <input type="radio" name="alertType" value="photo" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;">📸 1. Professional Photograph Issue</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Photograph is casual, blurry, or not in standard 3:4 passport ratio with plain background.</span>
+                </div>
+              </label>
+
+              <label class="alert-option-card" id="card-resume">
+                <input type="radio" name="alertType" value="resume" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;">📄 2. Resume Must Follow Official Academic Template</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">CV must follow the official academic template with degrees, teaching/research experience & publications.</span>
+                </div>
+              </label>
+
+              <label class="alert-option-card" id="card-both">
+                <input type="radio" name="alertType" value="both" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;color:#d97706;">🔄 3. Combine Both (Photograph & Resume Template)</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Both the passport photograph (3:4 portrait) and academic resume require updates.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Custom Remarks / Notes -->
           <div class="form-group" style="margin-bottom:1rem;">
-            <label for="alertCustomNotes">Optional Admin Remarks / Specific Instructions</label>
-            <textarea id="alertCustomNotes" class="form-control" rows="2" placeholder="e.g. Please update your research publications list up to 2026." style="resize:vertical;"></textarea>
+            <label for="alertCustomNotes" id="alertCustomNotesLabel">Optional Message Notes / Specific Remarks</label>
+            <textarea id="alertCustomNotes" class="form-control" rows="2" placeholder="e.g. Profile verified successfully. Welcome to the department directory!" style="resize:vertical;"></textarea>
           </div>
 
-          <!-- Email Preview Box -->
-          <div style="background:var(--bg-secondary);border-left:3px solid var(--brand-accent);border-radius:4px;padding:0.75rem;font-size:0.8rem;line-height:1.5;">
-            <strong style="color:var(--text-primary);display:block;margin-bottom:0.25rem;">📧 Email Message Preview:</strong>
+          <!-- Dynamic Email Preview Box -->
+          <div style="background:var(--bg-secondary);border-left:4px solid #10b981;border-radius:4px;padding:0.85rem;font-size:0.82rem;line-height:1.55;" id="alertPreviewContainer">
+            <strong style="color:var(--text-primary);display:block;margin-bottom:0.25rem;">📧 Outgoing Email Live Preview:</strong>
             <div id="alertPreviewText" style="color:var(--text-secondary);"></div>
           </div>
 
@@ -493,8 +543,8 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" onclick="closeModal('alertModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="sendAlertSubmitBtn" style="background:#d97706;border-color:#d97706;">
-            📨 Send Alert Email
+          <button type="submit" class="btn btn-primary" id="sendAlertSubmitBtn" style="background:#059669;border-color:#059669;">
+            📨 Send Message
           </button>
         </div>
       </form>
@@ -513,6 +563,7 @@
 
     let employeesList = [];
     let deleteTargetId = null;
+    let activeAlertTab = 'thankyou';
 
     // Toast notification helper
     function showToast(message, type = 'success') {
@@ -663,7 +714,7 @@
         renderTable(employeesList);
       } catch (err) {
         $('employeeTableBody').innerHTML = `
-          <tr><td colspan="8" style="color:var(--danger);text-align:center;padding:2rem;">
+          <tr><td colspan="9" style="color:var(--danger);text-align:center;padding:2rem;">
             Failed to load records: ${esc(err.message)}
           </td></tr>
         `;
@@ -673,11 +724,30 @@
     // Render Table
     function renderTable(list) {
       const tbody = $('employeeTableBody');
+      const countBadge = $('searchCountBadge');
+      if (countBadge) {
+        countBadge.textContent = list ? `${list.length} records` : '';
+      }
+
       if (!list || list.length === 0) {
+        const hasFilter = $('deptFilter').value || $('adminSearchInput').value;
         tbody.innerHTML = `
-          <tr><td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);">
-            No employee records found. Click <strong>"Add Faculty Member"</strong> to add one.
-          </td></tr>
+          <tr>
+            <td colspan="9" style="text-align:center;padding:3.5rem 1.5rem;">
+              <div style="max-width:360px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:0.75rem;">
+                <div style="width:56px;height:56px;border-radius:50%;background:var(--bg-secondary);border:1px solid var(--surface-border);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">🔍</div>
+                <div style="font-weight:700;font-size:1.05rem;color:var(--text-primary);">No Faculty Records Found</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;">
+                  ${hasFilter ? 'No faculty profiles matched your search or department filter.' : 'No faculty records exist yet. Click "Add Faculty Member" or share the intake link.'}
+                </div>
+                ${hasFilter ? `
+                  <button class="btn btn-sm btn-outline" style="margin-top:0.25rem;" onclick="$('deptFilter').value='';$('adminSearchInput').value='';loadEmployees();">
+                    ✕ Reset Search & Filters
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
         `;
         return;
       }
@@ -685,14 +755,22 @@
       tbody.innerHTML = list.map(emp => {
         const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
         const resumeUrl = emp.resumeUrl || '';
-        const hasAlert = emp.lastAlert?.sentAt;
-        const alertDateStr = hasAlert ? new Date(emp.lastAlert.sentAt).toLocaleDateString('en-GB') : '';
+        const isCloudResume = resumeUrl.includes('cloudinary.com');
+        const isCloudPhoto = emp.photoUrl && emp.photoUrl.includes('cloudinary.com');
+
+        const lastAlert = emp.lastAlert || {};
+        const hasAlert = lastAlert.sentAt;
+        const alertDateStr = hasAlert ? new Date(lastAlert.sentAt).toLocaleDateString('en-GB') : '';
+        const isThankYou = ['thankyou', 'approved', 'success', 'welcome'].includes(lastAlert.alertType);
 
         return `
           <tr class="employee-row">
             <td data-label="Photo">
               ${emp.photoUrl ? `
-                <img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}" title="Standard 3:4 Passport Photograph">
+                <div style="position:relative;display:inline-block;">
+                  <img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}" title="Standard 3:4 Passport Photograph">
+                  ${isCloudPhoto ? `<span style="position:absolute;bottom:-3px;right:-3px;font-size:10px;background:#0284c7;color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;" title="Hosted on Cloudinary">☁️</span>` : ''}
+                </div>
               ` : `
                 <div class="table-photo-empty">3:4 Photo</div>
               `}
@@ -701,28 +779,34 @@
               <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${esc(emp.name)}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);">${esc(emp.designation || 'Faculty Member')}</div>
               ${hasAlert ? `
-                <div style="margin-top:0.25rem;">
-                  <span style="display:inline-flex;align-items:center;gap:0.25rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:4px;padding:1px 6px;font-size:0.72rem;font-weight:600;" title="${esc(emp.lastAlert.message || '')}">
-                    ⚠️ Alert Sent: ${esc(alertDateStr)}
-                  </span>
+                <div style="margin-top:0.35rem;">
+                  ${isThankYou ? `
+                    <span class="badge-thankyou" title="${esc(lastAlert.message || '')}">
+                      ✉️ Messaged: ${esc(alertDateStr)}
+                    </span>
+                  ` : `
+                    <span class="badge-revision" title="${esc(lastAlert.message || '')}">
+                      ⚠️ Revision: ${esc(alertDateStr)}
+                    </span>
+                  `}
                 </div>
               ` : ''}
             </td>
             <td data-label="Qualification">
-              <span style="font-weight:600;color:var(--brand-primary);font-size:0.85rem;">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span>
+              <span style="font-weight:600;color:var(--brand-primary);font-size:0.85rem;background:var(--bg-secondary);padding:2px 6px;border-radius:4px;display:inline-block;">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span>
             </td>
             <td data-label="Department">
-              <span class="dept-code-tag" style="font-size:0.8rem;padding:0.2rem 0.5rem;background:var(--dept-${(emp.department||'').toLowerCase()}-bg, #e2e8f0);color:var(--dept-${(emp.department||'').toLowerCase()}, #0f4c5c);">
+              <span class="dept-code-tag" style="font-size:0.8rem;padding:0.2rem 0.55rem;background:var(--dept-${(emp.department||'').toLowerCase()}-bg, #e2e8f0);color:var(--dept-${(emp.department||'').toLowerCase()}, #0f4c5c);">
                 ${esc(emp.department)}
               </span>
             </td>
-            <td data-label="Contact"><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
-            <td data-label="Email"><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
+            <td data-label="Contact"><a href="tel:${esc(emp.contact)}" style="font-weight:500;">${esc(emp.contact)}</a></td>
+            <td data-label="Email"><a href="mailto:${esc(emp.email)}" style="font-weight:500;">${esc(emp.email)}</a></td>
             <td data-label="Joined">${esc(dateStr)}</td>
             <td data-label="Resume">
               ${resumeUrl ? `
-                <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;">
-                  📄 View PDF
+                <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;font-weight:600;gap:0.3rem;">
+                  📄 ${isCloudResume ? 'Cloud PDF' : 'View PDF'}
                 </a>
               ` : `
                 <span style="color:var(--text-muted);font-size:0.8rem;">—</span>
@@ -730,7 +814,9 @@
             </td>
             <td data-label="Actions" style="text-align:right;">
               <div style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
-                <button class="btn btn-sm btn-outline" style="color:#b45309;border-color:#fde68a;background:#fffbeb;font-weight:600;" onclick="openAlertModal('${esc(emp._id)}')" title="Send quality alert/revision email to faculty">⚠️ Alert</button>
+                <button class="btn btn-sm btn-outline" style="color:#059669;border-color:#a7f3d0;background:#ecfdf5;font-weight:700;" onclick="openCommunicationModal('${esc(emp._id)}', 'thankyou')" title="Send Message, Notice, or Revision Alert">
+                  ✉️ Message
+                </button>
                 <button class="btn btn-sm btn-outline" onclick="openEditModal('${esc(emp._id)}')">Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${esc(emp._id)}', '${esc(emp.name)}')">Delete</button>
               </div>
@@ -745,7 +831,7 @@
     let searchTimeout;
     $('adminSearchInput').oninput = () => {
       clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(loadEmployees, 300);
+      searchTimeout = setTimeout(loadEmployees, 250);
     };
 
     // Modal helpers
@@ -813,7 +899,7 @@
       $('formError').textContent = '';
       const saveBtn = $('saveEmployeeBtn');
       saveBtn.disabled = true;
-      saveBtn.textContent = 'Uploading & Saving...';
+      saveBtn.textContent = 'Uploading to Cloudinary & Saving...';
 
       const empId = $('editEmpId').value;
       const formData = new FormData(e.target);
@@ -868,14 +954,14 @@
       clearPhotoSelection();
       if (emp.photoUrl) {
         $('photoPreviewImg').src = emp.photoUrl;
-        $('photoPreviewName').textContent = 'Current Cloudinary Photo';
+        $('photoPreviewName').textContent = 'Current Photo (Cloudinary)';
         $('photoPreviewContainer').style.display = 'flex';
         $('photoDropContent').style.display = 'none';
       }
 
       clearResumeSelection();
       if (emp.resumeUrl) {
-        $('resumePreviewName').innerHTML = `Current Resume: <a href="${esc(emp.resumeUrl)}" target="_blank" style="color:var(--brand-primary);text-decoration:underline;font-weight:700;">📄 View Uploaded PDF ↗</a>`;
+        $('resumePreviewName').innerHTML = `Current Resume: <a href="${esc(emp.resumeUrl)}" target="_blank" style="color:var(--brand-primary);text-decoration:underline;font-weight:700;">📄 View PDF ↗</a>`;
         $('resumePreviewContainer').style.display = 'flex';
         $('resumeDropContent').style.display = 'none';
       }
@@ -884,10 +970,10 @@
       openModal('employeeModal');
     };
 
-    // ==========================================
-    // Alert Modal Logic
-    // ==========================================
-    window.openAlertModal = (id) => {
+    // =========================================================
+    // Communication & Alert Modal (Thank You vs Revision Tabs)
+    // =========================================================
+    window.openCommunicationModal = (id, tabMode = 'thankyou') => {
       const emp = employeesList.find(e => e._id === id);
       if (!emp) return;
 
@@ -897,32 +983,110 @@
       $('alertCustomNotes').value = '';
       $('alertFormError').textContent = '';
 
-      // Default to both
-      const radios = document.getElementsByName('alertType');
-      for (const r of radios) {
-        r.checked = r.value === 'both';
-      }
-
-      updateAlertPreview();
+      switchAlertTab(tabMode);
       openModal('alertModal');
     };
 
+    // Legacy fallback wrapper
+    window.openAlertModal = (id) => openCommunicationModal(id, 'revision');
+
+    window.switchAlertTab = (tab) => {
+      activeAlertTab = tab;
+      const tabThankyou = $('tabThankyouBtn');
+      const tabRevision = $('tabRevisionBtn');
+      const thankyouBlock = $('thankyouOptionsBlock');
+      const revisionBlock = $('revisionOptionsBlock');
+      const submitBtn = $('sendAlertSubmitBtn');
+      const previewContainer = $('alertPreviewContainer');
+      const customLabel = $('alertCustomNotesLabel');
+
+      if (tab === 'thankyou') {
+        tabThankyou.classList.add('active');
+        tabRevision.classList.remove('active');
+        thankyouBlock.style.display = 'block';
+        revisionBlock.style.display = 'none';
+
+        // Select thankyou radio
+        const radio = document.querySelector('input[name="alertType"][value="thankyou"]');
+        if (radio) radio.checked = true;
+
+        submitBtn.style.background = '#059669';
+        submitBtn.style.borderColor = '#059669';
+        submitBtn.innerHTML = '📨 Send Message';
+        previewContainer.style.borderLeftColor = '#10b981';
+        customLabel.textContent = 'Optional Message Notes / Remarks';
+      } else {
+        tabRevision.classList.add('active');
+        tabThankyou.classList.remove('active');
+        revisionBlock.style.display = 'block';
+        thankyouBlock.style.display = 'none';
+
+        // Select both radio by default for revision
+        const radio = document.querySelector('input[name="alertType"][value="both"]');
+        if (radio) radio.checked = true;
+
+        submitBtn.style.background = '#d97706';
+        submitBtn.style.borderColor = '#d97706';
+        submitBtn.innerHTML = '📨 Send Revision Alert';
+        previewContainer.style.borderLeftColor = '#e09f3e';
+        customLabel.textContent = 'Optional Revision Remarks / Instructions';
+      }
+
+      updateAlertPreview();
+    };
+
     window.updateAlertPreview = () => {
-      const type = document.querySelector('input[name="alertType"]:checked')?.value || 'both';
+      const type = document.querySelector('input[name="alertType"]:checked')?.value || 'thankyou';
       const customNotes = $('alertCustomNotes').value.trim();
       const previewBox = $('alertPreviewText');
+      const previewContainer = $('alertPreviewContainer');
+      const submitBtn = $('sendAlertSubmitBtn');
+
+      // Update card active classes
+      document.querySelectorAll('.alert-option-card').forEach(card => {
+        card.classList.remove('selected-success', 'selected-revision');
+      });
 
       let text = '';
-      if (type === 'photo') {
+      if (type === 'thankyou') {
+        $('card-thankyou')?.classList.add('selected-success');
+        text = '✅ <strong>Profile Verified & Approved:</strong> "We are pleased to inform you that your faculty profile, passport photograph, and CV have been reviewed, verified, and published in the University Directory."';
+        previewContainer.style.borderLeftColor = '#10b981';
+        submitBtn.style.background = '#059669';
+        submitBtn.style.borderColor = '#059669';
+        submitBtn.innerHTML = '📨 Send Message';
+      } else if (type === 'welcome') {
+        $('card-welcome')?.classList.add('selected-success');
+        text = '🎓 <strong>Welcome to IUHP:</strong> "Welcome to The ICFAI University, Himachal Pradesh! Your faculty onboarding profile has been formally approved and added to the university directory."';
+        previewContainer.style.borderLeftColor = '#10b981';
+        submitBtn.style.background = '#059669';
+        submitBtn.style.borderColor = '#059669';
+        submitBtn.innerHTML = '📨 Send Message';
+      } else if (type === 'photo') {
+        $('card-photo')?.classList.add('selected-revision');
         text = '📸 <strong>Photograph Quality Issue:</strong> "Your uploaded profile photo does not match the official standard. Please upload a formal 3:4 portrait passport photo with neutral background."';
+        previewContainer.style.borderLeftColor = '#e09f3e';
+        submitBtn.style.background = '#d97706';
+        submitBtn.style.borderColor = '#d97706';
+        submitBtn.innerHTML = '📨 Send Revision Alert';
       } else if (type === 'resume') {
-        text = '📄 <strong>Resume Template Mismatch:</strong> "Your uploaded resume must strictly follow the official university reference template (<a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Example PDF ↗</a>) including academic degrees, experience, and publications."';
+        $('card-resume')?.classList.add('selected-revision');
+        text = '📄 <strong>Resume Template Mismatch:</strong> "Your uploaded resume must strictly follow the official university reference template (<a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template PDF ↗</a>) including academic degrees, experience, and publications."';
+        previewContainer.style.borderLeftColor = '#e09f3e';
+        submitBtn.style.background = '#d97706';
+        submitBtn.style.borderColor = '#d97706';
+        submitBtn.innerHTML = '📨 Send Revision Alert';
       } else {
+        $('card-both')?.classList.add('selected-revision');
         text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait) and academic resume (must follow official example template: <a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template ↗</a>) require revisions."';
+        previewContainer.style.borderLeftColor = '#e09f3e';
+        submitBtn.style.background = '#d97706';
+        submitBtn.style.borderColor = '#d97706';
+        submitBtn.innerHTML = '📨 Send Revision Alert';
       }
 
       if (customNotes) {
-        text += `<br><br><strong>Additional Remark:</strong> "${esc(customNotes)}"`;
+        text += `<br><br><strong>Personalized Remark:</strong> "${esc(customNotes)}"`;
       }
 
       previewBox.innerHTML = text;
@@ -938,10 +1102,10 @@
       const submitBtn = $('sendAlertSubmitBtn');
       const origText = submitBtn.textContent;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `⏳ Sending Alert Email...`;
+      submitBtn.innerHTML = `⏳ Sending Email Notification...`;
       $('alertFormError').textContent = '';
 
-      const alertType = document.querySelector('input[name="alertType"]:checked')?.value || 'both';
+      const alertType = document.querySelector('input[name="alertType"]:checked')?.value || 'thankyou';
       const customMessage = $('alertCustomNotes').value.trim();
 
       try {
@@ -954,13 +1118,13 @@
         const data = await res.json();
         if (res.ok) {
           closeModal('alertModal');
-          showToast('Alert notification email sent successfully!');
+          showToast(data.message || 'Notification email sent successfully!');
           loadEmployees();
         } else {
-          $('alertFormError').textContent = data.error || 'Failed to send alert email';
+          $('alertFormError').textContent = data.error || 'Failed to send notification email';
         }
       } catch (err) {
-        $('alertFormError').textContent = err.message || 'Network error sending alert';
+        $('alertFormError').textContent = err.message || 'Network error sending email';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = origText;

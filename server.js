@@ -831,10 +831,42 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
     let title = 'Faculty Profile Revision Required';
     let mainMessage = '';
     let guidelinesHtml = '';
+    let isSuccess = false;
 
     const templatePdfUrl = 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+    const host = req.get('host') || 'localhost:3000';
+    const protocol = req.protocol || 'http';
+    const baseUrl = `${protocol}://${host}`;
+    let actionUrl = `${baseUrl}/register?email=${encodeURIComponent(employee.email)}`;
+    let actionBtnText = '✏️ Click Here to Update Your Profile & Resume';
 
-    if (type === 'photo') {
+    if (type === 'thankyou' || type === 'approved' || type === 'success' || type === 'message') {
+      isSuccess = true;
+      subject = `Official Notice: Faculty Profile Verified & Active - ${employee.name} (IUHP)`;
+      title = '📋 Faculty Profile Verified & Officially Active';
+      mainMessage = 'We are pleased to inform you that your faculty profile, passport photograph, and academic curriculum vitae have been reviewed, verified, and officially published in the University Faculty Directory.';
+      guidelinesHtml = `
+        • <strong>Directory Status:</strong> Active & Publicly Verified<br>
+        • <strong>Department:</strong> ${employee.department}<br>
+        • <strong>Designation:</strong> ${employee.designation || 'Faculty Member'}<br>
+        • <strong>Assets:</strong> Passport photograph (3:4 standard) and academic CV are verified and active on Cloudinary.
+      `;
+      actionUrl = `${baseUrl}/#section-${employee.department}`;
+      actionBtnText = '🌐 View Your Profile in Public Directory';
+    } else if (type === 'welcome') {
+      isSuccess = true;
+      subject = `Welcome to ICFAI University Himachal Pradesh: Faculty Profile Verified`;
+      title = '🎓 Welcome to IUHP Faculty Directory';
+      mainMessage = 'Welcome to The ICFAI University, Himachal Pradesh! Your faculty onboarding profile has been approved and added to the official institutional directory.';
+      guidelinesHtml = `
+        • <strong>Faculty Name:</strong> ${employee.name}<br>
+        • <strong>Department:</strong> ${employee.department}<br>
+        • <strong>Designation:</strong> ${employee.designation || 'Faculty Member'}<br>
+        • <strong>Official Email:</strong> ${employee.email}
+      `;
+      actionUrl = `${baseUrl}/#section-${employee.department}`;
+      actionBtnText = '🌐 Explore University Faculty Directory';
+    } else if (type === 'photo') {
       subject = 'Action Required: Update Passport Photograph - IUHP Faculty Portal';
       title = '📸 Passport Photograph Format Revision Required';
       mainMessage = 'Your uploaded profile photograph does not match the university official standard. Please upload a formal passport-sized portrait photograph (3:4 aspect ratio, plain/neutral background, frontal face view).';
@@ -863,10 +895,12 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
       `;
     }
 
-    const host = req.get('host') || 'localhost:3000';
-    const protocol = req.protocol || 'http';
-    const baseUrl = `${protocol}://${host}`;
-    const actionUrl = `${baseUrl}/register?email=${encodeURIComponent(employee.email)}`;
+    const badgeHtml = isSuccess
+      ? `<div style="display:inline-block; background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px;">✨ PROFILE VERIFIED & APPROVED</div>`
+      : `<div style="display:inline-block; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px;">⚠️ ACTION REQUIRED: PROFILE REVISION</div>`;
+
+    const borderColor = isSuccess ? '#10b981' : '#e09f3e';
+    const btnBg = isSuccess ? '#059669' : '#0f4c5c';
 
     const mailOptions = {
       from: `"IUHP Administration" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
@@ -879,32 +913,33 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
             <div style="font-size:12px; color:#e09f3e; font-weight:700; margin-top:4px; letter-spacing:1px;">HIMACHAL PRADESH • FACULTY PORTAL</div>
           </div>
           <div style="padding:32px 24px; color:#334155;">
-            <div style="display:inline-block; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px;">
-              ⚠️ ACTION REQUIRED: PROFILE REVISION
-            </div>
+            ${badgeHtml}
             <h3 style="margin:0 0 12px; font-size:18px; color:#0f172a; font-weight:700;">Dear ${employee.name},</h3>
             <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#475569;">
-              During the administrative review of faculty records in the University Directory, the following items in your profile were flagged for revision:
+              ${isSuccess
+                ? 'We have an administrative update regarding your profile status in the official University Faculty Directory:'
+                : 'During the administrative review of faculty records in the University Directory, the following items in your profile were flagged for revision:'
+              }
             </p>
 
-            <div style="background:#f8fafc; border-left:4px solid #e09f3e; border-radius:4px; padding:16px; margin:16px 0;">
+            <div style="background:#f8fafc; border-left:4px solid ${borderColor}; border-radius:4px; padding:16px; margin:16px 0;">
               <div style="font-weight:700; color:#0f4c5c; font-size:15px; margin-bottom:6px;">${title}</div>
               <div style="font-size:13.5px; line-height:1.5; color:#334155;">${mainMessage}</div>
               ${customMessage && customMessage.trim() ? `
                 <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; font-size:13px; color:#1e293b;">
-                  <strong>Admin Remarks:</strong> ${customMessage.trim()}
+                  <strong>Admin Remarks / Note:</strong> ${customMessage.trim()}
                 </div>
               ` : ''}
             </div>
 
             <div style="background:#f1f5f9; border-radius:8px; padding:16px; margin:20px 0; font-size:13px; color:#475569; line-height:1.6;">
-              <strong style="color:#0f172a; display:block; margin-bottom:6px;">📋 Official Format Guidelines:</strong>
+              <strong style="color:#0f172a; display:block; margin-bottom:6px;">${isSuccess ? '📋 Verification Summary:' : '📋 Official Format Guidelines:'}</strong>
               ${guidelinesHtml}
             </div>
 
             <div style="text-align:center; margin:28px 0 16px;">
-              <a href="${actionUrl}" style="background:#0f4c5c; color:#ffffff; text-decoration:none; padding:12px 28px; border-radius:6px; font-weight:700; font-size:14px; display:inline-block; box-shadow:0 2px 6px rgba(15,76,92,0.3);">
-                ✏️ Click Here to Update Your Profile & Resume
+              <a href="${actionUrl}" style="background:${btnBg}; color:#ffffff; text-decoration:none; padding:12px 28px; border-radius:6px; font-weight:700; font-size:14px; display:inline-block; box-shadow:0 2px 6px rgba(15,76,92,0.3);">
+                ${actionBtnText}
               </a>
             </div>
             <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:16px;">
@@ -931,7 +966,9 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
 
     res.json({
       ok: true,
-      message: `Alert notification email has been sent successfully to ${employee.email}!`,
+      message: isSuccess
+        ? `Thank You / Approval email sent successfully to ${employee.email}!`
+        : `Revision alert email sent successfully to ${employee.email}!`,
     });
   } catch (err) {
     console.error('Failed to send faculty alert:', err);
