@@ -266,13 +266,16 @@
         </div>
       </div>
 
-      <!-- Employees Management Table (Optimized Columns with Sticky Actions) -->
+      <!-- Employees Management Table (Optimized Columns with Multi-Select & Sticky Actions) -->
       <div class="table-card">
         <div class="table-responsive">
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="width:60px;">Photo</th>
+                <th style="width:38px;text-align:center;">
+                  <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" title="Select / Deselect All Records" style="cursor:pointer;width:16px;height:16px;">
+                </th>
+                <th style="width:55px;">Photo</th>
                 <th>Faculty Name & Role</th>
                 <th>Qualification</th>
                 <th>Department</th>
@@ -282,9 +285,30 @@
               </tr>
             </thead>
             <tbody id="employeeTableBody">
-              <tr><td colspan="7" style="text-align:center;padding:2rem;">Loading faculty records...</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:2rem;">Loading faculty records...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Floating Sticky Bulk Selection Bar -->
+      <div id="bulkActionBar" class="bulk-action-bar" style="display:none;">
+        <div class="bulk-bar-content">
+          <div class="bulk-info">
+            <span class="bulk-pill"><span id="bulkSelectedCount">0</span> Selected</span>
+            <span class="bulk-desc" id="bulkSelectedNames"></span>
+          </div>
+          <div class="bulk-actions-group">
+            <button type="button" class="btn btn-sm btn-primary" onclick="openBulkMessageModal()" style="font-weight:700;background:#059669;border-color:#059669;">
+              ✉️ Send Message to Selected (<span class="bulk-count-label">0</span>)
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="openBulkDeleteModal()">
+              🗑️ Delete Selected
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="clearSelection()" title="Deselect All" style="color:#ffffff;border-color:rgba(255,255,255,0.3);">
+              ✕ Clear
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -562,6 +586,9 @@
     let employeesList = [];
     let deleteTargetId = null;
     let activeAlertTab = 'thankyou';
+    let selectedEmpIds = new Set();
+    let isBulkCommunication = false;
+    let isBulkDelete = false;
 
     // Toast notification helper
     function showToast(message, type = 'success') {
@@ -760,9 +787,13 @@
         const hasAlert = lastAlert.sentAt;
         const alertDateStr = hasAlert ? new Date(lastAlert.sentAt).toLocaleDateString('en-GB') : '';
         const isThankYou = ['thankyou', 'approved', 'success', 'welcome'].includes(lastAlert.alertType);
+        const isChecked = selectedEmpIds.has(emp._id);
 
         return `
-          <tr class="employee-row">
+          <tr class="employee-row ${isChecked ? 'row-selected' : ''}">
+            <td style="text-align:center;" onclick="event.stopPropagation()">
+              <input type="checkbox" class="emp-row-check" data-id="${esc(emp._id)}" ${isChecked ? 'checked' : ''} onchange="toggleEmpSelection('${esc(emp._id)}', this.checked)" style="cursor:pointer;width:16px;height:16px;">
+            </td>
             <td data-label="Photo">
               ${emp.photoUrl ? `
                 <div style="position:relative;display:inline-block;">
@@ -828,6 +859,9 @@
           </tr>
         `;
       }).join('');
+
+      updateSelectAllCheckbox();
+      updateBulkBar();
     }
 
     // Filter & Search events
@@ -975,15 +1009,117 @@
     };
 
     // =========================================================
-    // Communication & Alert Modal (Thank You vs Revision Tabs)
+    // Multi-Select & Bulk Operations Handlers
+    // =========================================================
+    window.toggleSelectAll = (checked) => {
+      if (checked) {
+        employeesList.forEach(emp => selectedEmpIds.add(emp._id));
+      } else {
+        selectedEmpIds.clear();
+      }
+      renderTable(employeesList);
+    };
+
+    window.toggleEmpSelection = (id, checked) => {
+      if (checked) {
+        selectedEmpIds.add(id);
+      } else {
+        selectedEmpIds.delete(id);
+      }
+      updateSelectAllCheckbox();
+      updateBulkBar();
+      const row = document.querySelector(`.emp-row-check[data-id="${id}"]`)?.closest('tr');
+      if (row) {
+        if (checked) row.classList.add('row-selected');
+        else row.classList.remove('row-selected');
+      }
+    };
+
+    window.updateSelectAllCheckbox = () => {
+      const selectAll = $('selectAllCheckbox');
+      if (!selectAll) return;
+      if (!employeesList || employeesList.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+      }
+      const count = employeesList.filter(e => selectedEmpIds.has(e._id)).length;
+      if (count === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+      } else if (count === employeesList.length) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+      } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+      }
+    };
+
+    window.clearSelection = () => {
+      selectedEmpIds.clear();
+      renderTable(employeesList);
+    };
+
+    window.updateBulkBar = () => {
+      const bar = $('bulkActionBar');
+      const countSpan = $('bulkSelectedCount');
+      const namesSpan = $('bulkSelectedNames');
+      const countLabels = document.querySelectorAll('.bulk-count-label');
+      
+      const count = selectedEmpIds.size;
+      countLabels.forEach(lbl => lbl.textContent = count);
+
+      if (count === 0) {
+        if (bar) bar.style.display = 'none';
+        return;
+      }
+
+      if (bar) bar.style.display = 'block';
+      if (countSpan) countSpan.textContent = count;
+      if (namesSpan) {
+        const selectedEmps = employeesList.filter(e => selectedEmpIds.has(e._id));
+        if (selectedEmps.length <= 3) {
+          namesSpan.textContent = selectedEmps.map(e => e.name).join(', ');
+        } else {
+          namesSpan.textContent = `${selectedEmps.slice(0, 3).map(e => e.name).join(', ')} + ${selectedEmps.length - 3} more`;
+        }
+      }
+    };
+
+    // =========================================================
+    // Communication & Alert Modal (Single + Bulk Batch Modes)
     // =========================================================
     window.openCommunicationModal = (id, tabMode = 'thankyou') => {
       const emp = employeesList.find(e => e._id === id);
       if (!emp) return;
 
+      isBulkCommunication = false;
+      $('alertModalTitle').innerHTML = '<span>✉️</span> Faculty Notification & Alert';
       $('alertEmpId').value = emp._id;
       $('alertRecipientName').textContent = emp.name;
       $('alertRecipientEmail').textContent = emp.email;
+      $('alertCustomNotes').value = '';
+      $('alertFormError').textContent = '';
+
+      switchAlertTab(tabMode);
+      openModal('alertModal');
+    };
+
+    // Bulk Message / Notice Modal
+    window.openBulkMessageModal = (tabMode = 'thankyou') => {
+      if (selectedEmpIds.size === 0) {
+        showToast('Please select at least one faculty member first', 'warning');
+        return;
+      }
+
+      isBulkCommunication = true;
+      $('alertEmpId').value = 'bulk';
+      $('alertModalTitle').innerHTML = `<span>✉️</span> Bulk Faculty Message & Notification (${selectedEmpIds.size} Selected)`;
+      
+      const selectedEmps = employeesList.filter(e => selectedEmpIds.has(e._id));
+      $('alertRecipientName').innerHTML = `<span style="color:#059669;font-weight:700;">Batch Mode: ${selectedEmpIds.size} Faculty Members Selected</span>`;
+      $('alertRecipientEmail').textContent = selectedEmps.map(e => e.email).join(', ');
       $('alertCustomNotes').value = '';
       $('alertFormError').textContent = '';
 
@@ -1016,7 +1152,7 @@
 
         submitBtn.style.background = '#059669';
         submitBtn.style.borderColor = '#059669';
-        submitBtn.innerHTML = '📨 Send Message';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Message to ${selectedEmpIds.size} Selected` : '📨 Send Message';
         previewContainer.style.borderLeftColor = '#10b981';
         customLabel.textContent = 'Optional Message Notes / Remarks';
       } else {
@@ -1031,7 +1167,7 @@
 
         submitBtn.style.background = '#d97706';
         submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = '📨 Send Revision Alert';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Selected` : '📨 Send Revision Alert';
         previewContainer.style.borderLeftColor = '#e09f3e';
         customLabel.textContent = 'Optional Revision Remarks / Instructions';
       }
@@ -1058,35 +1194,35 @@
         previewContainer.style.borderLeftColor = '#10b981';
         submitBtn.style.background = '#059669';
         submitBtn.style.borderColor = '#059669';
-        submitBtn.innerHTML = '📨 Send Message';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Message to ${selectedEmpIds.size} Faculty Members` : '📨 Send Message';
       } else if (type === 'welcome') {
         $('card-welcome')?.classList.add('selected-success');
         text = '🎓 <strong>Welcome to IUHP:</strong> "Welcome to The ICFAI University, Himachal Pradesh! Your faculty onboarding profile has been formally approved and added to the university directory."';
         previewContainer.style.borderLeftColor = '#10b981';
         submitBtn.style.background = '#059669';
         submitBtn.style.borderColor = '#059669';
-        submitBtn.innerHTML = '📨 Send Message';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Welcome to ${selectedEmpIds.size} Faculty Members` : '📨 Send Message';
       } else if (type === 'photo') {
         $('card-photo')?.classList.add('selected-revision');
         text = '📸 <strong>Photograph Quality Issue:</strong> "Your uploaded profile photo does not match the official standard. Please upload a formal 3:4 portrait passport photo with neutral background."';
         previewContainer.style.borderLeftColor = '#e09f3e';
         submitBtn.style.background = '#d97706';
         submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = '📨 Send Revision Alert';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
       } else if (type === 'resume') {
         $('card-resume')?.classList.add('selected-revision');
         text = '📄 <strong>Resume Template Mismatch:</strong> "Your uploaded resume must strictly follow the official university reference template (<a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template PDF ↗</a>) including academic degrees, experience, and publications."';
         previewContainer.style.borderLeftColor = '#e09f3e';
         submitBtn.style.background = '#d97706';
         submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = '📨 Send Revision Alert';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
       } else {
         $('card-both')?.classList.add('selected-revision');
         text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait) and academic resume (must follow official example template: <a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template ↗</a>) require revisions."';
         previewContainer.style.borderLeftColor = '#e09f3e';
         submitBtn.style.background = '#d97706';
         submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = '📨 Send Revision Alert';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
       }
 
       if (customNotes) {
@@ -1100,32 +1236,44 @@
 
     $('alertForm').onsubmit = async (e) => {
       e.preventDefault();
-      const id = $('alertEmpId').value;
-      if (!id) return;
-
       const submitBtn = $('sendAlertSubmitBtn');
       const origText = submitBtn.textContent;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `⏳ Sending Email Notification...`;
+      submitBtn.innerHTML = `⏳ Sending Message Notification(s)...`;
       $('alertFormError').textContent = '';
 
       const alertType = document.querySelector('input[name="alertType"]:checked')?.value || 'thankyou';
       const customMessage = $('alertCustomNotes').value.trim();
 
       try {
-        const res = await fetch(`/api/admin/employees/${id}/alert`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ alertType, customMessage }),
-        });
+        let res;
+        if (isBulkCommunication) {
+          const ids = Array.from(selectedEmpIds);
+          res = await fetch('/api/admin/employees/bulk-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids, alertType, customMessage }),
+          });
+        } else {
+          const id = $('alertEmpId').value;
+          if (!id) return;
+          res = await fetch(`/api/admin/employees/${id}/alert`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ alertType, customMessage }),
+          });
+        }
 
         const data = await res.json();
         if (res.ok) {
           closeModal('alertModal');
-          showToast(data.message || 'Notification email sent successfully!');
+          showToast(data.message || 'Notification email(s) sent successfully!');
+          if (isBulkCommunication) {
+            clearSelection();
+          }
           loadEmployees();
         } else {
-          $('alertFormError').textContent = data.error || 'Failed to send notification email';
+          $('alertFormError').textContent = data.error || 'Failed to send notification email(s)';
         }
       } catch (err) {
         $('alertFormError').textContent = err.message || 'Network error sending email';
@@ -1135,24 +1283,53 @@
       }
     };
 
-    // Delete Modal
+    // =========================================================
+    // Delete Modal (Single + Bulk Batch Modes)
+    // =========================================================
     window.openDeleteModal = (id, name) => {
+      isBulkDelete = false;
       deleteTargetId = id;
       $('deleteEmpName').textContent = `"${name}"`;
       openModal('deleteModal');
     };
 
+    window.openBulkDeleteModal = () => {
+      if (selectedEmpIds.size === 0) {
+        showToast('Please select at least one faculty member first', 'warning');
+        return;
+      }
+      isBulkDelete = true;
+      deleteTargetId = null;
+      $('deleteEmpName').textContent = `${selectedEmpIds.size} selected faculty members`;
+      openModal('deleteModal');
+    };
+
     $('confirmDeleteBtn').onclick = async () => {
-      if (!deleteTargetId) return;
       $('confirmDeleteBtn').disabled = true;
 
       try {
-        const res = await fetch(`/api/admin/employees/${deleteTargetId}`, {
-          method: 'DELETE',
-        });
+        let res;
+        if (isBulkDelete) {
+          const ids = Array.from(selectedEmpIds);
+          res = await fetch('/api/admin/employees/bulk-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids }),
+          });
+        } else {
+          if (!deleteTargetId) return;
+          res = await fetch(`/api/admin/employees/${deleteTargetId}`, {
+            method: 'DELETE',
+          });
+        }
+
         if (res.ok) {
+          const data = await res.json();
           closeModal('deleteModal');
-          showToast('Employee removed from directory.');
+          showToast(isBulkDelete ? `${data.deletedCount || 'Selected'} records removed from directory.` : 'Employee removed from directory.');
+          if (isBulkDelete) {
+            clearSelection();
+          }
           loadStats();
           loadEmployees();
         } else {
@@ -1164,6 +1341,7 @@
       } finally {
         $('confirmDeleteBtn').disabled = false;
         deleteTargetId = null;
+        isBulkDelete = false;
       }
     };
 
