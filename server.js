@@ -758,6 +758,8 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
     let mainMessage = '';
     let guidelinesHtml = '';
 
+    const templatePdfUrl = 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+
     if (type === 'photo') {
       subject = 'Action Required: Update Passport Photograph - IUHP Faculty Portal';
       title = '📸 Passport Photograph Format Revision Required';
@@ -768,21 +770,22 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
         • <strong>Appearance:</strong> Formal university attire, neutral background, centered face. Avoid casual selfies or group pictures.
       `;
     } else if (type === 'resume') {
-      subject = 'Action Required: Update Academic CV / Resume - IUHP Faculty Portal';
+      subject = 'Action Required: Update Academic CV according to Official Template - IUHP Faculty Portal';
       title = '📄 Academic CV / Resume Format Revision Required';
-      mainMessage = 'Your uploaded Curriculum Vitae / Resume does not match the official university academic template or is missing required sections. Please revise your resume according to the institutional standard.';
+      mainMessage = `Your uploaded Curriculum Vitae / Resume must strictly follow the official university reference template. Please review the provided example template and revise your CV document accordingly.`;
       guidelinesHtml = `
+        • <strong>Official Reference Template:</strong> <a href="${templatePdfUrl}" target="_blank" style="color:#0f4c5c;font-weight:700;text-decoration:underline;">Click Here to View Official Example CV Template (PDF) ↗</a><br>
         • <strong>Format:</strong> PDF document (Maximum 10MB)<br>
-        • <strong>Required Sections:</strong> Contact Details, Educational Qualifications (Ph.D./PG/UG with year & university), Teaching/Research Experience, Publications, Books, Patents, FDPs & Memberships.
+        • <strong>Mandatory Sections:</strong> Contact Details, Educational Qualifications (Ph.D./PG/UG with passing year & university), Teaching & Research Experience, Publications, Books, Patents, FDPs & Memberships as shown in the example template.
       `;
     } else {
       // type === 'both'
-      subject = 'Action Required: Update Photograph & Resume - IUHP Faculty Portal';
+      subject = 'Action Required: Update Photograph & Resume (Official Template) - IUHP Faculty Portal';
       title = '🔄 Profile Photograph & Resume Format Revisions Required';
-      mainMessage = 'Both your profile photograph and curriculum vitae (resume) require revisions to align with the official standards of The ICFAI University, Himachal Pradesh.';
+      mainMessage = `Both your profile photograph and curriculum vitae (resume) require revisions to align with the official standards of The ICFAI University, Himachal Pradesh. Your resume must follow the university's official reference template.`;
       guidelinesHtml = `
-        • <strong>1. Photograph:</strong> Formal 3:4 portrait passport-sized photo (formal attire, neutral background).<br>
-        • <strong>2. Resume:</strong> Standard academic CV in PDF format detailing educational background, teaching experience, and publications.
+        • <strong>1. Photograph:</strong> Formal 3:4 portrait passport-sized photo (formal attire, neutral background, centered face).<br>
+        • <strong>2. Resume:</strong> Must follow the <a href="${templatePdfUrl}" target="_blank" style="color:#0f4c5c;font-weight:700;text-decoration:underline;">Official Example CV Template (PDF) ↗</a> in PDF format detailing academic degrees, experience, and publications.
       `;
     }
 

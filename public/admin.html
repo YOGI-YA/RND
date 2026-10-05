@@ -462,16 +462,16 @@
             <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--surface-border);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;" class="alert-option-card">
               <input type="radio" name="alertType" value="resume" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
               <div>
-                <strong style="font-size:0.9rem;display:block;">📄 2. Resume Format Mismatch</strong>
-                <span style="font-size:0.78rem;color:var(--text-muted);">CV does not match university academic template or is missing key sections (Ph.D., Publications, Experience).</span>
+                <strong style="font-size:0.9rem;display:block;">📄 2. Resume Must Follow Official Template</strong>
+                <span style="font-size:0.78rem;color:var(--text-muted);">CV must follow the official academic reference template with complete degrees, teaching/research experience & publications.</span>
               </div>
             </label>
 
             <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--brand-primary);border-radius:var(--radius-md);background:rgba(15,76,92,0.04);cursor:pointer;" class="alert-option-card">
               <input type="radio" name="alertType" value="both" checked style="margin-top:0.2rem;" onchange="updateAlertPreview()">
               <div>
-                <strong style="font-size:0.9rem;display:block;color:var(--brand-primary);">🔄 3. Combine Both (Photograph & Resume)</strong>
-                <span style="font-size:0.78rem;color:var(--text-muted);">Both the passport photograph and academic resume require updates according to official university guidelines.</span>
+                <strong style="font-size:0.9rem;display:block;color:var(--brand-primary);">🔄 3. Combine Both (Photograph & Resume Template)</strong>
+                <span style="font-size:0.78rem;color:var(--text-muted);">Both the passport photograph (3:4 portrait) and academic resume (must follow official example template) require updates.</span>
               </div>
             </label>
           </div>
@@ -916,9 +916,9 @@
       if (type === 'photo') {
         text = '📸 <strong>Photograph Quality Issue:</strong> "Your uploaded profile photo does not match the official standard. Please upload a formal 3:4 portrait passport photo with neutral background."';
       } else if (type === 'resume') {
-        text = '📄 <strong>Resume Format Mismatch:</strong> "Your uploaded resume does not match the university academic template or is missing required sections (Education, Publications, Experience)."';
+        text = '📄 <strong>Resume Template Mismatch:</strong> "Your uploaded resume must strictly follow the official university reference template (<a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Example PDF ↗</a>) including academic degrees, experience, and publications."';
       } else {
-        text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait needed) and academic resume (must follow official university format) require revisions."';
+        text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait) and academic resume (must follow official example template: <a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template ↗</a>) require revisions."';
       }
 
       if (customNotes) {
