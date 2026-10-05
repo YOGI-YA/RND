@@ -67,6 +67,11 @@ const employeeSchema = new mongoose.Schema({
     contentType: { type: String, default: 'application/pdf' },
     filename: { type: String, default: 'resume.pdf' },
   },
+  lastAlert: {
+    alertType: { type: String, default: '' },
+    sentAt: { type: Date },
+    message: { type: String, default: '' },
+  },
 }, { timestamps: true });
 
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
@@ -736,6 +741,124 @@ app.delete('/api/admin/employees/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true, deletedId: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Send Quality Alert Email to Faculty Member
+app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+    const { alertType, customMessage } = req.body || {};
+    const type = alertType || 'both';
+
+    let subject = 'Action Required: Please update your IUHP Faculty Profile details';
+    let title = 'Faculty Profile Revision Required';
+    let mainMessage = '';
+    let guidelinesHtml = '';
+
+    if (type === 'photo') {
+      subject = 'Action Required: Update Passport Photograph - IUHP Faculty Portal';
+      title = '📸 Passport Photograph Format Revision Required';
+      mainMessage = 'Your uploaded profile photograph does not match the university official standard. Please upload a formal passport-sized portrait photograph (3:4 aspect ratio, plain/neutral background, frontal face view).';
+      guidelinesHtml = `
+        • <strong>Format:</strong> JPG or PNG (Maximum 10MB)<br>
+        • <strong>Ratio:</strong> 3:4 Portrait standard<br>
+        • <strong>Appearance:</strong> Formal university attire, neutral background, centered face. Avoid casual selfies or group pictures.
+      `;
+    } else if (type === 'resume') {
+      subject = 'Action Required: Update Academic CV / Resume - IUHP Faculty Portal';
+      title = '📄 Academic CV / Resume Format Revision Required';
+      mainMessage = 'Your uploaded Curriculum Vitae / Resume does not match the official university academic template or is missing required sections. Please revise your resume according to the institutional standard.';
+      guidelinesHtml = `
+        • <strong>Format:</strong> PDF document (Maximum 10MB)<br>
+        • <strong>Required Sections:</strong> Contact Details, Educational Qualifications (Ph.D./PG/UG with year & university), Teaching/Research Experience, Publications, Books, Patents, FDPs & Memberships.
+      `;
+    } else {
+      // type === 'both'
+      subject = 'Action Required: Update Photograph & Resume - IUHP Faculty Portal';
+      title = '🔄 Profile Photograph & Resume Format Revisions Required';
+      mainMessage = 'Both your profile photograph and curriculum vitae (resume) require revisions to align with the official standards of The ICFAI University, Himachal Pradesh.';
+      guidelinesHtml = `
+        • <strong>1. Photograph:</strong> Formal 3:4 portrait passport-sized photo (formal attire, neutral background).<br>
+        • <strong>2. Resume:</strong> Standard academic CV in PDF format detailing educational background, teaching experience, and publications.
+      `;
+    }
+
+    const host = req.get('host') || 'localhost:3000';
+    const protocol = req.protocol || 'http';
+    const baseUrl = `${protocol}://${host}`;
+    const actionUrl = `${baseUrl}/register?email=${encodeURIComponent(employee.email)}`;
+
+    const mailOptions = {
+      from: `"IUHP Administration" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
+      to: employee.email,
+      subject,
+      html: `
+        <div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width:600px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+          <div style="background:linear-gradient(135deg, #0f4c5c 0%, #1e293b 100%); padding:24px 20px; text-align:center; color:#ffffff;">
+            <h2 style="margin:0; font-size:20px; font-weight:700; letter-spacing:0.5px;">THE ICFAI UNIVERSITY</h2>
+            <div style="font-size:12px; color:#e09f3e; font-weight:700; margin-top:4px; letter-spacing:1px;">HIMACHAL PRADESH • FACULTY PORTAL</div>
+          </div>
+          <div style="padding:32px 24px; color:#334155;">
+            <div style="display:inline-block; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px;">
+              ⚠️ ACTION REQUIRED: PROFILE REVISION
+            </div>
+            <h3 style="margin:0 0 12px; font-size:18px; color:#0f172a; font-weight:700;">Dear ${employee.name},</h3>
+            <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#475569;">
+              During the administrative review of faculty records in the University Directory, the following items in your profile were flagged for revision:
+            </p>
+
+            <div style="background:#f8fafc; border-left:4px solid #e09f3e; border-radius:4px; padding:16px; margin:16px 0;">
+              <div style="font-weight:700; color:#0f4c5c; font-size:15px; margin-bottom:6px;">${title}</div>
+              <div style="font-size:13.5px; line-height:1.5; color:#334155;">${mainMessage}</div>
+              ${customMessage && customMessage.trim() ? `
+                <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; font-size:13px; color:#1e293b;">
+                  <strong>Admin Remarks:</strong> ${customMessage.trim()}
+                </div>
+              ` : ''}
+            </div>
+
+            <div style="background:#f1f5f9; border-radius:8px; padding:16px; margin:20px 0; font-size:13px; color:#475569; line-height:1.6;">
+              <strong style="color:#0f172a; display:block; margin-bottom:6px;">📋 Official Format Guidelines:</strong>
+              ${guidelinesHtml}
+            </div>
+
+            <div style="text-align:center; margin:28px 0 16px;">
+              <a href="${actionUrl}" style="background:#0f4c5c; color:#ffffff; text-decoration:none; padding:12px 28px; border-radius:6px; font-weight:700; font-size:14px; display:inline-block; box-shadow:0 2px 6px rgba(15,76,92,0.3);">
+                ✏️ Click Here to Update Your Profile & Resume
+              </a>
+            </div>
+            <p style="font-size:12px; color:#94a3b8; text-align:center; margin-top:16px;">
+              Direct link: <a href="${actionUrl}" style="color:#0f4c5c; word-break:break-all;">${actionUrl}</a>
+            </p>
+          </div>
+          <div style="background:#f1f5f9; padding:14px 24px; text-align:center; font-size:12px; color:#94a3b8; border-top:1px solid #e2e8f0;">
+            © 2026 The ICFAI University, Himachal Pradesh. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    const mailTransporter = getMailTransporter();
+    await mailTransporter.sendMail(mailOptions);
+
+    // Save alert timestamp in employee record
+    employee.lastAlert = {
+      alertType: type,
+      sentAt: new Date(),
+      message: (customMessage || mainMessage).slice(0, 300),
+    };
+    await employee.save();
+
+    res.json({
+      ok: true,
+      message: `Alert notification email has been sent successfully to ${employee.email}!`,
+    });
+  } catch (err) {
+    console.error('Failed to send faculty alert:', err);
+    res.status(500).json({ error: 'Failed to send alert email: ' + (err.message || 'Check email configuration') });
   }
 });
 

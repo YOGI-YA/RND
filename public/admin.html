@@ -429,6 +429,78 @@
     </div>
   </div>
 
+  <!-- ========================================== -->
+  <!-- 5. QUALITY ALERT / REVISION REQUEST MODAL  -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="alertModal">
+    <div class="modal-box" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 id="alertModalTitle" style="display:flex;align-items:center;gap:0.5rem;">
+          <span>⚠️</span> Send Profile Revision Alert
+        </h3>
+        <button class="modal-close" onclick="closeModal('alertModal')">&times;</button>
+      </div>
+      <form id="alertForm">
+        <div class="modal-body">
+          <input type="hidden" id="alertEmpId">
+          <div style="background:var(--bg-secondary);border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.875rem;">
+            <div><strong>Recipient:</strong> <span id="alertRecipientName"></span></div>
+            <div style="color:var(--text-muted);margin-top:0.2rem;"><strong>Official Email:</strong> <span id="alertRecipientEmail"></span></div>
+          </div>
+
+          <label style="font-weight:700;font-size:0.875rem;margin-bottom:0.5rem;display:block;">Select Revision Preset Issue *</label>
+          
+          <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;">
+            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--surface-border);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;" class="alert-option-card">
+              <input type="radio" name="alertType" value="photo" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+              <div>
+                <strong style="font-size:0.9rem;display:block;">📸 1. Professional Photograph Issue</strong>
+                <span style="font-size:0.78rem;color:var(--text-muted);">Photograph is casual, blurry, or not in standard 3:4 passport ratio with plain background.</span>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--surface-border);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;" class="alert-option-card">
+              <input type="radio" name="alertType" value="resume" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+              <div>
+                <strong style="font-size:0.9rem;display:block;">📄 2. Resume Format Mismatch</strong>
+                <span style="font-size:0.78rem;color:var(--text-muted);">CV does not match university academic template or is missing key sections (Ph.D., Publications, Experience).</span>
+              </div>
+            </label>
+
+            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.75rem;border:1px solid var(--brand-primary);border-radius:var(--radius-md);background:rgba(15,76,92,0.04);cursor:pointer;" class="alert-option-card">
+              <input type="radio" name="alertType" value="both" checked style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+              <div>
+                <strong style="font-size:0.9rem;display:block;color:var(--brand-primary);">🔄 3. Combine Both (Photograph & Resume)</strong>
+                <span style="font-size:0.78rem;color:var(--text-muted);">Both the passport photograph and academic resume require updates according to official university guidelines.</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Custom Remarks -->
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label for="alertCustomNotes">Optional Admin Remarks / Specific Instructions</label>
+            <textarea id="alertCustomNotes" class="form-control" rows="2" placeholder="e.g. Please update your research publications list up to 2026." style="resize:vertical;"></textarea>
+          </div>
+
+          <!-- Email Preview Box -->
+          <div style="background:var(--bg-secondary);border-left:3px solid var(--brand-accent);border-radius:4px;padding:0.75rem;font-size:0.8rem;line-height:1.5;">
+            <strong style="color:var(--text-primary);display:block;margin-bottom:0.25rem;">📧 Email Message Preview:</strong>
+            <div id="alertPreviewText" style="color:var(--text-secondary);"></div>
+          </div>
+
+          <div id="alertFormError" style="color:var(--danger);font-size:0.85rem;font-weight:600;margin-top:0.5rem;min-height:1.2em;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('alertModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="sendAlertSubmitBtn" style="background:#d97706;border-color:#d97706;">
+            📨 Send Alert Email
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -613,6 +685,8 @@
       tbody.innerHTML = list.map(emp => {
         const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
         const resumeUrl = emp.resumeUrl || '';
+        const hasAlert = emp.lastAlert?.sentAt;
+        const alertDateStr = hasAlert ? new Date(emp.lastAlert.sentAt).toLocaleDateString('en-GB') : '';
 
         return `
           <tr class="employee-row">
@@ -626,6 +700,13 @@
             <td data-label="Name">
               <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${esc(emp.name)}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);">${esc(emp.designation || 'Faculty Member')}</div>
+              ${hasAlert ? `
+                <div style="margin-top:0.25rem;">
+                  <span style="display:inline-flex;align-items:center;gap:0.25rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:4px;padding:1px 6px;font-size:0.72rem;font-weight:600;" title="${esc(emp.lastAlert.message || '')}">
+                    ⚠️ Alert Sent: ${esc(alertDateStr)}
+                  </span>
+                </div>
+              ` : ''}
             </td>
             <td data-label="Qualification">
               <span style="font-weight:600;color:var(--brand-primary);font-size:0.85rem;">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span>
@@ -648,7 +729,8 @@
               `}
             </td>
             <td data-label="Actions" style="text-align:right;">
-              <div style="display:inline-flex;gap:0.4rem;">
+              <div style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
+                <button class="btn btn-sm btn-outline" style="color:#b45309;border-color:#fde68a;background:#fffbeb;font-weight:600;" onclick="openAlertModal('${esc(emp._id)}')" title="Send quality alert/revision email to faculty">⚠️ Alert</button>
                 <button class="btn btn-sm btn-outline" onclick="openEditModal('${esc(emp._id)}')">Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${esc(emp._id)}', '${esc(emp.name)}')">Delete</button>
               </div>
@@ -800,6 +882,89 @@
 
       $('formError').textContent = '';
       openModal('employeeModal');
+    };
+
+    // ==========================================
+    // Alert Modal Logic
+    // ==========================================
+    window.openAlertModal = (id) => {
+      const emp = employeesList.find(e => e._id === id);
+      if (!emp) return;
+
+      $('alertEmpId').value = emp._id;
+      $('alertRecipientName').textContent = emp.name;
+      $('alertRecipientEmail').textContent = emp.email;
+      $('alertCustomNotes').value = '';
+      $('alertFormError').textContent = '';
+
+      // Default to both
+      const radios = document.getElementsByName('alertType');
+      for (const r of radios) {
+        r.checked = r.value === 'both';
+      }
+
+      updateAlertPreview();
+      openModal('alertModal');
+    };
+
+    window.updateAlertPreview = () => {
+      const type = document.querySelector('input[name="alertType"]:checked')?.value || 'both';
+      const customNotes = $('alertCustomNotes').value.trim();
+      const previewBox = $('alertPreviewText');
+
+      let text = '';
+      if (type === 'photo') {
+        text = '📸 <strong>Photograph Quality Issue:</strong> "Your uploaded profile photo does not match the official standard. Please upload a formal 3:4 portrait passport photo with neutral background."';
+      } else if (type === 'resume') {
+        text = '📄 <strong>Resume Format Mismatch:</strong> "Your uploaded resume does not match the university academic template or is missing required sections (Education, Publications, Experience)."';
+      } else {
+        text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait needed) and academic resume (must follow official university format) require revisions."';
+      }
+
+      if (customNotes) {
+        text += `<br><br><strong>Additional Remark:</strong> "${esc(customNotes)}"`;
+      }
+
+      previewBox.innerHTML = text;
+    };
+
+    $('alertCustomNotes').addEventListener('input', updateAlertPreview);
+
+    $('alertForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const id = $('alertEmpId').value;
+      if (!id) return;
+
+      const submitBtn = $('sendAlertSubmitBtn');
+      const origText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `⏳ Sending Alert Email...`;
+      $('alertFormError').textContent = '';
+
+      const alertType = document.querySelector('input[name="alertType"]:checked')?.value || 'both';
+      const customMessage = $('alertCustomNotes').value.trim();
+
+      try {
+        const res = await fetch(`/api/admin/employees/${id}/alert`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ alertType, customMessage }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          closeModal('alertModal');
+          showToast('Alert notification email sent successfully!');
+          loadEmployees();
+        } else {
+          $('alertFormError').textContent = data.error || 'Failed to send alert email';
+        }
+      } catch (err) {
+        $('alertFormError').textContent = err.message || 'Network error sending alert';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+      }
     };
 
     // Delete Modal
