@@ -28,13 +28,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const mailTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in',
-    pass: (process.env.EMAIL_PASS || process.env.Email_PASS || '').replace(/\s+/g, ''),
-  },
-});
+const getMailTransporter = () => {
+  const emailUser = process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in';
+  const emailPass = (process.env.EMAIL_PASS || process.env.Email_PASS || '').replace(/\s+/g, '');
+
+  if (!emailPass) {
+    throw new Error('EMAIL_PASS is missing in environment variables. Please add EMAIL_PASS to your .env or cloud deployment settings.');
+  }
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: emailUser,
+      pass: emailPass,
+    },
+  });
+};
 
 const otpSchema = new mongoose.Schema({
   email: { type: String, required: true, lowercase: true, trim: true },
@@ -267,6 +276,7 @@ app.post('/api/public/otp/send', async (req, res) => {
       `,
     };
 
+    const mailTransporter = getMailTransporter();
     await mailTransporter.sendMail(mailOptions);
 
     res.json({
