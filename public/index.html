@@ -383,7 +383,7 @@
         <div class="faculty-grid">
           ${employees.map(emp => {
             const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-            const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+            const resumeUrl = emp.resumeUrl || '';
             const qualification = emp.highestQualification || 'Post-Graduate';
 
             return `
@@ -428,9 +428,15 @@
                   </div>
 
                   <div class="card-actions">
-                    <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-resume" title="Open Faculty Resume PDF">
-                      📄 Resume (PDF)
-                    </a>
+                    ${resumeUrl ? `
+                      <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-resume" title="Open Faculty Resume PDF">
+                        📄 Resume (PDF)
+                      </a>
+                    ` : `
+                      <span class="btn btn-sm btn-outline" style="opacity:0.45;cursor:default;" title="No resume uploaded">
+                        No Resume
+                      </span>
+                    `}
                     <button class="btn btn-sm btn-outline" onclick="openFacultyModal('${esc(emp._id || emp.email)}')">
                       Profile
                     </button>
@@ -464,7 +470,7 @@
               <tbody>
                 ${employees.map(emp => {
                   const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
-                  const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+                  const resumeUrl = emp.resumeUrl || '';
                   return `
                     <tr>
                       <td>
@@ -482,9 +488,13 @@
                       <td><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
                       <td>${esc(dateStr)}</td>
                       <td>
-                        <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">
-                          📄 PDF
-                        </a>
+                        ${resumeUrl ? `
+                          <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">
+                            📄 PDF
+                          </a>
+                        ` : `
+                          <span style="color:var(--text-muted);font-size:0.8rem;">—</span>
+                        `}
                       </td>
                     </tr>
                   `;
@@ -501,12 +511,18 @@
       const emp = state.employees.find(e => (e._id && e._id === idOrEmail) || e.email === idOrEmail);
       if (!emp) return;
 
-      const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+      const resumeUrl = emp.resumeUrl || '';
       const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
       const deptName = DEPT_NAMES[emp.department] || emp.department;
 
       document.getElementById('modalName').textContent = emp.name;
-      document.getElementById('modalResumeBtn').href = resumeUrl;
+      const modalResumeBtn = document.getElementById('modalResumeBtn');
+      if (resumeUrl) {
+        modalResumeBtn.style.display = 'inline-flex';
+        modalResumeBtn.href = resumeUrl;
+      } else {
+        modalResumeBtn.style.display = 'none';
+      }
 
       document.getElementById('modalBody').innerHTML = `
         <div style="display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;">
@@ -558,9 +574,13 @@
               <div>
                 <strong style="color:var(--text-secondary);">Curriculum Vitae / Resume:</strong>
                 <div style="margin-top:0.25rem;">
-                  <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" style="color:var(--brand-primary);font-weight:600;">
-                    🔗 Open Verified PDF Document &rarr;
-                  </a>
+                  ${resumeUrl ? `
+                    <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" style="color:var(--brand-primary);font-weight:600;">
+                      📄 Open Uploaded Resume PDF &rarr;
+                    </a>
+                  ` : `
+                    <span style="color:var(--text-muted);font-size:0.85rem;">No Resume Uploaded</span>
+                  `}
                 </div>
               </div>
             </div>

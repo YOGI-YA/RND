@@ -195,44 +195,44 @@
           <span>📄</span> Curriculum Vitae / Resume (PDF)
         </div>
 
-        <!-- Format Guide based on official example -->
+        <!-- Academic Resume Format Guidelines -->
         <div style="background:var(--bg-secondary);border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:0.85rem 1rem;font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">
-          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.35rem;display:flex;align-items:center;justify-content:space-between;">
-            <span>📋 Standard Faculty Resume Format (1-Page Academic Summary)</span>
-            <a href="https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf" target="_blank" rel="noopener" style="font-weight:600;font-size:0.8rem;">
-              View Example PDF ↗
-            </a>
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.35rem;">
+            📋 Recommended Academic CV Guidelines
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;" class="grid-2">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.35rem;" class="grid-2">
             <div>
               <strong>1. Header:</strong> Name, Designation, Department, Email, Contact.<br>
-              <strong>2. Education:</strong> Highest Degree (Ph.D./PG), University, Year.<br>
-              <strong>3. Experience:</strong> Teaching & Industry Years.
+              <strong>2. Education:</strong> Degrees (Ph.D./PG/UG), University & Year.<br>
+              <strong>3. Experience:</strong> Teaching, Research & Industry.
             </div>
             <div>
-              <strong>4. Research:</strong> Books, Chapters, Patents, Papers.<br>
-              <strong>5. Activities:</strong> FDPs, Workshops, Grants.<br>
-              <strong>6. Memberships:</strong> IEEE, CSI, ISTE, etc.
+              <strong>4. Research:</strong> Publications, Books, Patents & Projects.<br>
+              <strong>5. Activities:</strong> FDPs, Conferences & Workshops.<br>
+              <strong>6. Memberships:</strong> Professional bodies & Awards.
             </div>
           </div>
         </div>
 
+        <!-- Dynamic Existing Resume Status Indicator -->
+        <div id="currentResumeStatus" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;border-radius:var(--radius-md);font-size:0.85rem;"></div>
+
         <div class="form-group">
-          <label>Upload Resume (PDF Format - Max 5MB)</label>
+          <label>Upload Your Resume (PDF Format - Max 10MB)</label>
           <div class="file-dropzone" id="resumeDropzone">
-            <input type="file" id="resumeFile" name="resume" accept="application/pdf">
+            <input type="file" id="resumeFile" name="resume" accept="application/pdf,.pdf">
             <div id="resumeDropPrompt">
               <div style="font-size:2rem;margin-bottom:0.35rem;">📑</div>
               <div style="font-weight:700;font-size:0.95rem;">Click or drag & drop your Resume PDF</div>
               <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">
-                Optional: If you do not have your PDF ready, the official university template resume is linked automatically.
+                Select your official PDF resume to save to your university profile.
               </div>
             </div>
             <div class="dropzone-preview" id="resumePreviewBox" style="display:none;">
               <div style="font-size:2.2rem;margin-right:0.75rem;">📄</div>
               <div style="text-align:left;">
                 <span id="resumeFileName" style="font-size:0.9rem;font-weight:700;display:block;"></span>
-                <span style="font-size:0.75rem;color:var(--success);font-weight:600;">✓ PDF file selected</span><br>
+                <span style="font-size:0.75rem;color:var(--success);font-weight:600;">✓ PDF file selected for upload</span><br>
                 <button type="button" class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="resetResumeInput()">Choose Different PDF</button>
               </div>
             </div>
@@ -254,7 +254,7 @@
       <div style="font-size:3.5rem;margin-bottom:1rem;">🎉</div>
       <h2 style="font-size:2rem;margin-bottom:0.5rem;">Profile Successfully Submitted!</h2>
       <p style="color:var(--text-muted);font-size:1.05rem;max-width:500px;margin:0 auto 1.75rem;">
-        Your faculty details, passport photograph, and resume have been securely saved and are now visible in the directory.
+        Your faculty details, passport photograph, and resume have been securely saved and updated in the directory.
       </p>
 
       <!-- Profile Preview Card -->
@@ -292,6 +292,62 @@
       $('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
     });
 
+    // Lookup existing profile when email is entered
+    let lookupTimer = null;
+    $('emailAddress').addEventListener('input', (e) => {
+      clearTimeout(lookupTimer);
+      const email = e.target.value.trim();
+      if (!email || !email.includes('@')) return;
+      lookupTimer = setTimeout(() => checkExistingProfile(email), 600);
+    });
+
+    async function checkExistingProfile(email) {
+      try {
+        const res = await fetch('/api/public/faculty/lookup?email=' + encodeURIComponent(email));
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.found && data.employee) {
+          const emp = data.employee;
+          // Autofill fields if they are empty
+          if (!$('fullName').value && emp.name) $('fullName').value = emp.name;
+          if (!$('deptSelect').value && emp.department) $('deptSelect').value = emp.department;
+          if (!$('designation').value && emp.designation) $('designation').value = emp.designation;
+          if (!$('highestQualification').value && emp.highestQualification) $('highestQualification').value = emp.highestQualification;
+          if (!$('contactNumber').value && emp.contact) $('contactNumber').value = emp.contact;
+          if (!$('joiningDate').value && emp.joiningDate) $('joiningDate').value = emp.joiningDate;
+
+          const statusBox = $('currentResumeStatus');
+          if (emp.resumeUrl) {
+            statusBox.style.display = 'block';
+            statusBox.style.background = '#d1fae5';
+            statusBox.style.border = '1px solid #a7f3d0';
+            statusBox.style.color = '#065f46';
+            statusBox.innerHTML = `
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                <div>
+                  <strong>✅ Your Uploaded Resume is Active:</strong>
+                  <div style="font-size:0.8rem;color:#047857;margin-top:0.2rem;">You already have a valid resume linked to this email. To replace it, select a new PDF below.</div>
+                </div>
+                <a href="${esc(emp.resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="background:#fff;">
+                  📄 View Current Resume ↗
+                </a>
+              </div>
+            `;
+          } else {
+            statusBox.style.display = 'block';
+            statusBox.style.background = '#fef3c7';
+            statusBox.style.border = '1px solid #fde68a';
+            statusBox.style.color = '#92400e';
+            statusBox.innerHTML = `
+              <strong>ℹ️ Profile Found:</strong> You do not have a resume uploaded yet. Please upload your Resume PDF below.
+            `;
+          }
+        }
+      } catch (e) {
+        console.error('Email lookup error:', e);
+      }
+    }
+
     // Photo input live preview
     $('photoFile').onchange = (e) => {
       const file = e.target.files[0];
@@ -319,7 +375,8 @@
     $('resumeFile').onchange = (e) => {
       const file = e.target.files[0];
       if (file) {
-        $('resumeFileName').textContent = file.name;
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        $('resumeFileName').textContent = `${file.name} (${fileSizeMB} MB)`;
         $('resumePreviewBox').style.display = 'flex';
         $('resumeDropPrompt').style.display = 'none';
       }
@@ -340,7 +397,7 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = `
         <span style="display:inline-block;animation:spin 1s linear infinite;margin-right:0.5rem;">⏳</span>
-         Submitting...
+         Uploading & Saving...
       `;
 
       const formData = new FormData(e.target);
@@ -361,7 +418,7 @@
         $('submissionError').textContent = err.message || 'Network error occurred';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
+        submitBtn.textContent = 'Submit My Faculty Profile';
       }
     };
 
@@ -370,7 +427,7 @@
       $('formView').style.display = 'none';
       $('successView').style.display = 'block';
 
-      const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+      const resumeUrl = emp.resumeUrl || '';
       const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '';
 
       $('resultCardPreview').innerHTML = `
@@ -397,9 +454,15 @@
               <div class="faculty-meta-item">📅 Joined: ${esc(joiningStr)}</div>
             </div>
             <div class="card-actions">
-              <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-resume" style="width:100%;text-align:center;">
-                📄 View Resume (PDF)
-              </a>
+              ${resumeUrl ? `
+                <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-resume" style="width:100%;text-align:center;">
+                  📄 View Uploaded Resume (PDF)
+                </a>
+              ` : `
+                <div style="width:100%;text-align:center;font-size:0.8rem;color:var(--text-muted);padding:0.4rem 0;">
+                  No Resume Uploaded
+                </div>
+              `}
             </div>
           </div>
         </div>
@@ -412,6 +475,7 @@
       $('facultyRegisterForm').reset();
       resetPhotoInput();
       resetResumeInput();
+      $('currentResumeStatus').style.display = 'none';
       $('submissionError').textContent = '';
       $('successView').style.display = 'none';
       $('formView').style.display = 'block';

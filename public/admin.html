@@ -612,7 +612,7 @@
 
       tbody.innerHTML = list.map(emp => {
         const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
-        const resumeUrl = emp.resumeUrl || 'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf';
+        const resumeUrl = emp.resumeUrl || '';
 
         return `
           <tr class="employee-row">
@@ -639,9 +639,13 @@
             <td data-label="Email"><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
             <td data-label="Joined">${esc(dateStr)}</td>
             <td data-label="Resume">
-              <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;">
-                📄 View PDF
-              </a>
+              ${resumeUrl ? `
+                <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;">
+                  📄 View PDF
+                </a>
+              ` : `
+                <span style="color:var(--text-muted);font-size:0.8rem;">—</span>
+              `}
             </td>
             <td data-label="Actions" style="text-align:right;">
               <div style="display:inline-flex;gap:0.4rem;">
@@ -779,7 +783,7 @@
 
       clearResumeSelection();
       if (emp.resumeUrl) {
-        $('resumePreviewName').textContent = 'Current Resume Linked (PDF)';
+        $('resumePreviewName').innerHTML = `Current Resume: <a href="${esc(emp.resumeUrl)}" target="_blank" style="color:var(--brand-primary);text-decoration:underline;font-weight:700;">📄 View Uploaded PDF ↗</a>`;
         $('resumePreviewContainer').style.display = 'flex';
         $('resumeDropContent').style.display = 'none';
       }

@@ -34,7 +34,12 @@ const employeeSchema = new mongoose.Schema({
   designation: { type: String, trim: true, default: 'Faculty Member' },
   highestQualification: { type: String, trim: true, default: 'Post-Graduate' },
   photoUrl: { type: String, default: '' },
-  resumeUrl: { type: String, default: SAMPLE_RESUME },
+  resumeUrl: { type: String, default: '' },
+  resumeData: {
+    data: Buffer,
+    contentType: { type: String, default: 'application/pdf' },
+    filename: { type: String, default: 'resume.pdf' },
+  },
 }, { timestamps: true });
 
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
@@ -134,10 +139,64 @@ app.get('/api/public/employees', async (req, res) => {
       departments: DEPARTMENTS,
       departmentDetails: DEPARTMENT_DETAILS,
       employees,
-      sampleResume: SAMPLE_RESUME,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch directory: ' + err.message });
+  }
+});
+
+// Direct inline streaming route for resumes (100% reliable in all browsers, zero ACL/401 errors)
+app.get('/api/public/employees/:id/resume.pdf', async (req, res) => {
+  try {
+    const emp = await Employee.findById(req.params.id);
+    if (!emp) return res.status(404).send('Faculty record not found.');
+
+    if (emp.resumeData?.data) {
+      res.setHeader('Content-Type', emp.resumeData.contentType || 'application/pdf');
+      const safeFilename = `${(emp.name || 'Faculty').replace(/[^a-zA-Z0-9_-]/g, '_')}_Resume.pdf`;
+      res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
+      return res.send(emp.resumeData.data);
+    }
+
+    if (emp.resumeUrl && emp.resumeUrl.startsWith('http')) {
+      return res.redirect(emp.resumeUrl);
+    }
+
+    return res.status(404).send('No resume uploaded for this faculty member yet.');
+  } catch (err) {
+    res.status(500).send('Error retrieving resume: ' + err.message);
+  }
+});
+
+// Lookup existing faculty by email (for self-service profile autofill & resume status check)
+app.get('/api/public/faculty/lookup', async (req, res) => {
+  try {
+    const email = req.query.email?.trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Email parameter is required' });
+
+    const emp = await Employee.findOne({ email }).lean();
+    if (!emp) return res.json({ found: false });
+
+    // Exclude foreign sample URLs so users are only shown their real resume
+    const cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
+
+    res.json({
+      found: true,
+      employee: {
+        id: emp._id,
+        name: emp.name,
+        department: emp.department,
+        designation: emp.designation,
+        highestQualification: emp.highestQualification,
+        contact: emp.contact,
+        email: emp.email,
+        joiningDate: emp.joiningDate ? emp.joiningDate.toISOString().slice(0, 10) : '',
+        photoUrl: emp.photoUrl || '',
+        resumeUrl: cleanResume,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -166,28 +225,22 @@ app.post(
       let existingEmp = await Employee.findOne({ email: cleanEmail });
 
       let photoUrl = existingEmp?.photoUrl || '';
-      let resumeUrl = existingEmp?.resumeUrl || SAMPLE_RESUME;
+      let resumeUrl = (existingEmp?.resumeUrl && existingEmp.resumeUrl !== SAMPLE_RESUME) ? existingEmp.resumeUrl : '';
 
       const photo = req.files?.photo?.[0];
       const resume = req.files?.resume?.[0];
 
       // Standard 3:4 passport-style photo, face-centered uploaded to Cloudinary
       if (photo) {
-        const uploadResult = await toCloud(photo.buffer, {
-          folder: 'employee-portal/photos',
-          transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
-        });
-        photoUrl = uploadResult.secure_url;
-      }
-
-      // Resume uploaded to Cloudinary as PDF
-      if (resume) {
-        const uploadResult = await toCloud(resume.buffer, {
-          folder: 'employee-portal/resumes',
-          resource_type: 'raw',
-          format: 'pdf',
-        });
-        resumeUrl = uploadResult.secure_url;
+        try {
+          const uploadResult = await toCloud(photo.buffer, {
+            folder: 'employee-portal/photos',
+            transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
+          });
+          photoUrl = uploadResult.secure_url;
+        } catch (photoErr) {
+          console.error('Photo upload warning:', photoErr.message);
+        }
       }
 
       if (existingEmp) {
@@ -199,18 +252,40 @@ app.post(
         if (designation) existingEmp.designation = designation.trim();
         if (highestQualification) existingEmp.highestQualification = highestQualification.trim();
         if (photoUrl) existingEmp.photoUrl = photoUrl;
-        if (resumeUrl) existingEmp.resumeUrl = resumeUrl;
+
+        if (resume) {
+          existingEmp.resumeData = {
+            data: resume.buffer,
+            contentType: resume.mimetype || 'application/pdf',
+            filename: resume.originalname || `${name.trim()}_Resume.pdf`,
+          };
+          existingEmp.resumeUrl = `/api/public/employees/${existingEmp._id}/resume.pdf`;
+        } else if (resumeUrl) {
+          existingEmp.resumeUrl = resumeUrl;
+        }
+
         await existingEmp.save();
 
         return res.json({
           ok: true,
           message: 'Your faculty profile was updated successfully!',
-          employee: existingEmp,
+          employee: {
+            _id: existingEmp._id,
+            name: existingEmp.name,
+            department: existingEmp.department,
+            designation: existingEmp.designation,
+            highestQualification: existingEmp.highestQualification,
+            contact: existingEmp.contact,
+            email: existingEmp.email,
+            joiningDate: existingEmp.joiningDate,
+            photoUrl: existingEmp.photoUrl,
+            resumeUrl: existingEmp.resumeUrl,
+          },
           isUpdate: true,
         });
       } else {
         // Create new faculty member
-        const newEmp = await Employee.create({
+        const newEmp = new Employee({
           name: name.trim(),
           department,
           contact: contact.trim(),
@@ -219,13 +294,35 @@ app.post(
           designation: designation ? designation.trim() : 'Faculty Member',
           highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
           photoUrl,
-          resumeUrl,
+          resumeUrl: '',
         });
+
+        if (resume) {
+          newEmp.resumeData = {
+            data: resume.buffer,
+            contentType: resume.mimetype || 'application/pdf',
+            filename: resume.originalname || `${name.trim()}_Resume.pdf`,
+          };
+          newEmp.resumeUrl = `/api/public/employees/${newEmp._id}/resume.pdf`;
+        }
+
+        await newEmp.save();
 
         return res.status(201).json({
           ok: true,
           message: 'Your faculty profile has been registered successfully!',
-          employee: newEmp,
+          employee: {
+            _id: newEmp._id,
+            name: newEmp.name,
+            department: newEmp.department,
+            designation: newEmp.designation,
+            highestQualification: newEmp.highestQualification,
+            contact: newEmp.contact,
+            email: newEmp.email,
+            joiningDate: newEmp.joiningDate,
+            photoUrl: newEmp.photoUrl,
+            resumeUrl: newEmp.resumeUrl,
+          },
           isUpdate: false,
         });
       }
@@ -261,7 +358,10 @@ app.get('/api/admin/employees', requireAdmin, async (req, res) => {
       const regex = new RegExp(q.trim(), 'i');
       filter.$or = [{ name: regex }, { email: regex }, { contact: regex }, { designation: regex }];
     }
-    const employees = await Employee.find(filter).sort({ department: 1, name: 1 }).lean();
+    const employees = await Employee.find(filter)
+      .select('-resumeData.data')
+      .sort({ department: 1, name: 1 })
+      .lean();
     res.json(employees);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -270,7 +370,7 @@ app.get('/api/admin/employees', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/employees/:id', requireAdmin, async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
+    const employee = await Employee.findById(req.params.id).select('-resumeData.data');
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (err) {
@@ -278,7 +378,7 @@ app.get('/api/admin/employees/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// Add Employee (Photo & Resume to Cloudinary)
+// Add Employee (Photo & Resume)
 app.post(
   '/api/admin/employees',
   requireAdmin,
@@ -294,7 +394,7 @@ app.post(
         return res.status(400).json({ error: `Invalid department. Allowed: ${DEPARTMENTS.join(', ')}` });
       }
 
-      const doc = {
+      const newEmp = new Employee({
         name: name.trim(),
         department,
         contact: contact.trim(),
@@ -303,33 +403,39 @@ app.post(
         designation: designation ? designation.trim() : 'Faculty Member',
         highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
         photoUrl: '',
-        resumeUrl: SAMPLE_RESUME,
-      };
+        resumeUrl: '',
+      });
 
       const photo = req.files?.photo?.[0];
       const resume = req.files?.resume?.[0];
 
-      // Upload passport-style photo to Cloudinary: standard 3:4 portrait (300x400) face-centered
+      // Upload passport-style photo to Cloudinary
       if (photo) {
-        const uploadResult = await toCloud(photo.buffer, {
-          folder: 'employee-portal/photos',
-          transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
-        });
-        doc.photoUrl = uploadResult.secure_url;
+        try {
+          const uploadResult = await toCloud(photo.buffer, {
+            folder: 'employee-portal/photos',
+            transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
+          });
+          newEmp.photoUrl = uploadResult.secure_url;
+        } catch (pErr) {
+          console.error('Admin photo upload error:', pErr.message);
+        }
       }
 
-      // Upload PDF resume to Cloudinary or use sample resume
+      // Save PDF resume directly
       if (resume) {
-        const uploadResult = await toCloud(resume.buffer, {
-          folder: 'employee-portal/resumes',
-          resource_type: 'raw',
-          format: 'pdf',
-        });
-        doc.resumeUrl = uploadResult.secure_url;
+        newEmp.resumeData = {
+          data: resume.buffer,
+          contentType: resume.mimetype || 'application/pdf',
+          filename: resume.originalname || `${name.trim()}_Resume.pdf`,
+        };
+        newEmp.resumeUrl = `/api/public/employees/${newEmp._id}/resume.pdf`;
       }
 
-      const created = await Employee.create(doc);
-      res.status(201).json(created);
+      const created = await newEmp.save();
+      const returnDoc = created.toObject();
+      delete returnDoc.resumeData;
+      res.status(201).json(returnDoc);
     } catch (e) {
       console.error('Error creating employee:', e);
       res.status(400).json({ error: e.message || 'Failed to create employee' });
@@ -360,24 +466,30 @@ app.put(
       const resume = req.files?.resume?.[0];
 
       if (photo) {
-        const uploadResult = await toCloud(photo.buffer, {
-          folder: 'employee-portal/photos',
-          transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
-        });
-        employee.photoUrl = uploadResult.secure_url;
+        try {
+          const uploadResult = await toCloud(photo.buffer, {
+            folder: 'employee-portal/photos',
+            transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
+          });
+          employee.photoUrl = uploadResult.secure_url;
+        } catch (pErr) {
+          console.error('Admin edit photo upload error:', pErr.message);
+        }
       }
 
       if (resume) {
-        const uploadResult = await toCloud(resume.buffer, {
-          folder: 'employee-portal/resumes',
-          resource_type: 'raw',
-          format: 'pdf',
-        });
-        employee.resumeUrl = uploadResult.secure_url;
+        employee.resumeData = {
+          data: resume.buffer,
+          contentType: resume.mimetype || 'application/pdf',
+          filename: resume.originalname || `${employee.name}_Resume.pdf`,
+        };
+        employee.resumeUrl = `/api/public/employees/${employee._id}/resume.pdf`;
       }
 
       await employee.save();
-      res.json(employee);
+      const returnDoc = employee.toObject();
+      delete returnDoc.resumeData;
+      res.json(returnDoc);
     } catch (e) {
       console.error('Error updating employee:', e);
       res.status(400).json({ error: e.message || 'Failed to update employee' });
