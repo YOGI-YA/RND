@@ -1362,48 +1362,128 @@ input, select, textarea {
   display: none;
 }
 
-@media (max-width: 768px) {
-  :root {
-    --header-height: 60px;
-  }
+/* ==========================================================================
+   MOBILE HERO DETAILS DRAWER & QUICK CONTROLS
+   ========================================================================== */
 
-  body {
-    padding-bottom: 70px; /* Space for floating bottom bar */
-  }
+.search-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-  .wrap {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+.mobile-header-toggle {
+  display: none;
+}
 
-  /* Compact modern mobile navbar */
-  .navbar {
-    height: var(--header-height);
-  }
+.hero-details-drawer {
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, margin 0.25s ease;
+}
 
-  .brand-logo {
-    font-size: 1.05rem;
-    gap: 0.5rem;
-  }
+.search-clear-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  line-height: 1;
+  transition: var(--transition);
+}
 
-  .brand-badge {
-    padding: 0.25rem 0.55rem;
-    font-size: 0.85rem;
-  }
+.search-clear-btn:hover {
+  background: var(--surface-border);
+  color: var(--text-primary);
+}
 
-  .nav-links {
-    gap: 0.4rem;
-  }
+.view-mode-group {
+  display: flex;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+}
 
-  .nav-links .btn {
-    padding: 0.4rem 0.65rem;
+.view-mode-group .btn {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.view-mode-group .btn.active {
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Quick Touch Actions Strip */
+.quick-action-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  width: 100%;
+}
+
+.quick-touch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--surface-border);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none !important;
+  transition: var(--transition);
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.quick-touch-btn:hover {
+  background: var(--surface-border);
+  color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+.quick-touch-btn.btn-cv-accent {
+  background: rgba(15, 76, 92, 0.08);
+  color: var(--brand-primary);
+  border-color: rgba(15, 76, 92, 0.25);
+}
+
+.quick-touch-btn.btn-profile-action {
+  background: var(--brand-primary);
+  color: #ffffff;
+  border-color: var(--brand-primary);
+  margin-left: auto;
+}
+
+.quick-touch-btn.btn-profile-action:hover {
+  background: var(--brand-primary-hover);
+  color: #ffffff;
+}
+
 /* ==========================================================================
    MOBILE RESPONSIVENESS & TOUCH OPTIMIZATION (< 768px & < 480px)
    ========================================================================== */
 
 @media (max-width: 768px) {
   :root {
-    --header-height: 60px;
+    --header-height: 56px;
   }
 
   body {
@@ -1411,8 +1491,8 @@ input, select, textarea {
   }
 
   .wrap {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
   }
 
   /* Compact Single-Row Mobile Navbar */
@@ -1424,92 +1504,102 @@ input, select, textarea {
 
   .navbar .nav-inner {
     flex-wrap: nowrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
     padding: 0;
   }
 
   .brand-logo {
-    font-size: 1.05rem;
-    gap: 0.5rem;
+    font-size: 1rem;
+    gap: 0.4rem;
   }
 
-  .brand-logo span:not(.brand-badge) {
-    font-size: 0.95rem;
+  .brand-logo .brand-title {
+    font-size: 0.9rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 140px;
+    max-width: 130px;
   }
 
   .brand-badge {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.78rem;
   }
 
   .navbar .nav-links {
     flex: 0 0 auto;
-    gap: 0.35rem;
-  }
-
-  .navbar .nav-links .btn {
-    padding: 0.4rem 0.65rem;
-    font-size: 0.8rem;
-    min-height: 36px;
     gap: 0.3rem;
   }
 
-  .navbar .nav-links .nav-label {
-    display: inline-block;
+  .navbar .nav-links .btn {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.78rem;
+    min-height: 34px;
+    gap: 0.25rem;
   }
 
   /* Department Scroll Bar */
   .dept-bar {
     top: var(--header-height);
-    padding: 0.45rem 0;
+    padding: 0.4rem 0;
     background: var(--surface);
     border-bottom: 1px solid var(--surface-border);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   }
 
   .dept-pill-list {
-    gap: 0.4rem;
+    gap: 0.35rem;
     padding: 0.1rem 0;
     -webkit-overflow-scrolling: touch;
   }
 
   .dept-pill {
-    padding: 0.35rem 0.75rem;
-    font-size: 0.8rem;
-    min-height: 34px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    min-height: 32px;
   }
 
-  /* Hero Section on Mobile */
+  /* Hero Section on Mobile (Focused on Instant Search) */
   .hero {
-    padding: 1.25rem 0 1rem !important;
+    padding: 0.75rem 0 0.5rem !important;
   }
 
-  .hero h1 {
-    font-size: 1.65rem !important;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.5rem !important;
+  .mobile-header-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 
-  .hero p {
-    font-size: 0.88rem !important;
-    margin-bottom: 1rem !important;
-    line-height: 1.5 !important;
+  .mobile-header-toggle.active {
+    background: var(--brand-light);
+    color: var(--brand-primary);
+    border-color: var(--brand-primary);
   }
 
-  .hero .btn {
-    padding: 0.55rem 1rem;
-    font-size: 0.85rem;
+  /* Collapsible Hero Details Drawer on Mobile */
+  .hero-details-drawer {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .hero-details-drawer.expanded {
+    max-height: 400px;
+    opacity: 1;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--surface-border);
   }
 
   /* Search Controls Mobile */
   .search-controls {
     flex-direction: column;
-    gap: 0.65rem;
-    margin-top: 1rem;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
     width: 100%;
   }
 
@@ -1519,138 +1609,107 @@ input, select, textarea {
   }
 
   .search-input {
-    padding: 0.65rem 1rem 0.65rem 2.5rem;
+    padding: 0.65rem 2.25rem 0.65rem 2.4rem;
     font-size: 0.9rem;
   }
 
-  .search-controls > div:last-child {
+  .search-actions-row {
     width: 100%;
-    display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
   }
 
   /* Department section header */
   .dept-section {
-    padding: 1.5rem 0 0.5rem;
-    scroll-margin-top: 105px;
+    padding: 1.25rem 0 0.5rem;
+    scroll-margin-top: 100px;
   }
 
   .dept-header {
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
   }
 
   .dept-name {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     line-height: 1.25;
   }
 
   .dept-code-tag {
-    font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.82rem;
+    padding: 0.2rem 0.45rem;
   }
 
-  .dept-meta-count {
-    font-size: 0.78rem;
-  }
-
-  /* ELEGANT MOBILE FACULTY CARD (Compact Horizontal Hybrid) */
+  /* ELEGANT MOBILE FACULTY CARD (Modern Horizontal Card) */
   .faculty-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.85rem;
   }
 
   .faculty-card {
-    padding: 1rem;
+    padding: 0.85rem;
     border-radius: var(--radius-lg);
-    display: grid;
-    grid-template-columns: 84px 1fr;
-    grid-gap: 0.85rem;
-    align-items: start;
-    box-shadow: 0 2px 10px rgba(15, 76, 92, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    box-shadow: 0 2px 10px rgba(15, 76, 92, 0.05);
     border: 1px solid var(--surface-border);
+    cursor: pointer;
+  }
+
+  .faculty-card-main {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    grid-gap: 0.8rem;
+    align-items: start;
+    width: 100%;
   }
 
   .faculty-card .photo-wrapper {
     margin: 0;
-    grid-column: 1;
-    grid-row: 1;
   }
 
   .faculty-card .passport-photo,
   .faculty-card .photo-placeholder {
-    width: 84px;
-    height: 112px;
+    width: 76px;
+    height: 101px;
     aspect-ratio: 3 / 4;
     border-radius: var(--radius-md);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   }
 
   .faculty-card .photo-placeholder {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     padding: 0.25rem;
-  }
-
-  .faculty-card .photo-placeholder span:first-child {
-    font-size: 1.2rem;
   }
 
   .faculty-card .faculty-info {
     text-align: left;
-    grid-column: 2;
-    grid-row: 1;
     min-width: 0;
   }
 
   .faculty-card .faculty-name {
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 700;
     line-height: 1.25;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
     color: var(--text-primary);
   }
 
   .faculty-card .faculty-role {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.35rem;
   }
 
   .faculty-card .faculty-dept-badge {
     align-self: flex-start;
-    margin-bottom: 0.35rem;
-    font-size: 0.72rem;
-    padding: 0.15rem 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
   }
 
   .faculty-card .faculty-meta-list {
-    grid-column: 1 / -1;
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
-    padding: 0.65rem 0.85rem;
-    font-size: 0.82rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .faculty-card .card-actions {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  .faculty-card .card-actions .btn {
-    flex: 1;
-    padding: 0.55rem 0.6rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    min-height: 38px;
+    display: none; /* Replaced by quick-action-strip on mobile for maximum clean layout */
   }
 
   /* Mobile Profile Modal (Bottom Sheet Slide-up) */
@@ -1669,7 +1728,7 @@ input, select, textarea {
   }
 
   .modal-header {
-    padding: 1.1rem 1.25rem;
+    padding: 1rem 1.25rem;
   }
 
   .modal-body {
@@ -1683,8 +1742,8 @@ input, select, textarea {
 
   /* Form Container on Mobile */
   .register-container {
-    margin: 1rem auto 3rem !important;
-    padding: 0 0.85rem !important;
+    margin: 0.75rem auto 3rem !important;
+    padding: 0 0.75rem !important;
   }
 
   .form-card {
@@ -1714,9 +1773,9 @@ input, select, textarea {
 }
 
 @media (max-width: 480px) {
-  .brand-logo span:not(.brand-badge) {
-    max-width: 110px;
-    font-size: 0.85rem;
+  .brand-logo .brand-title {
+    max-width: 100px;
+    font-size: 0.82rem;
   }
 
   .navbar .nav-links #facultyJoinBtn .nav-label,
@@ -1726,27 +1785,11 @@ input, select, textarea {
 
   .navbar .nav-links #facultyJoinBtn,
   .navbar .nav-links #adminNavBtn {
-    padding: 0.45rem 0.6rem;
+    padding: 0.4rem 0.55rem;
   }
 
-  .faculty-card {
-    grid-template-columns: 74px 1fr;
-    grid-gap: 0.75rem;
-    padding: 0.85rem;
-  }
-
-  .faculty-card .passport-photo,
-  .faculty-card .photo-placeholder {
-    width: 74px;
-    height: 98px;
-  }
-
-  .faculty-card .faculty-name {
-    font-size: 0.98rem;
-  }
-
-  .faculty-card .faculty-role {
-    font-size: 0.76rem;
+  .quick-touch-btn .action-label {
+    display: inline;
   }
 }
 
