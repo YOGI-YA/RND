@@ -7,6 +7,9 @@ const cookieParser = require('cookie-parser');
 const cloudinary = require('cloudinary').v2;
 const path = require('path');
 const ExcelJS = require('exceljs');
+const crypto = require('crypto');
+
+const nodemailer = require('nodemailer');
 
 const DEPARTMENTS = ['FPS', 'FMS', 'FLA', 'FOL', 'FST'];
 const DEPARTMENT_DETAILS = {
@@ -24,6 +27,21 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const mailTransporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in',
+    pass: (process.env.EMAIL_PASS || process.env.Email_PASS || '').replace(/\s+/g, ''),
+  },
+});
+
+const otpSchema = new mongoose.Schema({
+  email: { type: String, required: true, lowercase: true, trim: true },
+  otp: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now, expires: 600 }, // 10 minutes auto-expiration
+});
+const Otp = mongoose.models.Otp || mongoose.model('Otp', otpSchema);
 
 const employeeSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
@@ -200,6 +218,104 @@ app.get('/api/public/faculty/lookup', async (req, res) => {
   }
 });
 
+// ---------- Public OTP Endpoints (100% Free Email OTP via Nodemailer) ----------
+// 1. Send OTP to Official Faculty Email
+app.post('/api/public/otp/send', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || !email.trim() || !email.includes('@')) {
+      return res.status(400).json({ error: 'Please provide a valid official email address.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Generate secure 6-digit random code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save/Upsert OTP in database with 10-minute expiration
+    await Otp.deleteMany({ email: cleanEmail });
+    await Otp.create({ email: cleanEmail, otp: otpCode });
+
+    // Send professional IUHP branded email
+    const mailOptions = {
+      from: `"IUHP Faculty Portal" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
+      to: cleanEmail,
+      subject: `IUHP Faculty Verification Code: ${otpCode}`,
+      html: `
+        <div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width:560px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+          <div style="background:linear-gradient(135deg, #0f4c5c 0%, #1e293b 100%); padding:24px 20px; text-align:center; color:#ffffff;">
+            <h2 style="margin:0; font-size:20px; font-weight:700; letter-spacing:0.5px;">THE ICFAI UNIVERSITY</h2>
+            <div style="font-size:12px; color:#e09f3e; font-weight:700; margin-top:4px; letter-spacing:1px;">HIMACHAL PRADESH • FACULTY PORTAL</div>
+          </div>
+          <div style="padding:32px 24px; color:#334155;">
+            <h3 style="margin:0 0 10px; font-size:18px; color:#0f172a; font-weight:700;">Faculty Profile Verification</h3>
+            <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#64748b;">
+              Please use the verification code below to authorize your faculty profile registration or details update.
+            </p>
+            <div style="background:#f8fafc; border:2px dashed #0f4c5c; border-radius:10px; padding:20px; text-align:center; margin:24px 0;">
+              <div style="font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Your 6-Digit Verification Code</div>
+              <span style="font-size:34px; font-weight:800; letter-spacing:8px; color:#0f4c5c; font-family:'Courier New', monospace; display:inline-block; margin-left:8px;">${otpCode}</span>
+            </div>
+            <p style="margin:0; font-size:13px; color:#94a3b8; text-align:center; line-height:1.5;">
+              ⏰ This code expires in <strong>10 minutes</strong>.<br>If you did not request this verification, you can safely ignore this email.
+            </p>
+          </div>
+          <div style="background:#f1f5f9; padding:14px 24px; text-align:center; font-size:12px; color:#94a3b8; border-top:1px solid #e2e8f0;">
+            © 2026 The ICFAI University, Himachal Pradesh. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    await mailTransporter.sendMail(mailOptions);
+
+    res.json({
+      ok: true,
+      message: `A 6-digit verification OTP has been sent to ${cleanEmail}. Please check your inbox or spam folder.`,
+    });
+  } catch (err) {
+    console.error('Failed to send OTP email:', err);
+    res.status(500).json({ error: 'Failed to send OTP email: ' + (err.message || 'Please check email configuration') });
+  }
+});
+
+// 2. Verify OTP
+app.post('/api/public/otp/verify', async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and 6-digit OTP code are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.trim();
+
+    const record = await Otp.findOne({ email: cleanEmail, otp: cleanOtp });
+    if (!record) {
+      return res.status(400).json({ error: 'Invalid or expired OTP. Please check the code or request a new one.' });
+    }
+
+    // Generate verification token (valid for 30 minutes)
+    const otpToken = jwt.sign(
+      { email: cleanEmail, verified: true, type: 'email_otp' },
+      process.env.JWT_SECRET || 'iuhp-jwt-secret-key-2026',
+      { expiresIn: '30m' }
+    );
+
+    // Delete used OTP
+    await Otp.deleteMany({ email: cleanEmail });
+
+    res.json({
+      ok: true,
+      otpToken,
+      message: 'Email successfully verified!',
+    });
+  } catch (err) {
+    console.error('OTP verify error:', err);
+    res.status(500).json({ error: err.message || 'Failed to verify OTP' });
+  }
+});
+
 // ---------- Public Faculty Self-Service Submission Endpoint ----------
 // Faculty members themselves can register / add their profile individually
 app.post(
@@ -207,7 +323,7 @@ app.post(
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'resume', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const { name, department, contact, email, joiningDate, designation, highestQualification } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, otpToken, otp } = req.body;
 
       if (!name || !department || !contact || !email || !joiningDate) {
         return res.status(400).json({
@@ -222,6 +338,32 @@ app.post(
       }
 
       const cleanEmail = email.trim().toLowerCase();
+
+      // Verify email ownership via OTP Token or OTP code
+      let isEmailVerified = false;
+      if (otpToken) {
+        try {
+          const decoded = jwt.verify(otpToken, process.env.JWT_SECRET || 'iuhp-jwt-secret-key-2026');
+          if (decoded.email === cleanEmail && decoded.verified) {
+            isEmailVerified = true;
+          }
+        } catch {}
+      }
+
+      if (!isEmailVerified && otp) {
+        const record = await Otp.findOne({ email: cleanEmail, otp: otp.trim() });
+        if (record) {
+          isEmailVerified = true;
+          await Otp.deleteMany({ email: cleanEmail });
+        }
+      }
+
+      if (!isEmailVerified) {
+        return res.status(403).json({
+          error: '🔒 Please verify your official email address with OTP before saving your faculty profile.',
+        });
+      }
+
       let existingEmp = await Employee.findOne({ email: cleanEmail });
 
       let photoUrl = existingEmp?.photoUrl || '';
@@ -244,6 +386,16 @@ app.post(
       }
 
       if (existingEmp) {
+        // Validate that photo exists or is uploaded
+        if (!existingEmp.photoUrl && !photo) {
+          return res.status(400).json({ error: 'Passport photograph is required. Please upload your photo.' });
+        }
+
+        // Validate that resume exists or is uploaded
+        if (!existingEmp.resumeUrl && !resume) {
+          return res.status(400).json({ error: 'Resume (PDF) is required. Please upload your Resume PDF.' });
+        }
+
         // Update existing faculty member
         existingEmp.name = name.trim();
         existingEmp.department = department;
@@ -284,7 +436,19 @@ app.post(
           isUpdate: true,
         });
       } else {
-        // Create new faculty member
+        // Create new faculty member - require photo and resume
+        if (!photo) {
+          return res.status(400).json({
+            error: 'Passport photograph is required. Please upload your standard 3:4 portrait photo.',
+          });
+        }
+
+        if (!resume) {
+          return res.status(400).json({
+            error: 'Curriculum Vitae / Resume (PDF) is required. Please upload your official PDF document.',
+          });
+        }
+
         const newEmp = new Employee({
           name: name.trim(),
           department,
@@ -394,6 +558,17 @@ app.post(
         return res.status(400).json({ error: `Invalid department. Allowed: ${DEPARTMENTS.join(', ')}` });
       }
 
+      const photo = req.files?.photo?.[0];
+      const resume = req.files?.resume?.[0];
+
+      if (!photo) {
+        return res.status(400).json({ error: 'Passport photograph is required. Please select a photo file.' });
+      }
+
+      if (!resume) {
+        return res.status(400).json({ error: 'Curriculum Vitae / Resume (PDF) is required. Please select a PDF file.' });
+      }
+
       const newEmp = new Employee({
         name: name.trim(),
         department,
@@ -405,9 +580,6 @@ app.post(
         photoUrl: '',
         resumeUrl: '',
       });
-
-      const photo = req.files?.photo?.[0];
-      const resume = req.files?.resume?.[0];
 
       // Upload passport-style photo to Cloudinary
       if (photo) {
@@ -489,6 +661,7 @@ app.put(
       await employee.save();
       const returnDoc = employee.toObject();
       delete returnDoc.resumeData;
+      delete returnDoc.pin;
       res.json(returnDoc);
     } catch (e) {
       console.error('Error updating employee:', e);

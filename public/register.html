@@ -146,9 +146,9 @@
           <input type="date" id="joiningDate" name="joiningDate" class="form-control" required>
         </div>
 
-        <!-- Section 2: Contact Details -->
+        <!-- Section 2: Contact & Official Email Verification -->
         <div class="form-section-title">
-          <span>📞</span> Contact Information
+          <span>📞</span> Contact & Official Email Verification
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="grid-2">
@@ -159,9 +159,46 @@
 
           <div class="form-group">
             <label for="emailAddress">Official University Email *</label>
-            <input type="email" id="emailAddress" name="email" class="form-control" required placeholder="your.name@iuhp.edu.in">
+            <div style="display:flex;gap:0.5rem;align-items:stretch;">
+              <input type="email" id="emailAddress" name="email" class="form-control" required placeholder="your.name@iuhp.edu.in">
+              <button type="button" class="btn btn-primary" id="sendOtpBtn" style="white-space:nowrap;padding:0.6rem 1rem;font-size:0.875rem;font-weight:600;min-width:110px;">
+                ✉️ Send OTP
+              </button>
+            </div>
+            <div id="otpStatusMsg" style="font-size:0.8rem;margin-top:0.35rem;display:none;"></div>
           </div>
         </div>
+
+        <!-- OTP Verification Input Box (Appears after clicking Send OTP) -->
+        <div id="otpVerificationBox" style="display:none;background:var(--bg-secondary);border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:1rem 1.25rem;margin-bottom:1.5rem;">
+          <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.35rem;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem;">
+            <span>🔑</span> Enter 6-Digit Email Verification Code *
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">
+            We sent a verification code to <strong id="otpTargetEmail" style="color:var(--brand-primary);"></strong>. Please check your inbox or spam folder.
+          </div>
+          <div style="display:flex;gap:0.75rem;align-items:center;max-width:380px;">
+            <input type="text" id="emailOtpInput" maxlength="6" class="form-control" placeholder="6-digit code" style="letter-spacing:4px;font-size:1.15rem;font-weight:700;text-align:center;">
+            <button type="button" class="btn btn-primary" id="verifyOtpBtn" style="white-space:nowrap;padding:0.6rem 1.2rem;font-weight:600;">
+              Verify Code
+            </button>
+          </div>
+          <div id="otpVerifyError" style="color:var(--danger);font-size:0.8rem;font-weight:600;margin-top:0.4rem;"></div>
+        </div>
+
+        <!-- Verified Success Banner -->
+        <div id="verifiedSuccessBanner" style="display:none;background:#d1fae5;border:1px solid #a7f3d0;border-radius:var(--radius-md);padding:0.75rem 1rem;color:#065f46;margin-bottom:1.5rem;font-size:0.875rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <span>✅</span> <strong>Email Verified:</strong> <span id="verifiedEmailDisplay"></span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" style="background:#fff;padding:0.25rem 0.6rem;font-size:0.75rem;" onclick="changeEmailAddress()">
+              ✏️ Use Different Email
+            </button>
+          </div>
+        </div>
+
+        <input type="hidden" id="otpTokenInput" name="otpToken">
 
         <!-- Section 3: Photograph Upload -->
         <div class="form-section-title">
@@ -169,12 +206,12 @@
         </div>
 
         <div class="form-group">
-          <label>Standard Passport Photo (3:4 Portrait Ratio, JPG/PNG)</label>
+          <label id="photoLabel">Standard Passport Photo (3:4 Portrait Ratio, JPG/PNG) *</label>
           <div class="file-dropzone" id="photoDropzone">
-            <input type="file" id="photoFile" name="photo" accept="image/*" capture="user">
+            <input type="file" id="photoFile" name="photo" accept="image/*" capture="user" required>
             <div id="photoDropPrompt">
               <div style="font-size:2rem;margin-bottom:0.35rem;">📷</div>
-              <div style="font-weight:700;font-size:0.95rem;">Click or drag & drop your passport photograph</div>
+              <div style="font-weight:700;font-size:0.95rem;">Click or drag & drop your passport photograph *</div>
               <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">
                 Standard portrait (3:4 aspect ratio). Cloudinary automatically applies face-centered 300×400px cropping.
               </div>
@@ -190,7 +227,7 @@
           </div>
         </div>
 
-        <!-- Section 4: Resume PDF -->
+        <!-- Section 5: Resume PDF -->
         <div class="form-section-title">
           <span>📄</span> Curriculum Vitae / Resume (PDF)
         </div>
@@ -218,12 +255,12 @@
         <div id="currentResumeStatus" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;border-radius:var(--radius-md);font-size:0.85rem;"></div>
 
         <div class="form-group">
-          <label>Upload Your Resume (PDF Format - Max 10MB)</label>
+          <label id="resumeLabel">Upload Your Resume (PDF Format - Max 10MB) *</label>
           <div class="file-dropzone" id="resumeDropzone">
-            <input type="file" id="resumeFile" name="resume" accept="application/pdf,.pdf">
+            <input type="file" id="resumeFile" name="resume" accept="application/pdf,.pdf" required>
             <div id="resumeDropPrompt">
               <div style="font-size:2rem;margin-bottom:0.35rem;">📑</div>
-              <div style="font-weight:700;font-size:0.95rem;">Click or drag & drop your Resume PDF</div>
+              <div style="font-weight:700;font-size:0.95rem;">Click or drag & drop your Resume PDF *</div>
               <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">
                 Select your official PDF resume to save to your university profile.
               </div>
@@ -292,14 +329,149 @@
       $('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
     });
 
-    // Lookup existing profile when email is entered
-    let lookupTimer = null;
-    $('emailAddress').addEventListener('input', (e) => {
-      clearTimeout(lookupTimer);
-      const email = e.target.value.trim();
-      if (!email || !email.includes('@')) return;
-      lookupTimer = setTimeout(() => checkExistingProfile(email), 600);
+    // Email OTP Verification State
+    let verifiedEmail = '';
+    let otpToken = '';
+    let otpCooldownTimer = null;
+    let otpSecondsLeft = 0;
+
+    // Send OTP handler
+    $('sendOtpBtn').onclick = async () => {
+      const email = $('emailAddress').value.trim();
+      const statusMsg = $('otpStatusMsg');
+      const sendBtn = $('sendOtpBtn');
+
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = 'var(--danger)';
+        statusMsg.textContent = '⚠️ Please enter a valid university email address first.';
+        $('emailAddress').focus();
+        return;
+      }
+
+      sendBtn.disabled = true;
+      const originalText = sendBtn.textContent;
+      sendBtn.textContent = 'Sending OTP...';
+      statusMsg.style.display = 'none';
+      $('otpVerifyError').textContent = '';
+
+      try {
+        const res = await fetch('/api/public/otp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          $('otpTargetEmail').textContent = email;
+          $('otpVerificationBox').style.display = 'block';
+          $('emailOtpInput').value = '';
+          $('emailOtpInput').focus();
+
+          statusMsg.style.display = 'block';
+          statusMsg.style.color = 'var(--success)';
+          statusMsg.textContent = '✅ Verification code sent! Check your inbox.';
+
+          // Start 60-second cooldown timer
+          otpSecondsLeft = 60;
+          sendBtn.textContent = `Resend in ${otpSecondsLeft}s`;
+          clearInterval(otpCooldownTimer);
+          otpCooldownTimer = setInterval(() => {
+            otpSecondsLeft--;
+            if (otpSecondsLeft <= 0) {
+              clearInterval(otpCooldownTimer);
+              sendBtn.disabled = false;
+              sendBtn.textContent = '✉️ Resend OTP';
+            } else {
+              sendBtn.textContent = `Resend in ${otpSecondsLeft}s`;
+            }
+          }, 1000);
+        } else {
+          statusMsg.style.display = 'block';
+          statusMsg.style.color = 'var(--danger)';
+          statusMsg.textContent = '❌ ' + (data.error || 'Failed to send OTP email');
+          sendBtn.disabled = false;
+          sendBtn.textContent = originalText;
+        }
+      } catch (err) {
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = 'var(--danger)';
+        statusMsg.textContent = '❌ Network error sending OTP. Please try again.';
+        sendBtn.disabled = false;
+        sendBtn.textContent = originalText;
+      }
+    };
+
+    // Verify OTP handler
+    $('verifyOtpBtn').onclick = async () => {
+      const email = $('emailAddress').value.trim();
+      const otp = $('emailOtpInput').value.trim();
+      const errBox = $('otpVerifyError');
+      const verifyBtn = $('verifyOtpBtn');
+
+      if (!otp || otp.length < 6) {
+        errBox.textContent = '⚠️ Please enter the full 6-digit code received in your email.';
+        $('emailOtpInput').focus();
+        return;
+      }
+
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = 'Verifying...';
+      errBox.textContent = '';
+
+      try {
+        const res = await fetch('/api/public/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.otpToken) {
+          verifiedEmail = email.toLowerCase();
+          otpToken = data.otpToken;
+          $('otpTokenInput').value = otpToken;
+
+          // Update UI to verified state
+          $('otpVerificationBox').style.display = 'none';
+          $('verifiedEmailDisplay').textContent = email;
+          $('verifiedSuccessBanner').style.display = 'block';
+          $('emailAddress').readOnly = true;
+          $('sendOtpBtn').style.display = 'none';
+          $('otpStatusMsg').style.display = 'none';
+
+          // Check if profile already exists for this verified email
+          await checkExistingProfile(email);
+        } else {
+          errBox.textContent = '❌ ' + (data.error || 'Invalid or expired OTP code.');
+        }
+      } catch (err) {
+        errBox.textContent = '❌ Network error verifying OTP. Please try again.';
+      } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = 'Verify Code';
+      }
+    };
+
+    // Auto-verify when 6 digits are typed
+    $('emailOtpInput').addEventListener('input', (e) => {
+      if (e.target.value.trim().length === 6) {
+        $('verifyOtpBtn').click();
+      }
     });
+
+    window.changeEmailAddress = () => {
+      verifiedEmail = '';
+      otpToken = '';
+      $('otpTokenInput').value = '';
+      $('emailAddress').readOnly = false;
+      $('sendOtpBtn').style.display = 'inline-block';
+      $('verifiedSuccessBanner').style.display = 'none';
+      $('otpVerificationBox').style.display = 'none';
+      $('otpStatusMsg').style.display = 'none';
+      $('emailAddress').focus();
+    };
 
     async function checkExistingProfile(email) {
       try {
@@ -316,14 +488,27 @@
           if (!$('contactNumber').value && emp.contact) $('contactNumber').value = emp.contact;
           if (!$('joiningDate').value && emp.joiningDate) $('joiningDate').value = emp.joiningDate;
 
+          $('submitBtn').textContent = 'Update My Faculty Profile';
+
+          // Photo requirement update on existing profile
+          if (emp.photoUrl) {
+            $('photoFile').required = false;
+            $('photoLabel').innerHTML = 'Standard Passport Photo (3:4 Ratio) <span style="font-size:0.75rem;color:var(--success);font-weight:600;">(Photo already saved - choose file only if replacing)</span>';
+          } else {
+            $('photoFile').required = true;
+            $('photoLabel').innerHTML = 'Standard Passport Photo (3:4 Portrait Ratio, JPG/PNG) *';
+          }
+
           const statusBox = $('currentResumeStatus');
           if (emp.resumeUrl) {
+            $('resumeFile').required = false;
+            $('resumeLabel').innerHTML = 'Curriculum Vitae / Resume (PDF) <span style="font-size:0.75rem;color:var(--success);font-weight:600;">(Resume already saved - choose file only if replacing)</span>';
             statusBox.style.display = 'block';
             statusBox.style.background = '#d1fae5';
             statusBox.style.border = '1px solid #a7f3d0';
             statusBox.style.color = '#065f46';
             statusBox.innerHTML = `
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:gap:0.5rem;">
                 <div>
                   <strong>✅ Your Uploaded Resume is Active:</strong>
                   <div style="font-size:0.8rem;color:#047857;margin-top:0.2rem;">You already have a valid resume linked to this email. To replace it, select a new PDF below.</div>
@@ -334,6 +519,8 @@
               </div>
             `;
           } else {
+            $('resumeFile').required = true;
+            $('resumeLabel').innerHTML = 'Upload Your Resume (PDF Format - Max 10MB) *';
             statusBox.style.display = 'block';
             statusBox.style.background = '#fef3c7';
             statusBox.style.border = '1px solid #fde68a';
@@ -342,6 +529,13 @@
               <strong>ℹ️ Profile Found:</strong> You do not have a resume uploaded yet. Please upload your Resume PDF below.
             `;
           }
+        } else {
+          $('submitBtn').textContent = 'Submit My Faculty Profile';
+          $('currentResumeStatus').style.display = 'none';
+          $('photoFile').required = true;
+          $('resumeFile').required = true;
+          $('photoLabel').innerHTML = 'Standard Passport Photo (3:4 Portrait Ratio, JPG/PNG) *';
+          $('resumeLabel').innerHTML = 'Upload Your Resume (PDF Format - Max 10MB) *';
         }
       } catch (e) {
         console.error('Email lookup error:', e);
@@ -393,11 +587,20 @@
     $('facultyRegisterForm').onsubmit = async (e) => {
       e.preventDefault();
       $('submissionError').textContent = '';
+
+      const currentEmail = $('emailAddress').value.trim().toLowerCase();
+      if (!otpToken || verifiedEmail !== currentEmail) {
+        $('submissionError').textContent = '⚠️ Please click "Send OTP" and verify your official university email before submitting.';
+        $('emailAddress').focus();
+        return;
+      }
+
       const submitBtn = $('submitBtn');
+      const origText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.innerHTML = `
         <span style="display:inline-block;animation:spin 1s linear infinite;margin-right:0.5rem;">⏳</span>
-         Uploading & Saving...
+         Saving & Standardizing...
       `;
 
       const formData = new FormData(e.target);
@@ -418,7 +621,7 @@
         $('submissionError').textContent = err.message || 'Network error occurred';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit My Faculty Profile';
+        submitBtn.textContent = origText;
       }
     };
 
@@ -475,11 +678,20 @@
       $('facultyRegisterForm').reset();
       resetPhotoInput();
       resetResumeInput();
+      changeEmailAddress();
       $('currentResumeStatus').style.display = 'none';
       $('submissionError').textContent = '';
+      $('submitBtn').textContent = 'Submit My Faculty Profile';
       $('successView').style.display = 'none';
       $('formView').style.display = 'block';
     };
+
+    // Check for email in URL query param (e.g. /register?email=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialEmail = urlParams.get('email');
+    if (initialEmail) {
+      $('emailAddress').value = initialEmail;
+    }
 
     initTheme();
   </script>

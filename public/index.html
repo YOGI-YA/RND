@@ -117,11 +117,16 @@
       <div class="modal-body" id="modalBody">
         <!-- Injected via JavaScript -->
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModal('facultyModal')">Close</button>
-        <a href="#" target="_blank" rel="noopener" class="btn btn-primary" id="modalResumeBtn">
-          📄 View Full Resume (PDF)
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <a href="/register" class="btn btn-sm btn-outline" id="modalEditBtn" title="Update your details, photo, or resume">
+          ✏️ Edit / Update My Details
         </a>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button class="btn btn-outline" onclick="closeModal('facultyModal')">Close</button>
+          <a href="#" target="_blank" rel="noopener" class="btn btn-primary" id="modalResumeBtn">
+            📄 View Full Resume (PDF)
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -517,6 +522,10 @@
 
       document.getElementById('modalName').textContent = emp.name;
       const modalResumeBtn = document.getElementById('modalResumeBtn');
+      const modalEditBtn = document.getElementById('modalEditBtn');
+      if (modalEditBtn && emp.email) {
+        modalEditBtn.href = '/register?email=' + encodeURIComponent(emp.email);
+      }
       if (resumeUrl) {
         modalResumeBtn.style.display = 'inline-flex';
         modalResumeBtn.href = resumeUrl;

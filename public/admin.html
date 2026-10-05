@@ -354,14 +354,14 @@
 
           <!-- Photograph Upload with Live Preview (Passport 3:4 Standard) -->
           <div class="form-group" style="margin-top:0.5rem;">
-            <label>Passport Photograph (Standard 3:4 Portrait, JPG/PNG)</label>
+            <label id="adminPhotoLabel">Passport Photograph (Standard 3:4 Portrait, JPG/PNG) *</label>
             <div class="file-dropzone" id="photoDropzone">
-              <input type="file" id="photoInput" name="photo" accept="image/*">
+              <input type="file" id="photoInput" name="photo" accept="image/*" required>
               <div id="photoDropContent">
                 <div style="font-size:1.5rem;margin-bottom:0.25rem;">📷</div>
-                <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop photograph</div>
+                <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop photograph *</div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem;">
-                  Automatically standardized to 3:4 passport ratio with Cloudinary face centering
+                  Standard portrait (3:4 ratio) with Cloudinary face centering
                 </div>
               </div>
               <div class="dropzone-preview" id="photoPreviewContainer" style="display:none;">
@@ -376,14 +376,14 @@
 
           <!-- Resume PDF Upload -->
           <div class="form-group" style="margin-top:0.5rem;">
-            <label>Resume / Curriculum Vitae (PDF)</label>
+            <label id="adminResumeLabel">Resume / Curriculum Vitae (PDF) *</label>
             <div class="file-dropzone" id="resumeDropzone">
-              <input type="file" id="resumeInput" name="resume" accept="application/pdf">
+              <input type="file" id="resumeInput" name="resume" accept="application/pdf" required>
               <div id="resumeDropContent">
                 <div style="font-size:1.5rem;margin-bottom:0.25rem;">📄</div>
-                <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop Resume PDF</div>
+                <div style="font-weight:600;font-size:0.9rem;">Click or drag & drop Resume PDF *</div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem;">
-                  Leave blank to automatically link the official university sample resume
+                  Select the faculty member's official PDF resume file
                 </div>
               </div>
               <div class="dropzone-preview" id="resumePreviewContainer" style="display:none;">
@@ -675,6 +675,10 @@
       $('modalTitle').textContent = 'Add New Faculty Member';
       $('editEmpId').value = '';
       $('employeeForm').reset();
+      $('photoInput').required = true;
+      $('resumeInput').required = true;
+      $('adminPhotoLabel').innerHTML = 'Passport Photograph (Standard 3:4 Portrait, JPG/PNG) *';
+      $('adminResumeLabel').innerHTML = 'Resume / Curriculum Vitae (PDF) *';
       clearPhotoSelection();
       clearResumeSelection();
       $('formError').textContent = '';
@@ -727,7 +731,7 @@
       $('formError').textContent = '';
       const saveBtn = $('saveEmployeeBtn');
       saveBtn.disabled = true;
-      saveBtn.textContent = 'Uploading to Cloudinary & Saving...';
+      saveBtn.textContent = 'Uploading & Saving...';
 
       const empId = $('editEmpId').value;
       const formData = new FormData(e.target);
@@ -772,6 +776,12 @@
       $('empContact').value = emp.contact || '';
       $('empEmail').value = emp.email || '';
       $('empDate').value = emp.joiningDate ? new Date(emp.joiningDate).toISOString().slice(0, 10) : '';
+
+      // On edit mode, files are optional unless the user wants to replace them
+      $('photoInput').required = false;
+      $('resumeInput').required = false;
+      $('adminPhotoLabel').innerHTML = 'Passport Photograph <span style="font-size:0.75rem;color:var(--text-muted);">(Select only to replace current)</span>';
+      $('adminResumeLabel').innerHTML = 'Resume / Curriculum Vitae (PDF) <span style="font-size:0.75rem;color:var(--text-muted);">(Select only to replace current)</span>';
 
       clearPhotoSelection();
       if (emp.photoUrl) {
