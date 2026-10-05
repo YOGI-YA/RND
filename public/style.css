@@ -739,6 +739,109 @@ h1, h2, h3, h4, h5, h6 {
    ADMIN PANEL REFINED UI SYSTEM
    ========================================================================== */
 
+.admin-main-wrap,
+.admin-header .admin-bar-wrap,
+.admin-footer-wrap {
+  width: 96%;
+  max-width: 1680px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Floating Sticky Bulk Actions Bar */
+.bulk-action-bar {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  background: rgba(15, 23, 42, 0.94);
+  color: #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.4);
+  padding: 0.65rem 1.15rem;
+  animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: 94vw;
+}
+
+[data-theme="light"] .bulk-action-bar {
+  background: rgba(15, 76, 92, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bulk-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.bulk-pill {
+  background: var(--brand-accent);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+}
+
+.bulk-desc {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bulk-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bulk-actions-group .btn {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+}
+
+.admin-table th.sticky-action-col,
+.admin-table td.sticky-action-col {
+  position: sticky;
+  right: 0;
+  background: var(--surface);
+  box-shadow: -5px 0 12px -3px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+.admin-table th.sticky-action-col {
+  background: var(--bg-secondary);
+  z-index: 15;
+}
+
+[data-theme="dark"] .admin-table th.sticky-action-col,
+[data-theme="dark"] .admin-table td.sticky-action-col {
+  background: var(--surface);
+  box-shadow: -5px 0 12px -3px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .admin-table th.sticky-action-col {
+  background: #1e293b;
+}
+
 .admin-header {
   position: sticky;
   top: 0;

@@ -121,7 +121,7 @@
     
     <!-- Admin Topbar -->
     <header class="admin-header">
-      <div class="wrap admin-bar-wrap">
+      <div class="admin-bar-wrap">
         <div style="display:flex;align-items:center;gap:0.85rem;">
           <span class="brand-badge">IUHP</span>
           <div>
@@ -151,8 +151,8 @@
       </div>
     </header>
 
-    <!-- Main Admin Workspace -->
-    <main class="wrap" style="padding-top:1.75rem;padding-bottom:4rem;flex:1;">
+    <!-- Main Admin Workspace (Fluid 96% / 1680px Wide Layout) -->
+    <main class="admin-main-wrap" style="padding-top:1.5rem;padding-bottom:4rem;flex:1;">
       
       <!-- Stats KPI Cards -->
       <div class="stats-grid" id="statsGrid">
@@ -266,25 +266,23 @@
         </div>
       </div>
 
-      <!-- Employees Management Table -->
+      <!-- Employees Management Table (Optimized Columns with Sticky Actions) -->
       <div class="table-card">
         <div class="table-responsive">
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="width:70px;">Photo</th>
-                <th>Name & Designation</th>
-                <th>Highest Qualification</th>
+                <th style="width:60px;">Photo</th>
+                <th>Faculty Name & Role</th>
+                <th>Qualification</th>
                 <th>Department</th>
-                <th>Contact</th>
-                <th>Email</th>
-                <th>Joined Date</th>
-                <th>Resume</th>
-                <th style="text-align:right;width:240px;">Actions & Alerts</th>
+                <th>Contact & Email</th>
+                <th>Joined & Resume</th>
+                <th class="sticky-action-col" style="text-align:right;width:220px;">Actions & Messaging</th>
               </tr>
             </thead>
             <tbody id="employeeTableBody">
-              <tr><td colspan="9" style="text-align:center;padding:2rem;">Loading faculty records...</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:2rem;">Loading faculty records...</td></tr>
             </tbody>
           </table>
         </div>
@@ -775,7 +773,7 @@
                 <div class="table-photo-empty">3:4 Photo</div>
               `}
             </td>
-            <td data-label="Name">
+            <td data-label="Faculty Name & Role">
               <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${esc(emp.name)}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);">${esc(emp.designation || 'Faculty Member')}</div>
               ${hasAlert ? `
@@ -800,19 +798,25 @@
                 ${esc(emp.department)}
               </span>
             </td>
-            <td data-label="Contact"><a href="tel:${esc(emp.contact)}" style="font-weight:500;">${esc(emp.contact)}</a></td>
-            <td data-label="Email"><a href="mailto:${esc(emp.email)}" style="font-weight:500;">${esc(emp.email)}</a></td>
-            <td data-label="Joined">${esc(dateStr)}</td>
-            <td data-label="Resume">
-              ${resumeUrl ? `
-                <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.25rem 0.6rem;font-size:0.75rem;font-weight:600;gap:0.3rem;">
-                  📄 ${isCloudResume ? 'Cloud PDF' : 'View PDF'}
-                </a>
-              ` : `
-                <span style="color:var(--text-muted);font-size:0.8rem;">—</span>
-              `}
+            <td data-label="Contact & Email">
+              <div style="display:flex;flex-direction:column;gap:0.2rem;">
+                <a href="tel:${esc(emp.contact)}" style="font-weight:600;font-size:0.85rem;color:var(--text-primary);">📞 ${esc(emp.contact)}</a>
+                <a href="mailto:${esc(emp.email)}" style="font-size:0.8rem;color:var(--text-muted);">✉️ ${esc(emp.email)}</a>
+              </div>
             </td>
-            <td data-label="Actions" style="text-align:right;">
+            <td data-label="Joined & Resume">
+              <div style="display:flex;flex-direction:column;gap:0.35rem;align-items:flex-start;">
+                <span style="font-size:0.8rem;color:var(--text-muted);">Joined: ${esc(dateStr)}</span>
+                ${resumeUrl ? `
+                  <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="padding:0.2rem 0.55rem;font-size:0.75rem;font-weight:600;gap:0.3rem;">
+                    📄 ${isCloudResume ? 'Cloud PDF' : 'View PDF'}
+                  </a>
+                ` : `
+                  <span style="color:var(--text-muted);font-size:0.75rem;">—</span>
+                `}
+              </div>
+            </td>
+            <td data-label="Actions" class="sticky-action-col" style="text-align:right;">
               <div style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
                 <button class="btn btn-sm btn-outline" style="color:#059669;border-color:#a7f3d0;background:#ecfdf5;font-weight:700;" onclick="openCommunicationModal('${esc(emp._id)}', 'thankyou')" title="Send Message, Notice, or Revision Alert">
                   ✉️ Message
