@@ -110,16 +110,42 @@ const toCloud = (buffer, opts) => new Promise((resolve, reject) => {
   cloudinary.uploader.upload_stream(opts, (err, res) => (err ? reject(err) : resolve(res))).end(buffer);
 });
 
+// Helper to upload PDF resume to Cloudinary
+const uploadResumeToCloudinary = async (buffer, facultyName) => {
+  const cleanName = (facultyName || 'faculty').trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const uniqueId = Date.now() + '_' + Math.round(Math.random() * 1e4);
+  const publicId = `${cleanName}_resume_${uniqueId}.pdf`;
+
+  const result = await toCloud(buffer, {
+    folder: 'employee-portal/resumes',
+    resource_type: 'raw',
+    public_id: publicId,
+  });
+  return result.secure_url;
+};
+
 // Helper to extract Cloudinary public_id and delete from Cloudinary
 const deleteFromCloudinary = async (url) => {
   if (!url || typeof url !== 'string' || !url.includes('cloudinary.com') || url === SAMPLE_RESUME) {
     return;
   }
   try {
-    const match = url.match(/\/(?:image|raw|video)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
-    if (match && match[1]) {
-      const publicId = match[1];
-      const isRaw = url.includes('/raw/upload/');
+    const isRaw = url.includes('/raw/upload/');
+    let publicId = '';
+    if (isRaw) {
+      // In Cloudinary raw storage, the filename extension (.pdf) is part of the public_id
+      const match = url.match(/\/raw\/upload\/(?:v\d+\/)?(.+?)$/);
+      if (match && match[1]) {
+        publicId = decodeURIComponent(match[1]);
+      }
+    } else {
+      const match = url.match(/\/(?:image|video)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+      if (match && match[1]) {
+        publicId = decodeURIComponent(match[1]);
+      }
+    }
+
+    if (publicId) {
       await cloudinary.uploader.destroy(publicId, {
         resource_type: isRaw ? 'raw' : 'image',
         invalidate: true,
@@ -184,35 +210,58 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
 app.get('/api/public/employees', async (req, res) => {
   try {
     const employees = await Employee.find({})
-      .select('name department designation highestQualification contact email joiningDate photoUrl resumeUrl')
+      .select('name department designation highestQualification contact email joiningDate photoUrl resumeUrl resumeData.data')
       .sort({ department: 1, name: 1 })
       .lean();
+
+    const formattedEmployees = employees.map((emp) => {
+      let resumeUrl = emp.resumeUrl || '';
+      // Backward compatibility: If resume is stored in MongoDB buffer, point to resume.pdf route
+      if (!resumeUrl && emp.resumeData?.data) {
+        resumeUrl = `/api/public/employees/${emp._id}/resume.pdf`;
+      }
+      return {
+        _id: emp._id,
+        name: emp.name,
+        department: emp.department,
+        designation: emp.designation,
+        highestQualification: emp.highestQualification,
+        contact: emp.contact,
+        email: emp.email,
+        joiningDate: emp.joiningDate,
+        photoUrl: emp.photoUrl || '',
+        resumeUrl,
+      };
+    });
 
     res.json({
       departments: DEPARTMENTS,
       departmentDetails: DEPARTMENT_DETAILS,
-      employees,
+      employees: formattedEmployees,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch directory: ' + err.message });
   }
 });
 
-// Direct inline streaming route for resumes (100% reliable in all browsers, zero ACL/401 errors)
+// Direct inline streaming route for resumes
+// Handles Cloudinary URLs (redirect) and legacy MongoDB buffers (streaming)
 app.get('/api/public/employees/:id/resume.pdf', async (req, res) => {
   try {
     const emp = await Employee.findById(req.params.id);
     if (!emp) return res.status(404).send('Faculty record not found.');
 
+    // 1. If stored on Cloudinary or external URL, redirect directly
+    if (emp.resumeUrl && emp.resumeUrl.startsWith('http')) {
+      return res.redirect(emp.resumeUrl);
+    }
+
+    // 2. Legacy fallback: If already uploaded & stored in MongoDB buffer, stream inline
     if (emp.resumeData?.data) {
       res.setHeader('Content-Type', emp.resumeData.contentType || 'application/pdf');
       const safeFilename = `${(emp.name || 'Faculty').replace(/[^a-zA-Z0-9_-]/g, '_')}_Resume.pdf`;
       res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
       return res.send(emp.resumeData.data);
-    }
-
-    if (emp.resumeUrl && emp.resumeUrl.startsWith('http')) {
-      return res.redirect(emp.resumeUrl);
     }
 
     return res.status(404).send('No resume uploaded for this faculty member yet.');
@@ -231,7 +280,11 @@ app.get('/api/public/faculty/lookup', async (req, res) => {
     if (!emp) return res.json({ found: false });
 
     // Exclude foreign sample URLs so users are only shown their real resume
-    const cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
+    let cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
+    // Backward compatibility for existing MongoDB buffer records
+    if (!cleanResume && emp.resumeData?.data) {
+      cleanResume = `/api/public/employees/${emp._id}/resume.pdf`;
+    }
 
     res.json({
       found: true,
@@ -418,17 +471,32 @@ app.post(
           photoUrl = uploadResult.secure_url;
         } catch (photoErr) {
           console.error('Photo upload warning:', photoErr.message);
+          return res.status(500).json({ error: 'Failed to upload photograph: ' + photoErr.message });
+        }
+      }
+
+      // Upload new resume PDF directly to Cloudinary (raw asset)
+      let newResumeCloudUrl = '';
+      if (resume) {
+        try {
+          newResumeCloudUrl = await uploadResumeToCloudinary(resume.buffer, name);
+        } catch (resumeErr) {
+          console.error('Resume upload error:', resumeErr.message);
+          return res.status(500).json({ error: 'Failed to upload resume to Cloudinary: ' + resumeErr.message });
         }
       }
 
       if (existingEmp) {
+        const hasExistingPhoto = Boolean(existingEmp.photoUrl);
+        const hasExistingResume = Boolean(existingEmp.resumeUrl || existingEmp.resumeData?.data);
+
         // Validate that photo exists or is uploaded
-        if (!existingEmp.photoUrl && !photo) {
+        if (!hasExistingPhoto && !photo) {
           return res.status(400).json({ error: 'Passport photograph is required. Please upload your photo.' });
         }
 
         // Validate that resume exists or is uploaded
-        if (!existingEmp.resumeUrl && !resume) {
+        if (!hasExistingResume && !resume) {
           return res.status(400).json({ error: 'Resume (PDF) is required. Please upload your Resume PDF.' });
         }
 
@@ -451,13 +519,10 @@ app.post(
         if (highestQualification) existingEmp.highestQualification = highestQualification.trim();
         if (photoUrl) existingEmp.photoUrl = photoUrl;
 
-        if (resume) {
-          existingEmp.resumeData = {
-            data: resume.buffer,
-            contentType: resume.mimetype || 'application/pdf',
-            filename: resume.originalname || `${name.trim()}_Resume.pdf`,
-          };
-          existingEmp.resumeUrl = `/api/public/employees/${existingEmp._id}/resume.pdf`;
+        // If a new resume is uploaded, use Cloudinary URL and clear old binary buffer
+        if (newResumeCloudUrl) {
+          existingEmp.resumeUrl = newResumeCloudUrl;
+          existingEmp.resumeData = undefined; // No longer store binary buffer in MongoDB
         } else if (resumeUrl) {
           existingEmp.resumeUrl = resumeUrl;
         }
@@ -477,7 +542,7 @@ app.post(
             email: existingEmp.email,
             joiningDate: existingEmp.joiningDate,
             photoUrl: existingEmp.photoUrl,
-            resumeUrl: existingEmp.resumeUrl,
+            resumeUrl: existingEmp.resumeUrl || (existingEmp.resumeData?.data ? `/api/public/employees/${existingEmp._id}/resume.pdf` : ''),
           },
           isUpdate: true,
         });
@@ -504,17 +569,8 @@ app.post(
           designation: designation ? designation.trim() : 'Faculty Member',
           highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
           photoUrl,
-          resumeUrl: '',
+          resumeUrl: newResumeCloudUrl,
         });
-
-        if (resume) {
-          newEmp.resumeData = {
-            data: resume.buffer,
-            contentType: resume.mimetype || 'application/pdf',
-            filename: resume.originalname || `${name.trim()}_Resume.pdf`,
-          };
-          newEmp.resumeUrl = `/api/public/employees/${newEmp._id}/resume.pdf`;
-        }
 
         await newEmp.save();
 
@@ -572,7 +628,19 @@ app.get('/api/admin/employees', requireAdmin, async (req, res) => {
       .select('-resumeData.data')
       .sort({ department: 1, name: 1 })
       .lean();
-    res.json(employees);
+
+    const formatted = employees.map((emp) => {
+      let resumeUrl = emp.resumeUrl || '';
+      if (!resumeUrl && emp.resumeData) {
+        resumeUrl = `/api/public/employees/${emp._id}/resume.pdf`;
+      }
+      return {
+        ...emp,
+        resumeUrl,
+      };
+    });
+
+    res.json(formatted);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -580,15 +648,18 @@ app.get('/api/admin/employees', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/employees/:id', requireAdmin, async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id).select('-resumeData.data');
+    const employee = await Employee.findById(req.params.id).select('-resumeData.data').lean();
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    if (!employee.resumeUrl && employee.resumeData) {
+      employee.resumeUrl = `/api/public/employees/${employee._id}/resume.pdf`;
+    }
     res.json(employee);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Add Employee (Photo & Resume)
+// Add Employee (Photo & Resume uploaded to Cloudinary)
 app.post(
   '/api/admin/employees',
   requireAdmin,
@@ -637,17 +708,18 @@ app.post(
           newEmp.photoUrl = uploadResult.secure_url;
         } catch (pErr) {
           console.error('Admin photo upload error:', pErr.message);
+          return res.status(500).json({ error: 'Failed to upload photo to Cloudinary: ' + pErr.message });
         }
       }
 
-      // Save PDF resume directly
+      // Upload PDF resume to Cloudinary
       if (resume) {
-        newEmp.resumeData = {
-          data: resume.buffer,
-          contentType: resume.mimetype || 'application/pdf',
-          filename: resume.originalname || `${name.trim()}_Resume.pdf`,
-        };
-        newEmp.resumeUrl = `/api/public/employees/${newEmp._id}/resume.pdf`;
+        try {
+          newEmp.resumeUrl = await uploadResumeToCloudinary(resume.buffer, name);
+        } catch (rErr) {
+          console.error('Admin resume upload error:', rErr.message);
+          return res.status(500).json({ error: 'Failed to upload resume to Cloudinary: ' + rErr.message });
+        }
       }
 
       const created = await newEmp.save();
@@ -696,20 +768,22 @@ app.put(
           employee.photoUrl = uploadResult.secure_url;
         } catch (pErr) {
           console.error('Admin edit photo upload error:', pErr.message);
+          return res.status(500).json({ error: 'Failed to upload photo to Cloudinary: ' + pErr.message });
         }
       }
 
       if (resume) {
-        // Delete old Cloudinary resume if replaced
-        if (employee.resumeUrl && employee.resumeUrl.includes('cloudinary.com')) {
-          deleteFromCloudinary(employee.resumeUrl);
+        try {
+          // Delete old Cloudinary resume if replaced
+          if (employee.resumeUrl && employee.resumeUrl.includes('cloudinary.com')) {
+            deleteFromCloudinary(employee.resumeUrl);
+          }
+          employee.resumeUrl = await uploadResumeToCloudinary(resume.buffer, employee.name);
+          employee.resumeData = undefined; // Clear old MongoDB binary buffer
+        } catch (rErr) {
+          console.error('Admin edit resume upload error:', rErr.message);
+          return res.status(500).json({ error: 'Failed to upload resume to Cloudinary: ' + rErr.message });
         }
-        employee.resumeData = {
-          data: resume.buffer,
-          contentType: resume.mimetype || 'application/pdf',
-          filename: resume.originalname || `${employee.name}_Resume.pdf`,
-        };
-        employee.resumeUrl = `/api/public/employees/${employee._id}/resume.pdf`;
       }
 
       await employee.save();
@@ -928,8 +1002,13 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
         ? { formula: `IMAGE("${emp.photoUrl}", 1)` }
         : 'No Photo';
 
-      const resumeCellVal = emp.resumeUrl
-        ? { formula: `HYPERLINK("${emp.resumeUrl}", "📄 View Resume")` }
+      let effectiveResumeUrl = emp.resumeUrl || '';
+      if (!effectiveResumeUrl && emp.resumeData) {
+        effectiveResumeUrl = `/api/public/employees/${emp._id}/resume.pdf`;
+      }
+
+      const resumeCellVal = effectiveResumeUrl
+        ? { formula: `HYPERLINK("${effectiveResumeUrl}", "📄 View Resume")` }
         : '—';
 
       row.values = [
@@ -977,17 +1056,23 @@ app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
     const rows = await Employee.find(q).sort({ department: 1, name: 1 }).lean();
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const head = ['Name', 'Department', 'Designation', 'Highest Qualification', 'Contact', 'Email', 'Date of Joining', 'Photograph', 'Resume'];
-    const lines = rows.map((r) => [
-      r.name,
-      r.department,
-      r.designation || 'Faculty Member',
-      r.highestQualification || 'Post-Graduate',
-      r.contact,
-      r.email,
-      r.joiningDate?.toISOString().slice(0, 10),
-      r.photoUrl,
-      r.resumeUrl,
-    ].map(esc).join(','));
+    const lines = rows.map((r) => {
+      let effectiveResumeUrl = r.resumeUrl || '';
+      if (!effectiveResumeUrl && r.resumeData) {
+        effectiveResumeUrl = `/api/public/employees/${r._id}/resume.pdf`;
+      }
+      return [
+        r.name,
+        r.department,
+        r.designation || 'Faculty Member',
+        r.highestQualification || 'Post-Graduate',
+        r.contact,
+        r.email,
+        r.joiningDate?.toISOString().slice(0, 10),
+        r.photoUrl,
+        effectiveResumeUrl,
+      ].map(esc).join(',');
+    });
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="employees.csv"');
