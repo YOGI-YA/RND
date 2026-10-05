@@ -289,8 +289,8 @@
     <!-- Success Confirmation View -->
     <div id="successView" class="success-card" style="display:none;">
       <div style="font-size:3.5rem;margin-bottom:1rem;">🎉</div>
-      <h2 style="font-size:2rem;margin-bottom:0.5rem;">Profile Successfully Submitted!</h2>
-      <p style="color:var(--text-muted);font-size:1.05rem;max-width:500px;margin:0 auto 1.75rem;">
+      <h2 id="successTitle" style="font-size:2rem;margin-bottom:0.5rem;">Profile Successfully Saved!</h2>
+      <p id="successSubtitle" style="color:var(--text-muted);font-size:1.05rem;max-width:500px;margin:0 auto 1.75rem;">
         Your faculty details, passport photograph, and resume have been securely saved and updated in the directory.
       </p>
 
@@ -613,7 +613,7 @@
 
         const data = await res.json();
         if (res.ok) {
-          showSuccessScreen(data.employee);
+          showSuccessScreen(data.employee, data.isUpdate);
         } else {
           $('submissionError').textContent = data.error || 'Failed to submit profile';
         }
@@ -626,9 +626,14 @@
     };
 
     // Show Success State
-    function showSuccessScreen(emp) {
+    function showSuccessScreen(emp, isUpdate = false) {
       $('formView').style.display = 'none';
       $('successView').style.display = 'block';
+
+      $('successTitle').textContent = isUpdate ? 'Profile Successfully Updated!' : 'Profile Successfully Registered!';
+      $('successSubtitle').textContent = isUpdate
+        ? 'Your revised details, photograph, and resume have been securely updated in the directory.'
+        : 'Your faculty details, passport photograph, and resume have been securely saved to the directory.';
 
       const resumeUrl = emp.resumeUrl || '';
       const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '';
