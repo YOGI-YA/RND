@@ -105,6 +105,27 @@ const toCloud = (buffer, opts) => new Promise((resolve, reject) => {
   cloudinary.uploader.upload_stream(opts, (err, res) => (err ? reject(err) : resolve(res))).end(buffer);
 });
 
+// Helper to extract Cloudinary public_id and delete from Cloudinary
+const deleteFromCloudinary = async (url) => {
+  if (!url || typeof url !== 'string' || !url.includes('cloudinary.com') || url === SAMPLE_RESUME) {
+    return;
+  }
+  try {
+    const match = url.match(/\/(?:image|raw|video)\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+    if (match && match[1]) {
+      const publicId = match[1];
+      const isRaw = url.includes('/raw/upload/');
+      await cloudinary.uploader.destroy(publicId, {
+        resource_type: isRaw ? 'raw' : 'image',
+        invalidate: true,
+      });
+      console.log(`Cloudinary asset destroyed: ${publicId} (${isRaw ? 'raw' : 'image'})`);
+    }
+  } catch (err) {
+    console.warn(`Cloudinary destroy warning for ${url}:`, err.message);
+  }
+};
+
 // ---------- Auth middleware ----------
 const requireAdmin = (req, res, next) => {
   try {
@@ -406,6 +427,16 @@ app.post(
           return res.status(400).json({ error: 'Resume (PDF) is required. Please upload your Resume PDF.' });
         }
 
+        // Delete old Cloudinary photo if replaced
+        if (photo && existingEmp.photoUrl && existingEmp.photoUrl !== photoUrl) {
+          deleteFromCloudinary(existingEmp.photoUrl);
+        }
+
+        // Delete old Cloudinary resume if replaced
+        if (resume && existingEmp.resumeUrl && existingEmp.resumeUrl.includes('cloudinary.com')) {
+          deleteFromCloudinary(existingEmp.resumeUrl);
+        }
+
         // Update existing faculty member
         existingEmp.name = name.trim();
         existingEmp.department = department;
@@ -653,6 +684,10 @@ app.put(
             folder: 'employee-portal/photos',
             transformation: [{ width: 300, height: 400, crop: 'fill', gravity: 'face' }],
           });
+          // Delete old Cloudinary photo if replaced
+          if (employee.photoUrl && employee.photoUrl !== uploadResult.secure_url) {
+            deleteFromCloudinary(employee.photoUrl);
+          }
           employee.photoUrl = uploadResult.secure_url;
         } catch (pErr) {
           console.error('Admin edit photo upload error:', pErr.message);
@@ -660,6 +695,10 @@ app.put(
       }
 
       if (resume) {
+        // Delete old Cloudinary resume if replaced
+        if (employee.resumeUrl && employee.resumeUrl.includes('cloudinary.com')) {
+          deleteFromCloudinary(employee.resumeUrl);
+        }
         employee.resumeData = {
           data: resume.buffer,
           contentType: resume.mimetype || 'application/pdf',
@@ -685,6 +724,15 @@ app.delete('/api/admin/employees/:id', requireAdmin, async (req, res) => {
   try {
     const deleted = await Employee.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Employee not found' });
+
+    // Clean up Cloudinary photo & resume
+    if (deleted.photoUrl) {
+      deleteFromCloudinary(deleted.photoUrl);
+    }
+    if (deleted.resumeUrl && deleted.resumeUrl.includes('cloudinary.com')) {
+      deleteFromCloudinary(deleted.resumeUrl);
+    }
+
     res.json({ ok: true, deletedId: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message });
