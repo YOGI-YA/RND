@@ -337,7 +337,8 @@
             </button>
           </div>
         </div>
-      </div> <!-- End #moduleDirectory -->
+      </div> <!-- End #bulkActionBar -->
+    </div> <!-- End #moduleDirectory -->
 
       <!-- Module B: External Email Verification Requests Container -->
       <div id="moduleRequests" style="display:none;">
@@ -743,6 +744,12 @@
       $('shareUrlBox').value = window.location.origin + '/register';
       loadStats();
       loadEmployees();
+      loadRequests();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (window.location.hash === '#requests' || urlParams.get('tab') === 'requests') {
+        switchAdminModule('requests');
+      }
     }
 
     window.copyAdminShareUrl = function() {
