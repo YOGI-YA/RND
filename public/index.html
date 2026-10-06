@@ -482,6 +482,10 @@
             const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
             const resumeUrl = emp.resumeUrl || '';
             const qualification = emp.highestQualification || 'Post-Graduate';
+            const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
+            const statusBadge = isVisiting
+              ? `<span style="font-size:0.72rem;font-weight:700;background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;padding:1px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:3px;" title="Visiting Faculty (External Organization / Guest)">🤝 Visiting Faculty</span>`
+              : `<span style="font-size:0.72rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:1px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:3px;" title="Regular University Faculty">🏛️ Regular</span>`;
 
             return `
               <div class="faculty-card" style="--card-accent: ${accentColor};" onclick="openFacultyModal('${esc(emp._id || emp.email)}')">
@@ -500,7 +504,10 @@
 
                   <div class="faculty-info">
                     <h3 class="faculty-name">${esc(emp.name)}</h3>
-                    <div class="faculty-role">${esc(emp.designation || 'Faculty Member')}</div>
+                    <div class="faculty-role" style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                      <span>${esc(emp.designation || (isVisiting ? 'Visiting Faculty' : 'Faculty Member'))}</span>
+                      ${statusBadge}
+                    </div>
                     
                     <div style="display:flex;gap:0.35rem;align-items:center;flex-wrap:wrap;margin-bottom:0.4rem;">
                       <span class="faculty-dept-badge" style="background:${accentColor}18;color:${accentColor};border:1px solid ${accentColor}30;">
@@ -570,7 +577,7 @@
                 <tr>
                   <th style="width:70px;">Photo</th>
                   <th>Faculty Name</th>
-                  <th>Designation</th>
+                  <th>Designation & Type</th>
                   <th>Highest Qualification</th>
                   <th>Contact</th>
                   <th>Email</th>
@@ -582,6 +589,7 @@
                 ${employees.map(emp => {
                   const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
                   const resumeUrl = emp.resumeUrl || '';
+                  const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
                   return `
                     <tr>
                       <td>
@@ -593,7 +601,15 @@
                       <td>
                         <strong style="color:var(--text-primary);">${esc(emp.name)}</strong>
                       </td>
-                      <td>${esc(emp.designation || 'Faculty Member')}</td>
+                      <td>
+                        <div>${esc(emp.designation || (isVisiting ? 'Visiting Faculty' : 'Faculty Member'))}</div>
+                        <div style="margin-top:3px;">
+                          ${isVisiting
+                            ? `<span style="font-size:0.7rem;font-weight:700;background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;padding:1px 6px;border-radius:999px;">🤝 Visiting</span>`
+                            : `<span style="font-size:0.7rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:1px 6px;border-radius:999px;">🏛️ Regular</span>`
+                          }
+                        </div>
+                      </td>
                       <td><span style="font-weight:600;color:var(--brand-primary);">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span></td>
                       <td><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
                       <td><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></td>
@@ -625,6 +641,7 @@
       const resumeUrl = emp.resumeUrl || '';
       const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
       const deptName = DEPT_NAMES[emp.department] || emp.department;
+      const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
 
       document.getElementById('modalName').textContent = emp.name;
       const modalResumeBtn = document.getElementById('modalResumeBtn');
@@ -650,25 +667,29 @@
                 <small>3:4 Standard</small>
               </div>
             `}
-            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">Standard 3:4 Passport Portrait</div>
+            <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">Standard 3:4 Portrait</div>
           </div>
 
           <div style="flex:1;min-width:240px;">
-            <div style="margin-bottom:0.75rem;">
+            <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
               <span class="brand-badge" style="background:var(--brand-primary);">${esc(emp.department)}</span>
-              <span style="font-weight:600;margin-left:0.5rem;color:var(--text-secondary);">${esc(deptName)}</span>
+              <span style="font-weight:600;color:var(--text-secondary);">${esc(deptName)}</span>
+              ${isVisiting
+                ? '<span style="font-size:0.75rem;font-weight:700;color:#7e22ce;background:#f3e8ff;padding:2px 8px;border-radius:999px;border:1px solid #d8b4fe;">🤝 Visiting Faculty</span>'
+                : '<span style="font-size:0.75rem;font-weight:700;color:#047857;background:#ecfdf5;padding:2px 8px;border-radius:999px;border:1px solid #a7f3d0;">🏛️ Regular University Faculty</span>'
+              }
             </div>
 
             <h2 style="font-size:1.5rem;margin-bottom:0.25rem;">${esc(emp.name)}</h2>
-            <div style="color:var(--text-muted);font-weight:600;margin-bottom:0.5rem;">${esc(emp.designation || 'Faculty Member')}</div>
+            <div style="color:var(--text-muted);font-weight:600;margin-bottom:0.5rem;">${esc(emp.designation || (isVisiting ? 'Visiting Faculty' : 'Faculty Member'))}</div>
             <div style="font-size:0.9rem;font-weight:700;color:var(--brand-primary);margin-bottom:1.25rem;">
               🎓 Highest Qualification: ${esc(emp.highestQualification || 'Post-Graduate')}
             </div>
 
             <div style="display:grid;gap:0.75rem;font-size:0.95rem;">
               <div>
-                <strong style="color:var(--text-secondary);">Highest Qualification:</strong>
-                <div>${esc(emp.highestQualification || 'Post-Graduate')}</div>
+                <strong style="color:var(--text-secondary);">Faculty Cadre:</strong>
+                <div>${isVisiting ? '🤝 Visiting Faculty (External Organization / Guest)' : '🏛️ Regular University Faculty (@iuhimachal.edu.in)'}</div>
               </div>
 
               <div>
@@ -677,7 +698,7 @@
               </div>
 
               <div>
-                <strong style="color:var(--text-secondary);">Official Email:</strong>
+                <strong style="color:var(--text-secondary);">Email:</strong>
                 <div><a href="mailto:${esc(emp.email)}">${esc(emp.email)}</a></div>
               </div>
 

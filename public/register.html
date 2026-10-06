@@ -392,8 +392,11 @@
         notice.style.background = '#fef3c7';
         notice.style.border = '1px solid #fde68a';
         notice.style.color = '#92400e';
-        notice.innerHTML = '⚠️ <strong>External Domain Detected:</strong> Submissions not using <code>@iuhimachal.edu.in</code> will be submitted as an <strong>Access Request</strong> for Administrator verification & approval.';
-        $('submitBtn').textContent = '📤 Submit Registration Request for Approval';
+        notice.innerHTML = '🤝 <strong>Visiting Faculty (External Domain):</strong> Faculty without an official <code>@iuhimachal.edu.in</code> email are categorized as <strong>Visiting Faculty</strong>. Your profile will be submitted as a verification request for Administrator approval before appearing in the directory.';
+        $('submitBtn').textContent = '📤 Submit Visiting Faculty Request for Approval';
+        if (!$('designation').value || $('designation').value === 'Faculty Member') {
+          $('designation').value = 'Visiting Faculty';
+        }
       }
     }
 

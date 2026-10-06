@@ -58,6 +58,7 @@ const employeeSchema = new mongoose.Schema({
   contact: { type: String, required: true, trim: true },
   email: { type: String, required: true, trim: true, lowercase: true },
   joiningDate: { type: Date, required: true },
+  employmentType: { type: String, enum: ['Regular', 'Visiting'], default: 'Regular' },
   designation: { type: String, trim: true, default: 'Faculty Member' },
   highestQualification: { type: String, trim: true, default: 'Post-Graduate' },
   totalExperience: { type: String, trim: true, default: '' },
@@ -103,7 +104,8 @@ const registrationRequestSchema = new mongoose.Schema({
   contact: { type: String, required: true, trim: true },
   email: { type: String, required: true, trim: true, lowercase: true },
   joiningDate: { type: Date, required: true },
-  designation: { type: String, trim: true, default: 'Faculty Member' },
+  employmentType: { type: String, enum: ['Regular', 'Visiting'], default: 'Visiting' },
+  designation: { type: String, trim: true, default: 'Visiting Faculty' },
   highestQualification: { type: String, trim: true, default: 'Post-Graduate' },
   totalExperience: { type: String, trim: true, default: '' },
   photoUrl: { type: String, default: '' },
@@ -257,7 +259,7 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
 app.get('/api/public/employees', async (req, res) => {
   try {
     const employees = await Employee.find({})
-      .select('name department designation highestQualification totalExperience contact email joiningDate photoUrl resumeUrl resumeData.data')
+      .select('name department designation employmentType highestQualification totalExperience contact email joiningDate photoUrl resumeUrl resumeData.data')
       .lean();
 
     // Sort by department, then by experience (highest experience / seniority first)
@@ -279,6 +281,7 @@ app.get('/api/public/employees', async (req, res) => {
         name: emp.name,
         department: emp.department,
         designation: emp.designation,
+        employmentType: emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting'),
         highestQualification: emp.highestQualification,
         totalExperience: emp.totalExperience || '',
         contact: emp.contact,
@@ -564,7 +567,8 @@ app.post(
         existingReq.department = department;
         existingReq.contact = contact.trim();
         existingReq.joiningDate = new Date(joiningDate);
-        existingReq.designation = designation ? designation.trim() : 'Faculty Member';
+        existingReq.employmentType = 'Visiting';
+        existingReq.designation = designation && designation !== 'Faculty Member' ? designation.trim() : 'Visiting Faculty';
         existingReq.highestQualification = highestQualification ? highestQualification.trim() : 'Post-Graduate';
         existingReq.totalExperience = totalExperience ? totalExperience.trim() : '';
         if (photoUrl) existingReq.photoUrl = photoUrl;
@@ -576,10 +580,11 @@ app.post(
         return res.status(200).json({
           ok: true,
           isRequest: true,
-          message: 'Your registration request has been submitted successfully! Since your email is not on the official @iuhimachal.edu.in domain, it has been forwarded to the Administrator for verification. Your profile will appear in the directory once approved.',
+          message: 'Your registration request as Visiting Faculty has been submitted successfully! Since your email is not on the official @iuhimachal.edu.in domain, it has been forwarded to the Administrator for verification. Your profile will appear in the directory as Visiting Faculty once approved.',
           request: {
             id: existingReq._id,
             email: existingReq.email,
+            employmentType: 'Visiting',
             status: existingReq.status,
           },
         });
@@ -667,6 +672,7 @@ app.post(
           contact: contact.trim(),
           email: cleanEmail,
           joiningDate: new Date(joiningDate),
+          employmentType: 'Regular',
           designation: designation ? designation.trim() : 'Faculty Member',
           highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
           totalExperience: totalExperience ? totalExperience.trim() : '',
@@ -738,6 +744,7 @@ app.post('/api/admin/requests/:id/approve', requireAdmin, async (req, res) => {
     if (!reqDoc) return res.status(404).json({ error: 'Request not found' });
 
     // Create or update active Employee record
+    const empType = reqDoc.employmentType || (isOfficialDomain(reqDoc.email) ? 'Regular' : 'Visiting');
     let emp = await Employee.findOne({ email: reqDoc.email });
     if (!emp) {
       emp = new Employee({
@@ -746,7 +753,8 @@ app.post('/api/admin/requests/:id/approve', requireAdmin, async (req, res) => {
         contact: reqDoc.contact,
         email: reqDoc.email,
         joiningDate: reqDoc.joiningDate,
-        designation: reqDoc.designation,
+        employmentType: empType,
+        designation: reqDoc.designation || (empType === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member'),
         highestQualification: reqDoc.highestQualification,
         totalExperience: reqDoc.totalExperience,
         photoUrl: reqDoc.photoUrl,
@@ -757,7 +765,8 @@ app.post('/api/admin/requests/:id/approve', requireAdmin, async (req, res) => {
       emp.department = reqDoc.department;
       emp.contact = reqDoc.contact;
       emp.joiningDate = reqDoc.joiningDate;
-      emp.designation = reqDoc.designation;
+      emp.employmentType = empType;
+      emp.designation = reqDoc.designation || (empType === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member');
       emp.highestQualification = reqDoc.highestQualification;
       emp.totalExperience = reqDoc.totalExperience;
       if (reqDoc.photoUrl) emp.photoUrl = reqDoc.photoUrl;
@@ -895,7 +904,7 @@ app.post(
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'resume', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, employmentType } = req.body;
       if (!name || !department || !contact || !email || !joiningDate) {
         return res.status(400).json({ error: 'Please provide Name, Department, Contact, Email, and Date of Joining' });
       }
@@ -915,13 +924,17 @@ app.post(
         return res.status(400).json({ error: 'Curriculum Vitae / Resume (PDF) is required. Please select a PDF file.' });
       }
 
+      const cleanEmail = email.trim().toLowerCase();
+      const empType = employmentType || (isOfficialDomain(cleanEmail) ? 'Regular' : 'Visiting');
+
       const newEmp = new Employee({
         name: name.trim(),
         department,
         contact: contact.trim(),
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         joiningDate: new Date(joiningDate),
-        designation: designation ? designation.trim() : 'Faculty Member',
+        employmentType: empType,
+        designation: designation ? designation.trim() : (empType === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member'),
         highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
         totalExperience: totalExperience ? totalExperience.trim() : '',
         photoUrl: '',
@@ -973,12 +986,13 @@ app.put(
       const employee = await Employee.findById(req.params.id);
       if (!employee) return res.status(404).json({ error: 'Employee not found' });
 
-      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, employmentType } = req.body;
       if (name) employee.name = name.trim();
       if (department && DEPARTMENTS.includes(department)) employee.department = department;
       if (contact) employee.contact = contact.trim();
       if (email) employee.email = email.trim().toLowerCase();
       if (joiningDate) employee.joiningDate = new Date(joiningDate);
+      if (employmentType && ['Regular', 'Visiting'].includes(employmentType)) employee.employmentType = employmentType;
       if (designation) employee.designation = designation.trim();
       if (highestQualification) employee.highestQualification = highestQualification.trim();
       if (totalExperience !== undefined) employee.totalExperience = totalExperience.trim();

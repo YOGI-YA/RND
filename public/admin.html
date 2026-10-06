@@ -464,9 +464,17 @@
             </div>
 
             <div class="form-group">
-              <label for="empEmail">Official Email *</label>
-              <input type="email" id="empEmail" name="email" class="form-control" required placeholder="name@iuhp.edu.in">
+              <label for="empEmail">Email Address *</label>
+              <input type="email" id="empEmail" name="email" class="form-control" required placeholder="name@iuhimachal.edu.in">
             </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label for="empEmploymentType">Faculty Cadre / Employment Type *</label>
+            <select id="empEmploymentType" name="employmentType" class="form-control">
+              <option value="Regular">🏛️ Regular Faculty (Official @iuhimachal.edu.in)</option>
+              <option value="Visiting">🤝 Visiting Faculty (External Domain / Guest)</option>
+            </select>
           </div>
 
           <!-- Photograph Upload with Live Preview (Passport 3:4 Standard) -->
@@ -917,8 +925,11 @@
             </td>
             <td>
               <strong style="color:var(--text-primary);font-size:0.92rem;">${esc(req.name)}</strong>
-              <div style="font-size:0.8rem;color:var(--text-secondary);">${esc(req.designation || 'Faculty Member')}</div>
-              <span style="font-size:0.75rem;color:var(--brand-primary);font-weight:600;background:var(--bg-secondary);padding:1px 5px;border-radius:4px;display:inline-block;margin-top:2px;">
+              <div style="font-size:0.8rem;color:var(--text-secondary);display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px;">
+                <span>${esc(req.designation || 'Visiting Faculty')}</span>
+                <span style="background:#f3e8ff;color:#7e22ce;font-size:0.7rem;font-weight:700;padding:1px 6px;border-radius:999px;border:1px solid #d8b4fe;">🤝 Visiting Faculty</span>
+              </div>
+              <span style="font-size:0.75rem;color:var(--brand-primary);font-weight:600;background:var(--bg-secondary);padding:1px 5px;border-radius:4px;display:inline-block;margin-top:3px;">
                 🎓 ${esc(req.highestQualification || 'Post-Graduate')}
               </span>
             </td>
@@ -977,7 +988,7 @@
 
     // Approve Request Action
     window.approveRequest = async (id, name) => {
-      if (!confirm(`Are you sure you want to approve ${name} and publish their profile to the active faculty directory?`)) return;
+      if (!confirm(`Are you sure you want to approve ${name} as Visiting Faculty and publish their profile to the active faculty directory?`)) return;
       try {
         const res = await fetch(`/api/admin/requests/${id}/approve`, { method: 'POST' });
         const data = await res.json();
@@ -1111,6 +1122,7 @@
         const alertDateStr = hasAlert ? new Date(lastAlert.sentAt).toLocaleDateString('en-GB') : '';
         const isThankYou = ['thankyou', 'approved', 'success', 'welcome'].includes(lastAlert.alertType);
         const isChecked = selectedEmpIds.has(emp._id);
+        const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
 
         return `
           <tr class="employee-row ${isChecked ? 'row-selected' : ''}">
@@ -1120,7 +1132,7 @@
             <td data-label="Photo">
               ${emp.photoUrl ? `
                 <div style="position:relative;display:inline-block;">
-                  <img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}" title="Standard 3:4 Passport Photograph">
+                  <img src="${esc(emp.photoUrl)}" class="table-photo" alt="${esc(emp.name)}" title="Standard 3:4 Portrait">
                   ${isCloudPhoto ? `<span style="position:absolute;bottom:-3px;right:-3px;font-size:10px;background:#0284c7;color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;" title="Hosted on Cloudinary">☁️</span>` : ''}
                 </div>
               ` : `
@@ -1129,7 +1141,13 @@
             </td>
             <td data-label="Faculty Name & Role">
               <div style="font-weight:700;color:var(--text-primary);font-size:0.95rem;">${esc(emp.name)}</div>
-              <div style="font-size:0.8rem;color:var(--text-muted);">${esc(emp.designation || 'Faculty Member')}</div>
+              <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;margin-top:2px;">
+                <span>${esc(emp.designation || (isVisiting ? 'Visiting Faculty' : 'Faculty Member'))}</span>
+                ${isVisiting
+                  ? '<span style="background:#f3e8ff;color:#7e22ce;font-size:0.7rem;font-weight:700;padding:1px 6px;border-radius:999px;border:1px solid #d8b4fe;">🤝 Visiting</span>'
+                  : '<span style="background:#ecfdf5;color:#047857;font-size:0.7rem;font-weight:700;padding:1px 6px;border-radius:999px;border:1px solid #a7f3d0;">🏛️ Regular</span>'
+                }
+              </div>
               ${hasAlert ? `
                 <div style="margin-top:0.35rem;">
                   ${isThankYou ? `
@@ -1221,6 +1239,7 @@
       $('modalTitle').textContent = 'Add New Faculty Member';
       $('editEmpId').value = '';
       $('employeeForm').reset();
+      $('empEmploymentType').value = 'Regular';
       $('empTotalExperience').value = '';
       $('photoInput').required = true;
       $('resumeInput').required = true;
@@ -1319,6 +1338,7 @@
       $('empName').value = emp.name || '';
       $('empDept').value = emp.department || 'FPS';
       $('empDesignation').value = emp.designation || '';
+      $('empEmploymentType').value = emp.employmentType || (emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in') ? 'Regular' : 'Visiting');
       $('empQualification').value = emp.highestQualification || '';
       $('empTotalExperience').value = emp.totalExperience || '';
       $('empContact').value = emp.contact || '';
