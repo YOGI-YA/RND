@@ -142,9 +142,18 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="joiningDate">Date of Joining University *</label>
-          <input type="date" id="joiningDate" name="joiningDate" class="form-control" required>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="grid-2">
+          <div class="form-group">
+            <label for="joiningDate">Date of Joining University *</label>
+            <input type="date" id="joiningDate" name="joiningDate" class="form-control" required>
+            <div id="joiningTenurePreview" style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Auto-calculates your university tenure (e.g. <strong>3.2 Years</strong>, <strong>1.5 Years</strong>)</div>
+          </div>
+
+          <div class="form-group">
+            <label for="totalExperience">Total Overall Experience <span style="font-weight:400;color:var(--text-muted);">(Teaching + Industry)</span></label>
+            <input type="text" id="totalExperience" name="totalExperience" class="form-control" placeholder="e.g. 8 Years or 10+ Years">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Total career experience matching your CV</div>
+          </div>
         </div>
 
         <!-- Section 2: Contact & Official Email Verification -->
@@ -338,6 +347,30 @@
       $('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
     });
 
+    // Helper to calculate tenure / experience at IUHP based on Date of Joining in decimal years (e.g. 3.2 Years, 1.5 Years)
+    function calcIuhpTenure(joiningDate) {
+      if (!joiningDate) return '—';
+      const join = new Date(joiningDate);
+      if (isNaN(join.getTime())) return '—';
+      const now = new Date();
+      const diffMs = now.getTime() - join.getTime();
+      if (diffMs <= 0) return '0.1 Year';
+      const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+      const rounded = Math.max(0.1, parseFloat(diffYears.toFixed(1)));
+      return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
+    }
+
+    $('joiningDate').addEventListener('input', (e) => {
+      const val = e.target.value;
+      const preview = $('joiningTenurePreview');
+      if (val) {
+        const tenure = calcIuhpTenure(val);
+        preview.innerHTML = `🏛️ Calculated IUHP Tenure: <strong style="color:var(--brand-primary);">${tenure}</strong>`;
+      } else {
+        preview.innerHTML = `Auto-calculates your university tenure (e.g. <strong>3.2 Years</strong>, <strong>1.5 Years</strong>)`;
+      }
+    });
+
     // Email OTP Verification State
     let verifiedEmail = '';
     let otpToken = '';
@@ -494,8 +527,12 @@
           if (!$('deptSelect').value && emp.department) $('deptSelect').value = emp.department;
           if (!$('designation').value && emp.designation) $('designation').value = emp.designation;
           if (!$('highestQualification').value && emp.highestQualification) $('highestQualification').value = emp.highestQualification;
+          if (!$('totalExperience').value && emp.totalExperience) $('totalExperience').value = emp.totalExperience;
           if (!$('contactNumber').value && emp.contact) $('contactNumber').value = emp.contact;
-          if (!$('joiningDate').value && emp.joiningDate) $('joiningDate').value = emp.joiningDate;
+          if (!$('joiningDate').value && emp.joiningDate) {
+            $('joiningDate').value = emp.joiningDate;
+            $('joiningDate').dispatchEvent(new Event('input'));
+          }
 
           $('submitBtn').textContent = 'Update My Faculty Profile';
 

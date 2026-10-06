@@ -60,6 +60,7 @@ const employeeSchema = new mongoose.Schema({
   joiningDate: { type: Date, required: true },
   designation: { type: String, trim: true, default: 'Faculty Member' },
   highestQualification: { type: String, trim: true, default: 'Post-Graduate' },
+  totalExperience: { type: String, trim: true, default: '' },
   photoUrl: { type: String, default: '' },
   resumeUrl: { type: String, default: '' },
   resumeData: {
@@ -73,6 +74,19 @@ const employeeSchema = new mongoose.Schema({
     message: { type: String, default: '' },
   },
 }, { timestamps: true });
+
+// Helper to calculate tenure / experience at IUHP based on Date of Joining in decimal years (e.g. 3.2 Years, 1.5 Years)
+function calcIuhpTenure(joiningDate) {
+  if (!joiningDate) return '—';
+  const join = new Date(joiningDate);
+  if (isNaN(join.getTime())) return '—';
+  const now = new Date();
+  const diffMs = now.getTime() - join.getTime();
+  if (diffMs <= 0) return '0.1 Year';
+  const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+  const rounded = Math.max(0.1, parseFloat(diffYears.toFixed(1)));
+  return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
+}
 
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
 
@@ -412,7 +426,7 @@ app.post(
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'resume', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const { name, department, contact, email, joiningDate, designation, highestQualification, otpToken, otp } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, otpToken, otp } = req.body;
 
       if (!name || !department || !contact || !email || !joiningDate) {
         return res.status(400).json({
@@ -517,6 +531,7 @@ app.post(
         existingEmp.joiningDate = new Date(joiningDate);
         if (designation) existingEmp.designation = designation.trim();
         if (highestQualification) existingEmp.highestQualification = highestQualification.trim();
+        if (totalExperience !== undefined) existingEmp.totalExperience = totalExperience.trim();
         if (photoUrl) existingEmp.photoUrl = photoUrl;
 
         // If a new resume is uploaded, use Cloudinary URL and clear old binary buffer
@@ -538,6 +553,7 @@ app.post(
             department: existingEmp.department,
             designation: existingEmp.designation,
             highestQualification: existingEmp.highestQualification,
+            totalExperience: existingEmp.totalExperience,
             contact: existingEmp.contact,
             email: existingEmp.email,
             joiningDate: existingEmp.joiningDate,
@@ -568,6 +584,7 @@ app.post(
           joiningDate: new Date(joiningDate),
           designation: designation ? designation.trim() : 'Faculty Member',
           highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
+          totalExperience: totalExperience ? totalExperience.trim() : '',
           photoUrl,
           resumeUrl: newResumeCloudUrl,
         });
@@ -583,6 +600,7 @@ app.post(
             department: newEmp.department,
             designation: newEmp.designation,
             highestQualification: newEmp.highestQualification,
+            totalExperience: newEmp.totalExperience,
             contact: newEmp.contact,
             email: newEmp.email,
             joiningDate: newEmp.joiningDate,
@@ -666,7 +684,7 @@ app.post(
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'resume', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const { name, department, contact, email, joiningDate, designation, highestQualification } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience } = req.body;
       if (!name || !department || !contact || !email || !joiningDate) {
         return res.status(400).json({ error: 'Please provide Name, Department, Contact, Email, and Date of Joining' });
       }
@@ -694,6 +712,7 @@ app.post(
         joiningDate: new Date(joiningDate),
         designation: designation ? designation.trim() : 'Faculty Member',
         highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
+        totalExperience: totalExperience ? totalExperience.trim() : '',
         photoUrl: '',
         resumeUrl: '',
       });
@@ -743,7 +762,7 @@ app.put(
       const employee = await Employee.findById(req.params.id);
       if (!employee) return res.status(404).json({ error: 'Employee not found' });
 
-      const { name, department, contact, email, joiningDate, designation, highestQualification } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience } = req.body;
       if (name) employee.name = name.trim();
       if (department && DEPARTMENTS.includes(department)) employee.department = department;
       if (contact) employee.contact = contact.trim();
@@ -751,6 +770,7 @@ app.put(
       if (joiningDate) employee.joiningDate = new Date(joiningDate);
       if (designation) employee.designation = designation.trim();
       if (highestQualification) employee.highestQualification = highestQualification.trim();
+      if (totalExperience !== undefined) employee.totalExperience = totalExperience.trim();
 
       const photo = req.files?.photo?.[0];
       const resume = req.files?.resume?.[0];
@@ -1069,6 +1089,8 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
       { header: 'Department', key: 'department', width: 16 },
       { header: 'Designation', key: 'designation', width: 22 },
       { header: 'Highest Qualification', key: 'highestQualification', width: 25 },
+      { header: 'IUHP Experience (Tenure)', key: 'iuhpExperience', width: 22 },
+      { header: 'Overall Experience', key: 'totalExperience', width: 22 },
       { header: 'Contact', key: 'contact', width: 18 },
       { header: 'Email', key: 'email', width: 28 },
       { header: 'Date of Joining', key: 'joiningDate', width: 18 },
@@ -1124,6 +1146,8 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
         emp.department,
         emp.designation || 'Faculty Member',
         emp.highestQualification || 'Post-Graduate',
+        calcIuhpTenure(emp.joiningDate),
+        emp.totalExperience || '—',
         emp.contact,
         emp.email,
         dateStr,
@@ -1135,7 +1159,7 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
       row.eachCell((cell, colNumber) => {
         cell.alignment = {
           vertical: 'middle',
-          horizontal: colNumber === 1 || colNumber === 3 || colNumber === 4 || colNumber === 6 ? 'left' : 'center',
+          horizontal: colNumber === 1 || colNumber === 3 || colNumber === 4 || colNumber === 6 || colNumber === 8 ? 'left' : 'center',
           wrapText: true,
         };
         cell.font = { name: 'Segoe UI', size: 10 };
@@ -1163,7 +1187,7 @@ app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
     const q = req.query.department ? { department: req.query.department } : {};
     const rows = await Employee.find(q).sort({ department: 1, name: 1 }).lean();
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const head = ['Name', 'Department', 'Designation', 'Highest Qualification', 'Contact', 'Email', 'Date of Joining', 'Photograph', 'Resume'];
+    const head = ['Name', 'Department', 'Designation', 'Highest Qualification', 'IUHP Experience', 'Overall Experience', 'Contact', 'Email', 'Date of Joining', 'Photograph', 'Resume'];
     const lines = rows.map((r) => {
       let effectiveResumeUrl = r.resumeUrl || '';
       if (!effectiveResumeUrl && r.resumeData) {
@@ -1174,6 +1198,8 @@ app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
         r.department,
         r.designation || 'Faculty Member',
         r.highestQualification || 'Post-Graduate',
+        calcIuhpTenure(r.joiningDate),
+        r.totalExperience || '—',
         r.contact,
         r.email,
         r.joiningDate?.toISOString().slice(0, 10),
@@ -1207,6 +1233,8 @@ app.get('/api/admin/template.xlsx', (req, res) => {
       { header: 'Department', key: 'department', width: 16 },
       { header: 'Designation', key: 'designation', width: 22 },
       { header: 'Highest Qualification', key: 'highestQualification', width: 25 },
+      { header: 'IUHP Experience (Tenure)', key: 'iuhpExperience', width: 22 },
+      { header: 'Overall Experience', key: 'totalExperience', width: 22 },
       { header: 'Contact', key: 'contact', width: 18 },
       { header: 'Email', key: 'email', width: 28 },
       { header: 'Date of Joining', key: 'joiningDate', width: 18 },
@@ -1230,9 +1258,11 @@ app.get('/api/admin/template.xlsx', (req, res) => {
       'FST',
       'Professor & HOD',
       'Ph.D. in Computer Science',
+      '2 Yrs 4 Mos',
+      '10+ Years',
       '9876543210',
       'rahul.sharma@iuhp.edu.in',
-      '2026-10-01',
+      '2024-05-15',
       { formula: `IMAGE("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&h=533&q=80", 1)` },
       { formula: `HYPERLINK("${SAMPLE_RESUME}", "📄 View Resume")` },
     ];

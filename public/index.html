@@ -188,6 +188,19 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 
+    // Helper to calculate tenure / experience at IUHP based on Date of Joining in decimal years (e.g. 3.2 Years, 1.5 Years)
+    function calcIuhpTenure(joiningDate) {
+      if (!joiningDate) return '—';
+      const join = new Date(joiningDate);
+      if (isNaN(join.getTime())) return '—';
+      const now = new Date();
+      const diffMs = now.getTime() - join.getTime();
+      if (diffMs <= 0) return '0.1 Year';
+      const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
+      const rounded = Math.max(0.1, parseFloat(diffYears.toFixed(1)));
+      return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
+    }
+
     // Theme handling
     const initTheme = () => {
       const saved = localStorage.getItem('iuhp_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -446,6 +459,14 @@
                       <span style="font-size:0.75rem;color:var(--brand-primary);font-weight:700;background:var(--bg-secondary);padding:0.15rem 0.45rem;border-radius:var(--radius-sm);border:1px solid var(--surface-border);">
                         🎓 ${esc(qualification)}
                       </span>
+                      <span style="font-size:0.75rem;color:#059669;font-weight:700;background:rgba(16,185,129,0.1);padding:0.15rem 0.45rem;border-radius:var(--radius-sm);border:1px solid rgba(16,185,129,0.25);" title="Tenure at IUHP (Calculated from Date of Joining)">
+                        🏛️ ${calcIuhpTenure(emp.joiningDate)} at IUHP
+                      </span>
+                      ${emp.totalExperience ? `
+                        <span style="font-size:0.75rem;color:#0284c7;font-weight:700;background:#e0f2fe;padding:0.15rem 0.45rem;border-radius:var(--radius-sm);border:1px solid #bae6fd;" title="Total Career Experience">
+                          💼 ${esc(emp.totalExperience)} Total
+                        </span>
+                      ` : ''}
                     </div>
 
                     <div class="faculty-meta-list">
@@ -612,7 +633,12 @@
 
               <div>
                 <strong style="color:var(--text-secondary);">Date of Joining:</strong>
-                <div>${esc(joiningStr)}</div>
+                <div>${esc(joiningStr)} <span style="color:#059669;font-weight:700;font-size:0.85rem;background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;margin-left:0.35rem;">(${calcIuhpTenure(emp.joiningDate)} at IUHP)</span></div>
+              </div>
+
+              <div>
+                <strong style="color:var(--text-secondary);">Overall Experience:</strong>
+                <div>${emp.totalExperience ? `<span style="font-weight:700;color:#0284c7;">💼 ${esc(emp.totalExperience)}</span>` : '<span style="color:var(--text-muted);font-style:italic;">Detailed in attached Curriculum Vitae</span>'}</div>
               </div>
 
               <div>
