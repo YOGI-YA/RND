@@ -6,15 +6,15 @@
   <title>IUHP - Faculty & Staff Directory</title>
   <meta name="description" content="Explore faculty profiles, contact details, standard passport photographs, and resumes across FPS, FMS, FLA, FOL, and FST departments.">
   <link rel="stylesheet" href="/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="https://iuhimachal.edu.in/assets/img/Logo.svg">
 </head>
 <body>
 
   <!-- Top Navbar -->
   <header class="navbar">
     <div class="wrap nav-inner">
-      <a href="/" class="brand-logo" id="homeLogo">
-        <span class="brand-badge">IUHP</span>
+      <a href="/" class="brand-logo" id="homeLogo" title="The ICFAI University, Himachal Pradesh">
+        <img src="https://iuhimachal.edu.in/assets/img/Logo.svg" alt="The ICFAI University Himachal Pradesh" class="brand-logo-img" height="42" onerror="this.src='/Logo.svg'">
         <span class="brand-title">Faculty Directory</span>
       </a>
 
@@ -153,9 +153,12 @@
   <!-- Footer -->
   <footer>
     <div class="wrap footer-inner">
-      <div>
-        <strong style="color:var(--text-primary);font-size:1rem;">IUHP Employee & Faculty Directory</strong>
-        <p style="margin-top:0.25rem;">Standardized passport photograph directory across FPS, FMS, FLA, FOL, & FST.</p>
+      <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">
+        <img src="https://iuhimachal.edu.in/assets/img/Logo.svg" alt="The ICFAI University Himachal Pradesh" class="brand-logo-img" style="height:44px;object-fit:contain;" onerror="this.src='/Logo.svg'">
+        <div>
+          <strong style="color:var(--text-primary);font-size:1rem;">The ICFAI University, Himachal Pradesh</strong>
+          <p style="margin-top:0.2rem;">Official Academic Faculty Directory across FPS, FMS, FLA, FOL, & FST.</p>
+        </div>
       </div>
       <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">
         <a href="/api/admin/template.xlsx" class="btn btn-sm btn-outline">

@@ -172,6 +172,27 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none !important;
 }
 
+.brand-logo-img {
+  height: 40px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+}
+
+.brand-logo:hover .brand-logo-img {
+  transform: scale(1.03);
+}
+
+[data-theme="dark"] .brand-logo-img {
+  background: rgba(255, 255, 255, 0.96);
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .brand-badge {
   background: linear-gradient(135deg, #0f4c5c, #16222a);
   color: #ffffff;
