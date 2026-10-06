@@ -1475,6 +1475,33 @@ input, select, textarea {
   gap: 0.5rem;
 }
 
+.sort-select-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sort-select {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.42rem 0.75rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+.sort-select:hover,
+.sort-select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--brand-accent-glow);
+}
+
 .mobile-header-toggle {
   display: none;
 }
@@ -1718,7 +1745,21 @@ input, select, textarea {
 
   .search-actions-row {
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
     justify-content: space-between;
+  }
+
+  .sort-select-wrap {
+    flex: 1 1 auto;
+  }
+
+  .sort-select {
+    width: 100%;
+    font-size: 0.78rem;
+    padding: 0.38rem 0.55rem;
   }
 
   /* Department section header */

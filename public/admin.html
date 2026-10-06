@@ -257,6 +257,13 @@
             <option value="FST">FST - Science & Tech</option>
           </select>
 
+          <!-- Experience / Seniority Sort Selector -->
+          <select id="adminSortSelect" class="form-control" style="width:auto;min-width:165px;" title="Order Faculty List">
+            <option value="exp-desc" selected>⏳ Exp: Highest First</option>
+            <option value="exp-asc">🌱 Exp: Newest First</option>
+            <option value="name-asc">🔤 Name (A - Z)</option>
+          </select>
+
           <!-- Search Input with Clear Button -->
           <div style="position:relative;display:flex;align-items:center;">
             <input type="text" id="adminSearchInput" class="form-control" placeholder="Search name, email, role..." style="width:auto;min-width:240px;padding-left:2rem;padding-right:4rem;">
@@ -610,6 +617,23 @@
       return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
     }
 
+    // Helper to calculate numeric experience years for seniority ranking
+    function getFacultyExpYears(emp) {
+      if (!emp) return 0;
+      if (emp.totalExperience) {
+        const match = String(emp.totalExperience).match(/\d+(\.\d+)?/);
+        if (match) return parseFloat(match[0]);
+      }
+      if (emp.joiningDate) {
+        const join = new Date(emp.joiningDate);
+        if (!isNaN(join.getTime())) {
+          const diffMs = Date.now() - join.getTime();
+          return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
+        }
+      }
+      return 0;
+    }
+
     // Toast notification helper
     function showToast(message, type = 'success') {
       const container = $('toastContainer');
@@ -797,7 +821,27 @@
         return;
       }
 
-      tbody.innerHTML = list.map(emp => {
+      const sortBy = $('adminSortSelect') ? $('adminSortSelect').value : 'exp-desc';
+      const sorted = [...list].sort((a, b) => {
+        if (sortBy === 'exp-desc') {
+          const expB = getFacultyExpYears(b);
+          const expA = getFacultyExpYears(a);
+          if (Math.abs(expB - expA) > 0.05) return expB - expA;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        if (sortBy === 'exp-asc') {
+          const expB = getFacultyExpYears(b);
+          const expA = getFacultyExpYears(a);
+          if (Math.abs(expA - expB) > 0.05) return expA - expB;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        if (sortBy === 'name-asc') {
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        return 0;
+      });
+
+      tbody.innerHTML = sorted.map(emp => {
         const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
         const resumeUrl = emp.resumeUrl || '';
         const isCloudResume = resumeUrl.includes('cloudinary.com');
@@ -900,6 +944,9 @@
 
     // Filter & Search events
     $('deptFilter').onchange = loadEmployees;
+    if ($('adminSortSelect')) {
+      $('adminSortSelect').onchange = () => renderTable(employeesList);
+    }
     let searchTimeout;
     $('adminSearchInput').oninput = () => {
       clearTimeout(searchTimeout);

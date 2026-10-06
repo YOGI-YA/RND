@@ -64,6 +64,15 @@
             <span id="headerToggleText">Info & Actions ▾</span>
           </button>
 
+          <!-- Sort Select (Default: Experience Highest First) -->
+          <div class="sort-select-wrap">
+            <select id="sortSelect" class="sort-select" title="Order Faculty by Experience or Name" aria-label="Order Faculty">
+              <option value="exp-desc" selected>⏳ Exp: Highest First (Seniority)</option>
+              <option value="exp-asc">🌱 Exp: Newest Joiners First</option>
+              <option value="name-asc">🔤 Name: Alphabetical (A-Z)</option>
+            </select>
+          </div>
+
           <!-- View Mode (Grid vs Table) -->
           <div class="view-mode-group">
             <button class="btn btn-sm btn-outline active" id="viewModeGrid" title="Grid View">Grid</button>
@@ -166,6 +175,7 @@
       activeDept: 'ALL',
       searchQuery: '',
       viewMode: 'grid', // 'grid' or 'table'
+      sortBy: 'exp-desc', // 'exp-desc' (Highest Experience First - Default), 'exp-asc', 'name-asc'
     };
 
     const DEPT_NAMES = {
@@ -199,6 +209,23 @@
       const diffYears = diffMs / (1000 * 60 * 60 * 24 * 365.25);
       const rounded = Math.max(0.1, parseFloat(diffYears.toFixed(1)));
       return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
+    }
+
+    // Helper to calculate numeric experience years for seniority ranking (overall experience or university tenure)
+    function getFacultyExpYears(emp) {
+      if (!emp) return 0;
+      if (emp.totalExperience) {
+        const match = String(emp.totalExperience).match(/\d+(\.\d+)?/);
+        if (match) return parseFloat(match[0]);
+      }
+      if (emp.joiningDate) {
+        const join = new Date(emp.joiningDate);
+        if (!isNaN(join.getTime())) {
+          const diffMs = Date.now() - join.getTime();
+          return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
+        }
+      }
+      return 0;
     }
 
     // Theme handling
@@ -321,11 +348,21 @@
       resetSearch();
     });
 
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderSections();
+      });
+    }
+
     window.resetSearch = function() {
       searchInput.value = '';
       state.searchQuery = '';
       clearBtn.style.display = 'none';
       state.activeDept = 'ALL';
+      state.sortBy = 'exp-desc';
+      if (sortSelect) sortSelect.value = 'exp-desc';
       renderDepartmentPills();
       renderSections();
     };
@@ -349,9 +386,9 @@
       }
     };
 
-    // Filter employees based on activeDept and searchQuery
+    // Filter & arrange employees based on activeDept, searchQuery, and experience ranking
     function getFilteredEmployees() {
-      return state.employees.filter(emp => {
+      const list = state.employees.filter(emp => {
         const matchesDept = state.activeDept === 'ALL' || emp.department === state.activeDept;
         if (!matchesDept) return false;
 
@@ -363,8 +400,29 @@
         const dept = (emp.department || '').toLowerCase();
         const desig = (emp.designation || '').toLowerCase();
         const qual = (emp.highestQualification || '').toLowerCase();
+        const exp = (emp.totalExperience || '').toLowerCase();
 
-        return name.includes(q) || email.includes(q) || contact.includes(q) || dept.includes(q) || desig.includes(q) || qual.includes(q);
+        return name.includes(q) || email.includes(q) || contact.includes(q) || dept.includes(q) || desig.includes(q) || qual.includes(q) || exp.includes(q);
+      });
+
+      // Sort according to state.sortBy (Default: Highest Seniority / Experience First!)
+      return list.sort((a, b) => {
+        if (state.sortBy === 'exp-desc') {
+          const expB = getFacultyExpYears(b);
+          const expA = getFacultyExpYears(a);
+          if (Math.abs(expB - expA) > 0.05) return expB - expA;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        if (state.sortBy === 'exp-asc') {
+          const expB = getFacultyExpYears(b);
+          const expA = getFacultyExpYears(a);
+          if (Math.abs(expA - expB) > 0.05) return expA - expB;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        if (state.sortBy === 'name-asc') {
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        return 0;
       });
     }
 

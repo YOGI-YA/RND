@@ -88,6 +88,23 @@ function calcIuhpTenure(joiningDate) {
   return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
 }
 
+// Helper to extract numeric experience years for seniority ranking (overall experience or university tenure)
+function getFacultyExperienceYears(emp) {
+  if (!emp) return 0;
+  if (emp.totalExperience) {
+    const match = String(emp.totalExperience).match(/\d+(\.\d+)?/);
+    if (match) return parseFloat(match[0]);
+  }
+  if (emp.joiningDate) {
+    const join = new Date(emp.joiningDate);
+    if (!isNaN(join.getTime())) {
+      const diffMs = Date.now() - join.getTime();
+      return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
+    }
+  }
+  return 0;
+}
+
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
 
 const app = express();
@@ -224,9 +241,16 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
 app.get('/api/public/employees', async (req, res) => {
   try {
     const employees = await Employee.find({})
-      .select('name department designation highestQualification contact email joiningDate photoUrl resumeUrl resumeData.data')
-      .sort({ department: 1, name: 1 })
+      .select('name department designation highestQualification totalExperience contact email joiningDate photoUrl resumeUrl resumeData.data')
       .lean();
+
+    // Sort by department, then by experience (highest experience / seniority first)
+    employees.sort((a, b) => {
+      if (a.department !== b.department) return a.department.localeCompare(b.department);
+      const expDiff = getFacultyExperienceYears(b) - getFacultyExperienceYears(a);
+      if (Math.abs(expDiff) > 0.05) return expDiff;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
     const formattedEmployees = employees.map((emp) => {
       let resumeUrl = emp.resumeUrl || '';
@@ -240,6 +264,7 @@ app.get('/api/public/employees', async (req, res) => {
         department: emp.department,
         designation: emp.designation,
         highestQualification: emp.highestQualification,
+        totalExperience: emp.totalExperience || '',
         contact: emp.contact,
         email: emp.email,
         joiningDate: emp.joiningDate,
@@ -644,8 +669,15 @@ app.get('/api/admin/employees', requireAdmin, async (req, res) => {
     }
     const employees = await Employee.find(filter)
       .select('-resumeData.data')
-      .sort({ department: 1, name: 1 })
       .lean();
+
+    // Sort by department, then by experience (highest experience first)
+    employees.sort((a, b) => {
+      if (a.department !== b.department) return a.department.localeCompare(b.department);
+      const expDiff = getFacultyExperienceYears(b) - getFacultyExperienceYears(a);
+      if (Math.abs(expDiff) > 0.05) return expDiff;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
     const formatted = employees.map((emp) => {
       let resumeUrl = emp.resumeUrl || '';
@@ -1072,7 +1104,13 @@ app.post('/api/admin/employees/bulk-delete', requireAdmin, async (req, res) => {
 app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
   try {
     const q = req.query.department ? { department: req.query.department } : {};
-    const employees = await Employee.find(q).sort({ department: 1, name: 1 }).lean();
+    const employees = await Employee.find(q).lean();
+    employees.sort((a, b) => {
+      if (a.department !== b.department) return a.department.localeCompare(b.department);
+      const expDiff = getFacultyExperienceYears(b) - getFacultyExperienceYears(a);
+      if (Math.abs(expDiff) > 0.05) return expDiff;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'IUHP Employee Portal';
@@ -1185,7 +1223,13 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
 app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
   try {
     const q = req.query.department ? { department: req.query.department } : {};
-    const rows = await Employee.find(q).sort({ department: 1, name: 1 }).lean();
+    const rows = await Employee.find(q).lean();
+    rows.sort((a, b) => {
+      if (a.department !== b.department) return a.department.localeCompare(b.department);
+      const expDiff = getFacultyExperienceYears(b) - getFacultyExperienceYears(a);
+      if (Math.abs(expDiff) > 0.05) return expDiff;
+      return (a.name || '').localeCompare(b.name || '');
+    });
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const head = ['Name', 'Department', 'Designation', 'Highest Qualification', 'IUHP Experience', 'Overall Experience', 'Contact', 'Email', 'Date of Joining', 'Photograph', 'Resume'];
     const lines = rows.map((r) => {
