@@ -485,7 +485,7 @@
             const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
             const statusBadge = isVisiting
               ? `<span style="font-size:0.72rem;font-weight:700;background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;padding:1px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:3px;" title="Visiting Faculty (External Organization / Guest)">🤝 Visiting Faculty</span>`
-              : `<span style="font-size:0.72rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:1px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:3px;" title="Regular University Faculty">🏛️ Regular</span>`;
+              : '';
 
             return `
               <div class="faculty-card" style="--card-accent: ${accentColor};" onclick="openFacultyModal('${esc(emp._id || emp.email)}')">
@@ -603,12 +603,11 @@
                       </td>
                       <td>
                         <div>${esc(emp.designation || (isVisiting ? 'Visiting Faculty' : 'Faculty Member'))}</div>
-                        <div style="margin-top:3px;">
-                          ${isVisiting
-                            ? `<span style="font-size:0.7rem;font-weight:700;background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;padding:1px 6px;border-radius:999px;">🤝 Visiting</span>`
-                            : `<span style="font-size:0.7rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:1px 6px;border-radius:999px;">🏛️ Regular</span>`
-                          }
-                        </div>
+                        ${isVisiting ? `
+                          <div style="margin-top:3px;">
+                            <span style="font-size:0.7rem;font-weight:700;background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;padding:1px 6px;border-radius:999px;">🤝 Visiting</span>
+                          </div>
+                        ` : ''}
                       </td>
                       <td><span style="font-weight:600;color:var(--brand-primary);">🎓 ${esc(emp.highestQualification || 'Post-Graduate')}</span></td>
                       <td><a href="tel:${esc(emp.contact)}">${esc(emp.contact)}</a></td>
@@ -676,7 +675,7 @@
               <span style="font-weight:600;color:var(--text-secondary);">${esc(deptName)}</span>
               ${isVisiting
                 ? '<span style="font-size:0.75rem;font-weight:700;color:#7e22ce;background:#f3e8ff;padding:2px 8px;border-radius:999px;border:1px solid #d8b4fe;">🤝 Visiting Faculty</span>'
-                : '<span style="font-size:0.75rem;font-weight:700;color:#047857;background:#ecfdf5;padding:2px 8px;border-radius:999px;border:1px solid #a7f3d0;">🏛️ Regular University Faculty</span>'
+                : ''
               }
             </div>
 
@@ -687,10 +686,12 @@
             </div>
 
             <div style="display:grid;gap:0.75rem;font-size:0.95rem;">
-              <div>
-                <strong style="color:var(--text-secondary);">Faculty Cadre:</strong>
-                <div>${isVisiting ? '🤝 Visiting Faculty (External Organization / Guest)' : '🏛️ Regular University Faculty (@iuhimachal.edu.in)'}</div>
-              </div>
+              ${isVisiting ? `
+                <div>
+                  <strong style="color:var(--text-secondary);">Faculty Cadre:</strong>
+                  <div><span style="font-size:0.85rem;font-weight:700;color:#7e22ce;background:#f3e8ff;padding:2px 8px;border-radius:999px;border:1px solid #d8b4fe;">🤝 Visiting Faculty (Guest / External Organization)</span></div>
+                </div>
+              ` : ''}
 
               <div>
                 <strong style="color:var(--text-secondary);">Contact Number:</strong>
