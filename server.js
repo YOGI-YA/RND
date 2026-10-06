@@ -88,22 +88,38 @@ function calcIuhpTenure(joiningDate) {
   return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
 }
 
-// Helper to extract numeric experience years for seniority ranking (overall experience or university tenure)
+// Helper to extract ICFAI experience years for seniority ranking (strictly based on Date of Joining at ICFAI / IUHP)
 function getFacultyExperienceYears(emp) {
-  if (!emp) return 0;
-  if (emp.totalExperience) {
-    const match = String(emp.totalExperience).match(/\d+(\.\d+)?/);
-    if (match) return parseFloat(match[0]);
-  }
-  if (emp.joiningDate) {
-    const join = new Date(emp.joiningDate);
-    if (!isNaN(join.getTime())) {
-      const diffMs = Date.now() - join.getTime();
-      return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
-    }
-  }
-  return 0;
+  if (!emp || !emp.joiningDate) return 0;
+  const join = new Date(emp.joiningDate);
+  if (isNaN(join.getTime())) return 0;
+  const diffMs = Date.now() - join.getTime();
+  return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
 }
+
+const registrationRequestSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  department: { type: String, enum: DEPARTMENTS, required: true },
+  contact: { type: String, required: true, trim: true },
+  email: { type: String, required: true, trim: true, lowercase: true },
+  joiningDate: { type: Date, required: true },
+  designation: { type: String, trim: true, default: 'Faculty Member' },
+  highestQualification: { type: String, trim: true, default: 'Post-Graduate' },
+  totalExperience: { type: String, trim: true, default: '' },
+  photoUrl: { type: String, default: '' },
+  resumeUrl: { type: String, default: '' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  adminRemarks: { type: String, default: '' },
+  reviewedAt: { type: Date },
+}, { timestamps: true });
+
+const RegistrationRequest = mongoose.models.RegistrationRequest || mongoose.model('RegistrationRequest', registrationRequestSchema);
+
+// Helper to check if email belongs to official university domain (@iuhimachal.edu.in)
+const isOfficialDomain = (email) => {
+  if (!email || typeof email !== 'string') return false;
+  return email.trim().toLowerCase().endsWith('@iuhimachal.edu.in');
+};
 
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
 
@@ -451,7 +467,7 @@ app.post(
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'resume', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, otpToken, otp } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, otpToken, otp, photoUrl: bodyPhotoUrl, resumeUrl: bodyResumeUrl } = req.body;
 
       if (!name || !department || !contact || !email || !joiningDate) {
         return res.status(400).json({
@@ -494,8 +510,8 @@ app.post(
 
       let existingEmp = await Employee.findOne({ email: cleanEmail });
 
-      let photoUrl = existingEmp?.photoUrl || '';
-      let resumeUrl = (existingEmp?.resumeUrl && existingEmp.resumeUrl !== SAMPLE_RESUME) ? existingEmp.resumeUrl : '';
+      let photoUrl = existingEmp?.photoUrl || bodyPhotoUrl || '';
+      let resumeUrl = (existingEmp?.resumeUrl && existingEmp.resumeUrl !== SAMPLE_RESUME) ? existingEmp.resumeUrl : (bodyResumeUrl || '');
 
       const photo = req.files?.photo?.[0];
       const resume = req.files?.resume?.[0];
@@ -523,6 +539,50 @@ app.post(
           console.error('Resume upload error:', resumeErr.message);
           return res.status(500).json({ error: 'Failed to upload resume to Cloudinary: ' + resumeErr.message });
         }
+      }
+
+      // Check official university email domain (@iuhimachal.edu.in)
+      const isOfficial = isOfficialDomain(cleanEmail);
+
+      // If email is NOT @iuhimachal.edu.in, save as Verification Request for Admin review
+      if (!isOfficial) {
+        let existingReq = await RegistrationRequest.findOne({ email: cleanEmail, status: 'pending' });
+        if (existingReq) {
+          photoUrl = photoUrl || existingReq.photoUrl;
+          resumeUrl = resumeUrl || existingReq.resumeUrl;
+        } else {
+          if (!photo && !photoUrl) {
+            return res.status(400).json({ error: 'Passport photograph is required. Please upload your photo.' });
+          }
+          if (!resume && !newResumeCloudUrl && !resumeUrl) {
+            return res.status(400).json({ error: 'Resume (PDF) is required. Please upload your Resume PDF.' });
+          }
+          existingReq = new RegistrationRequest({ email: cleanEmail });
+        }
+
+        existingReq.name = name.trim();
+        existingReq.department = department;
+        existingReq.contact = contact.trim();
+        existingReq.joiningDate = new Date(joiningDate);
+        existingReq.designation = designation ? designation.trim() : 'Faculty Member';
+        existingReq.highestQualification = highestQualification ? highestQualification.trim() : 'Post-Graduate';
+        existingReq.totalExperience = totalExperience ? totalExperience.trim() : '';
+        if (photoUrl) existingReq.photoUrl = photoUrl;
+        if (newResumeCloudUrl) existingReq.resumeUrl = newResumeCloudUrl;
+        else if (resumeUrl) existingReq.resumeUrl = resumeUrl;
+        existingReq.status = 'pending';
+        await existingReq.save();
+
+        return res.status(200).json({
+          ok: true,
+          isRequest: true,
+          message: 'Your registration request has been submitted successfully! Since your email is not on the official @iuhimachal.edu.in domain, it has been forwarded to the Administrator for verification. Your profile will appear in the directory once approved.',
+          request: {
+            id: existingReq._id,
+            email: existingReq.email,
+            status: existingReq.status,
+          },
+        });
       }
 
       if (existingEmp) {
@@ -650,7 +710,126 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
     for (const d of DEPARTMENTS) {
       byDept[d] = await Employee.countDocuments({ department: d });
     }
-    res.json({ total, byDept, departments: DEPARTMENTS, departmentDetails: DEPARTMENT_DETAILS });
+    const pendingRequests = await RegistrationRequest.countDocuments({ status: 'pending' });
+    res.json({ total, byDept, departments: DEPARTMENTS, departmentDetails: DEPARTMENT_DETAILS, pendingRequests });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------- Admin Verification Requests Endpoints ----------
+app.get('/api/admin/requests', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.query;
+    const filter = {};
+    if (status && ['pending', 'approved', 'rejected'].includes(status)) {
+      filter.status = status;
+    }
+    const requests = await RegistrationRequest.find(filter).sort({ createdAt: -1 }).lean();
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/requests/:id/approve', requireAdmin, async (req, res) => {
+  try {
+    const reqDoc = await RegistrationRequest.findById(req.params.id);
+    if (!reqDoc) return res.status(404).json({ error: 'Request not found' });
+
+    // Create or update active Employee record
+    let emp = await Employee.findOne({ email: reqDoc.email });
+    if (!emp) {
+      emp = new Employee({
+        name: reqDoc.name,
+        department: reqDoc.department,
+        contact: reqDoc.contact,
+        email: reqDoc.email,
+        joiningDate: reqDoc.joiningDate,
+        designation: reqDoc.designation,
+        highestQualification: reqDoc.highestQualification,
+        totalExperience: reqDoc.totalExperience,
+        photoUrl: reqDoc.photoUrl,
+        resumeUrl: reqDoc.resumeUrl,
+      });
+    } else {
+      emp.name = reqDoc.name;
+      emp.department = reqDoc.department;
+      emp.contact = reqDoc.contact;
+      emp.joiningDate = reqDoc.joiningDate;
+      emp.designation = reqDoc.designation;
+      emp.highestQualification = reqDoc.highestQualification;
+      emp.totalExperience = reqDoc.totalExperience;
+      if (reqDoc.photoUrl) emp.photoUrl = reqDoc.photoUrl;
+      if (reqDoc.resumeUrl) emp.resumeUrl = reqDoc.resumeUrl;
+    }
+    await emp.save();
+
+    reqDoc.status = 'approved';
+    reqDoc.reviewedAt = new Date();
+    await reqDoc.save();
+
+    // Send confirmation email to faculty
+    try {
+      const transporter = getMailTransporter();
+      await transporter.sendMail({
+        from: `"IUHP Faculty Portal" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
+        to: reqDoc.email,
+        subject: 'IUHP Directory: Your Registration Request Has Been Approved! 🎉',
+        html: `
+          <div style="font-family:'Segoe UI', Tahoma, sans-serif; max-width:560px; margin:0 auto; padding:24px; border:1px solid #e2e8f0; border-radius:12px;">
+            <h3 style="color:#0f4c5c; margin-top:0;">Profile Verified & Published!</h3>
+            <p>Dear <strong>${reqDoc.name}</strong>,</p>
+            <p>Your external domain faculty registration request has been verified and approved by the administrator. Your faculty profile is now live in the <strong>IUHP Faculty & Staff Directory</strong> under the <strong>${reqDoc.department}</strong> department.</p>
+            <p style="color:#64748b; font-size:12px; margin-top:24px;">The ICFAI University Himachal Pradesh</p>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.warn('Could not send approval email:', mailErr.message);
+    }
+
+    res.json({ ok: true, message: `Request for ${reqDoc.name} approved and profile published to directory!` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/requests/:id/reject', requireAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body || {};
+    const reqDoc = await RegistrationRequest.findById(req.params.id);
+    if (!reqDoc) return res.status(404).json({ error: 'Request not found' });
+
+    reqDoc.status = 'rejected';
+    reqDoc.adminRemarks = reason || 'Verification requirements not met.';
+    reqDoc.reviewedAt = new Date();
+    await reqDoc.save();
+
+    // Send rejection notice
+    try {
+      const transporter = getMailTransporter();
+      await transporter.sendMail({
+        from: `"IUHP Faculty Portal" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
+        to: reqDoc.email,
+        subject: 'IUHP Directory: Registration Request Status',
+        html: `
+          <div style="font-family:'Segoe UI', Tahoma, sans-serif; max-width:560px; margin:0 auto; padding:24px; border:1px solid #e2e8f0; border-radius:12px;">
+            <h3 style="color:#dc2626; margin-top:0;">Registration Request Notice</h3>
+            <p>Dear <strong>${reqDoc.name}</strong>,</p>
+            <p>Your external domain faculty registration request could not be approved at this time.</p>
+            <div style="background:#fee2e2; border-left:4px solid #dc2626; padding:10px 14px; margin:15px 0; font-size:14px; color:#991b1b;">
+              <strong>Remarks:</strong> ${reqDoc.adminRemarks}
+            </div>
+            <p style="font-size:13px; color:#64748b;">Please use your official university email (<code>@iuhimachal.edu.in</code>) or contact your department Dean for assistance.</p>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.warn('Could not send rejection email:', mailErr.message);
+    }
+
+    res.json({ ok: true, message: `Request for ${reqDoc.name} marked as rejected.` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

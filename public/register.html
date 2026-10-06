@@ -168,13 +168,14 @@
           </div>
 
           <div class="form-group">
-            <label for="emailAddress">Official University Email *</label>
+            <label for="emailAddress">Faculty Email Address * <span style="font-weight:400;color:var(--text-muted);font-size:0.8rem;">(@iuhimachal.edu.in for instant directory publication)</span></label>
             <div style="display:flex;gap:0.5rem;align-items:stretch;">
-              <input type="email" id="emailAddress" name="email" class="form-control" required placeholder="your.name@iuhp.edu.in">
+              <input type="email" id="emailAddress" name="email" class="form-control" required placeholder="your.name@iuhimachal.edu.in">
               <button type="button" class="btn btn-primary" id="sendOtpBtn" style="white-space:nowrap;padding:0.6rem 1rem;font-size:0.875rem;font-weight:600;min-width:110px;">
                 ✉️ Send OTP
               </button>
             </div>
+            <div id="emailDomainNotice" style="font-size:0.78rem;margin-top:0.4rem;display:none;padding:0.45rem 0.75rem;border-radius:var(--radius-sm);line-height:1.4;"></div>
             <div id="otpStatusMsg" style="font-size:0.8rem;margin-top:0.35rem;display:none;"></div>
           </div>
         </div>
@@ -370,6 +371,33 @@
         preview.innerHTML = `Auto-calculates your university tenure (e.g. <strong>3.2 Years</strong>, <strong>1.5 Years</strong>)`;
       }
     });
+
+    function checkEmailDomain() {
+      const email = $('emailAddress').value.trim().toLowerCase();
+      const notice = $('emailDomainNotice');
+      if (!notice) return;
+      if (!email || !email.includes('@')) {
+        notice.style.display = 'none';
+        return;
+      }
+      if (email.endsWith('@iuhimachal.edu.in')) {
+        notice.style.display = 'block';
+        notice.style.background = '#d1fae5';
+        notice.style.border = '1px solid #a7f3d0';
+        notice.style.color = '#065f46';
+        notice.innerHTML = '🏛️ <strong>Official University Email:</strong> Profile will be directly published to the live directory upon submission.';
+        $('submitBtn').textContent = 'Submit Faculty Profile';
+      } else {
+        notice.style.display = 'block';
+        notice.style.background = '#fef3c7';
+        notice.style.border = '1px solid #fde68a';
+        notice.style.color = '#92400e';
+        notice.innerHTML = '⚠️ <strong>External Domain Detected:</strong> Submissions not using <code>@iuhimachal.edu.in</code> will be submitted as an <strong>Access Request</strong> for Administrator verification & approval.';
+        $('submitBtn').textContent = '📤 Submit Registration Request for Approval';
+      }
+    }
+
+    $('emailAddress').addEventListener('input', checkEmailDomain);
 
     // Email OTP Verification State
     let verifiedEmail = '';
@@ -659,7 +687,11 @@
 
         const data = await res.json();
         if (res.ok) {
-          showSuccessScreen(data.employee, data.isUpdate);
+          if (data.isRequest) {
+            showRequestSubmittedScreen(data.message);
+          } else {
+            showSuccessScreen(data.employee, data.isUpdate);
+          }
         } else {
           $('submissionError').textContent = data.error || 'Failed to submit profile';
         }
@@ -670,6 +702,31 @@
         submitBtn.textContent = origText;
       }
     };
+
+    // Show Request Submitted State for Non-Official Domain Emails
+    function showRequestSubmittedScreen(msg) {
+      $('formView').style.display = 'none';
+      $('successView').style.display = 'block';
+
+      $('successTitle').textContent = '📥 Access Request Submitted for Admin Verification';
+      $('successSubtitle').textContent = msg || 'Your submission has been received and routed to the Administrator for verification.';
+
+      $('resultCardPreview').innerHTML = `
+        <div style="background:var(--bg-secondary);border:1px solid var(--surface-border);border-radius:var(--radius-lg);padding:1.75rem 1.25rem;text-align:center;max-width:520px;margin:0 auto;">
+          <div style="font-size:3rem;margin-bottom:0.75rem;">⏳</div>
+          <h3 style="margin-bottom:0.5rem;color:var(--text-primary);font-size:1.15rem;">External Email Domain Pending Verification</h3>
+          <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;">
+            Because your email address is not from the official <code>@iuhimachal.edu.in</code> domain, your profile details, standard 3:4 passport photo, and academic CV have been placed in the <strong>Administrator Verification Queue</strong>.
+          </p>
+          <div style="background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;border-radius:var(--radius-md);padding:0.75rem 1rem;font-size:0.84rem;font-weight:600;text-align:left;">
+            ✉️ You will receive an official approval notification email once the Administrator reviews and activates your profile.
+          </div>
+        </div>
+      `;
+
+      $('viewDirectoryBtn').textContent = 'Return to Directory';
+      $('viewDirectoryBtn').href = '/';
+    }
 
     // Show Success State
     function showSuccessScreen(emp, isUpdate = false) {

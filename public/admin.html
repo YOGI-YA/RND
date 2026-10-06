@@ -154,6 +154,17 @@
     <!-- Main Admin Workspace (Fluid 96% / 1680px Wide Layout) -->
     <main class="admin-main-wrap" style="padding-top:1.5rem;padding-bottom:4rem;flex:1;">
       
+      <!-- Module Navigation Tabs -->
+      <div style="display:flex;gap:0.6rem;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary" id="tabBtnDirectory" onclick="switchAdminModule('directory')" style="font-weight:700;">
+          👥 Active Directory (<span id="tabCountTotal">0</span>)
+        </button>
+        <button type="button" class="btn btn-outline" id="tabBtnRequests" onclick="switchAdminModule('requests')" style="font-weight:700;">
+          📥 Verification Requests
+          <span id="tabBadgeRequests" style="background:#dc2626;color:#ffffff;font-size:0.75rem;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:0.35rem;display:none;">0</span>
+        </button>
+      </div>
+
       <!-- Stats KPI Cards -->
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card" style="border-top:3px solid #0284c7;">
@@ -198,6 +209,13 @@
             <span class="stat-label">FST (Science & Tech)</span>
           </div>
         </div>
+        <div class="stat-card" style="border-top:3px solid #dc2626;cursor:pointer;" onclick="switchAdminModule('requests')" title="View Pending Access Requests">
+          <div class="stat-icon" style="background:#fee2e2;color:#dc2626;">📥</div>
+          <div class="stat-info">
+            <span class="stat-value" id="statPendingRequests">0</span>
+            <span class="stat-label">Pending Requests</span>
+          </div>
+        </div>
       </div>
 
       <!-- Shareable Link Banner for Faculty Data Intake -->
@@ -221,8 +239,10 @@
         </div>
       </div>
 
-      <!-- Action Toolbar -->
-      <div class="admin-toolbar">
+      <!-- Module A: Active Directory Container -->
+      <div id="moduleDirectory">
+        <!-- Action Toolbar -->
+        <div class="admin-toolbar">
         <div class="action-group">
           <button class="btn btn-primary" id="openAddModalBtn" style="font-weight:700;box-shadow:0 2px 8px rgba(15,76,92,0.25);">
             ➕ Add Faculty Member
@@ -258,9 +278,9 @@
           </select>
 
           <!-- Experience / Seniority Sort Selector -->
-          <select id="adminSortSelect" class="form-control" style="width:auto;min-width:165px;" title="Order Faculty List">
-            <option value="exp-desc" selected>⏳ Exp: Highest First</option>
-            <option value="exp-asc">🌱 Exp: Newest First</option>
+          <select id="adminSortSelect" class="form-control" style="width:auto;min-width:175px;" title="Order Faculty List by ICFAI Experience">
+            <option value="exp-desc" selected>⏳ ICFAI Exp: Highest First</option>
+            <option value="exp-asc">🌱 ICFAI Exp: Newest First</option>
             <option value="name-asc">🔤 Name (A - Z)</option>
           </select>
 
@@ -315,6 +335,55 @@
             <button type="button" class="btn btn-sm btn-outline" onclick="clearSelection()" title="Deselect All" style="color:#ffffff;border-color:rgba(255,255,255,0.3);">
               ✕ Clear
             </button>
+          </div>
+        </div>
+      </div> <!-- End #moduleDirectory -->
+
+      <!-- Module B: External Email Verification Requests Container -->
+      <div id="moduleRequests" style="display:none;">
+        <div class="admin-toolbar" style="margin-bottom:1rem;">
+          <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <h2 style="font-size:1.25rem;font-weight:700;color:var(--text-primary);margin:0;">
+              📥 Verification Requests Module
+            </h2>
+            <span style="font-size:0.8rem;color:var(--text-muted);background:var(--bg-secondary);padding:0.25rem 0.65rem;border-radius:var(--radius-sm);border:1px solid var(--surface-border);">
+              External Domain Submissions (Pending Administrative Verification)
+            </span>
+          </div>
+
+          <div class="filter-group">
+            <select id="requestStatusFilter" class="form-control" style="width:auto;min-width:160px;" onchange="loadRequests()">
+              <option value="pending" selected>⏳ Pending Review</option>
+              <option value="approved">✅ Approved</option>
+              <option value="rejected">❌ Rejected</option>
+              <option value="">All Requests</option>
+            </select>
+
+            <button class="btn btn-outline" onclick="loadRequests()" title="Reload Requests">
+              🔄 Refresh Requests
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width:55px;">Photo</th>
+                  <th>Faculty Details</th>
+                  <th>Department</th>
+                  <th>Email & Contact</th>
+                  <th>ICFAI Date & Tenure</th>
+                  <th>Resume (PDF)</th>
+                  <th>Status</th>
+                  <th class="sticky-action-col" style="text-align:right;width:220px;">Verification Action</th>
+                </tr>
+              </thead>
+              <tbody id="requestsTableBody">
+                <tr><td colspan="8" style="text-align:center;padding:2rem;">Loading verification requests...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -617,21 +686,13 @@
       return rounded === 1.0 ? '1.0 Year' : `${rounded.toFixed(1)} Years`;
     }
 
-    // Helper to calculate numeric experience years for seniority ranking
+    // Helper to calculate ICFAI experience years for seniority ranking (purely based on Date of Joining at ICFAI / IUHP)
     function getFacultyExpYears(emp) {
-      if (!emp) return 0;
-      if (emp.totalExperience) {
-        const match = String(emp.totalExperience).match(/\d+(\.\d+)?/);
-        if (match) return parseFloat(match[0]);
-      }
-      if (emp.joiningDate) {
-        const join = new Date(emp.joiningDate);
-        if (!isNaN(join.getTime())) {
-          const diffMs = Date.now() - join.getTime();
-          return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
-        }
-      }
-      return 0;
+      if (!emp || !emp.joiningDate) return 0;
+      const join = new Date(emp.joiningDate);
+      if (isNaN(join.getTime())) return 0;
+      const diffMs = Date.now() - join.getTime();
+      return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
     }
 
     // Toast notification helper
@@ -748,15 +809,206 @@
         if (!res.ok) return;
         const stats = await res.json();
         $('statTotal').textContent = stats.total || 0;
+        if ($('tabCountTotal')) $('tabCountTotal').textContent = stats.total || 0;
         $('statFPS').textContent = stats.byDept?.FPS || 0;
         $('statFMS').textContent = stats.byDept?.FMS || 0;
         $('statFLA').textContent = stats.byDept?.FLA || 0;
         $('statFOL').textContent = stats.byDept?.FOL || 0;
         $('statFST').textContent = stats.byDept?.FST || 0;
+        const pending = stats.pendingRequests || 0;
+        if ($('statPendingRequests')) $('statPendingRequests').textContent = pending;
+        const badge = $('tabBadgeRequests');
+        if (badge) {
+          badge.textContent = pending;
+          badge.style.display = pending > 0 ? 'inline-block' : 'none';
+        }
       } catch (err) {
         console.error('Failed to load stats:', err);
       }
     }
+
+    // Admin Module Switcher (Active Directory vs Verification Requests)
+    let currentAdminModule = 'directory';
+    window.switchAdminModule = function(mod) {
+      currentAdminModule = mod;
+      if (mod === 'directory') {
+        $('tabBtnDirectory').className = 'btn btn-primary';
+        $('tabBtnRequests').className = 'btn btn-outline';
+        $('moduleDirectory').style.display = 'block';
+        $('moduleRequests').style.display = 'none';
+        loadEmployees();
+      } else {
+        $('tabBtnDirectory').className = 'btn btn-outline';
+        $('tabBtnRequests').className = 'btn btn-primary';
+        $('moduleDirectory').style.display = 'none';
+        $('moduleRequests').style.display = 'block';
+        loadRequests();
+      }
+    };
+
+    // Load Requests
+    async function loadRequests() {
+      const statusFilter = $('requestStatusFilter') ? $('requestStatusFilter').value : 'pending';
+      const tbody = $('requestsTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;">Loading verification requests...</td></tr>';
+
+      try {
+        const url = '/api/admin/requests' + (statusFilter ? `?status=${statusFilter}` : '');
+        const res = await fetch(url);
+        if (res.status === 401) {
+          showLoginScreen();
+          return;
+        }
+        const requests = await res.json();
+        renderRequestsTable(requests);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger);text-align:center;padding:2rem;">Failed to load requests: ${esc(err.message)}</td></tr>`;
+      }
+    }
+
+    // Render Requests Table
+    function renderRequestsTable(list) {
+      const tbody = $('requestsTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align:center;padding:3rem 1.5rem;">
+              <div style="font-size:2.2rem;margin-bottom:0.5rem;">🎉</div>
+              <div style="font-weight:700;font-size:1.05rem;">No Verification Requests Found</div>
+              <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem;">
+                There are no registration requests matching the selected filter.
+              </p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map(req => {
+        const submittedStr = req.createdAt ? new Date(req.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+        const joiningStr = req.joiningDate ? new Date(req.joiningDate).toLocaleDateString('en-GB') : '—';
+        const tenureStr = calcIuhpTenure(req.joiningDate);
+        const resumeUrl = req.resumeUrl || '';
+
+        let statusPill = '';
+        if (req.status === 'pending') {
+          statusPill = '<span style="background:#fef3c7;color:#92400e;font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:999px;">⏳ Pending Review</span>';
+        } else if (req.status === 'approved') {
+          statusPill = '<span style="background:#d1fae5;color:#065f46;font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:999px;">✅ Approved</span>';
+        } else {
+          statusPill = '<span style="background:#fee2e2;color:#991b1b;font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:999px;">❌ Rejected</span>';
+        }
+
+        return `
+          <tr>
+            <td>
+              ${req.photoUrl ? `
+                <img src="${esc(req.photoUrl)}" class="table-photo" alt="${esc(req.name)}">
+              ` : `
+                <div class="table-photo-empty">No Photo</div>
+              `}
+            </td>
+            <td>
+              <strong style="color:var(--text-primary);font-size:0.92rem;">${esc(req.name)}</strong>
+              <div style="font-size:0.8rem;color:var(--text-secondary);">${esc(req.designation || 'Faculty Member')}</div>
+              <span style="font-size:0.75rem;color:var(--brand-primary);font-weight:600;background:var(--bg-secondary);padding:1px 5px;border-radius:4px;display:inline-block;margin-top:2px;">
+                🎓 ${esc(req.highestQualification || 'Post-Graduate')}
+              </span>
+            </td>
+            <td>
+              <span class="dept-code-tag" style="font-size:0.8rem;padding:0.2rem 0.55rem;background:var(--dept-${(req.department||'').toLowerCase()}-bg, #e2e8f0);color:var(--dept-${(req.department||'').toLowerCase()}, #0f4c5c);">
+                ${esc(req.department)}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;">
+                <a href="mailto:${esc(req.email)}" style="font-size:0.85rem;font-weight:600;">${esc(req.email)}</a>
+                <span style="background:#fee2e2;color:#dc2626;font-size:0.68rem;font-weight:700;padding:1px 5px;border-radius:4px;" title="Non-official domain (not @iuhimachal.edu.in)">External</span>
+              </div>
+              <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;">
+                📞 <a href="tel:${esc(req.contact)}">${esc(req.contact)}</a>
+              </div>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">Submitted: ${esc(submittedStr)}</div>
+            </td>
+            <td>
+              <div style="font-size:0.82rem;font-weight:500;">📅 ${esc(joiningStr)}</div>
+              <span style="font-size:0.75rem;color:#059669;font-weight:700;background:rgba(16,185,129,0.1);padding:1px 5px;border-radius:4px;display:inline-block;margin-top:2px;">
+                🏛️ ${tenureStr} at IUHP
+              </span>
+            </td>
+            <td>
+              ${resumeUrl ? `
+                <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline" style="font-size:0.75rem;padding:0.25rem 0.55rem;">
+                  📄 View PDF ↗
+                </a>
+              ` : `
+                <span style="font-size:0.75rem;color:var(--text-muted);">No File</span>
+              `}
+            </td>
+            <td>
+              ${statusPill}
+              ${req.adminRemarks ? `<div style="font-size:0.72rem;color:var(--danger);margin-top:2px;">Reason: ${esc(req.adminRemarks)}</div>` : ''}
+            </td>
+            <td style="text-align:right;">
+              ${req.status === 'pending' ? `
+                <div style="display:inline-flex;gap:0.4rem;">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="approveRequest('${req._id}', '${esc(req.name)}')" style="background:#059669;border-color:#059669;padding:0.35rem 0.7rem;font-size:0.78rem;font-weight:700;" title="Approve & Publish to Directory">
+                    ✅ Approve
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="rejectRequest('${req._id}', '${esc(req.name)}')" style="padding:0.35rem 0.7rem;font-size:0.78rem;" title="Reject request">
+                    ❌ Reject
+                  </button>
+                </div>
+              ` : `
+                <span style="font-size:0.75rem;color:var(--text-muted);">Reviewed</span>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Approve Request Action
+    window.approveRequest = async (id, name) => {
+      if (!confirm(`Are you sure you want to approve ${name} and publish their profile to the active faculty directory?`)) return;
+      try {
+        const res = await fetch(`/api/admin/requests/${id}/approve`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Request approved successfully!');
+          loadRequests();
+          loadStats();
+          loadEmployees();
+        } else {
+          showToast(data.error || 'Failed to approve request', 'error');
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    };
+
+    // Reject Request Action
+    window.rejectRequest = async (id, name) => {
+      const reason = prompt(`Reason for rejecting the request of ${name}:`, 'External domain credentials could not be verified by Dean office.');
+      if (reason === null) return;
+      try {
+        const res = await fetch(`/api/admin/requests/${id}/reject`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Request rejected');
+          loadRequests();
+          loadStats();
+        } else {
+          showToast(data.error || 'Failed to reject request', 'error');
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    };
 
     // Load Employees
     async function loadEmployees() {
