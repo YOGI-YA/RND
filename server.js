@@ -1345,7 +1345,7 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
 
     // Comprehensive column definitions
     sheet.columns = [
-      { header: 'Sr. No.', key: 'srNo', width: 10 },
+      { header: 'Sr. No.', key: 'srNo', width: 8 },
       { header: 'Full Name', key: 'name', width: 26 },
       { header: 'Cadre / Type', key: 'employmentType', width: 16 },
       { header: 'Department', key: 'department', width: 16 },
@@ -1354,11 +1354,11 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
       { header: 'IUHP Experience', key: 'iuhpExperience', width: 18 },
       { header: 'Overall Experience', key: 'totalExperience', width: 20 },
       { header: 'Contact Number', key: 'contact', width: 18 },
-      { header: 'Email Address', key: 'email', width: 28 },
+      { header: 'Official Email', key: 'email', width: 28 },
       { header: 'Date of Joining', key: 'joiningDate', width: 16 },
-      { header: 'Photograph (Preview)', key: 'photoPreview', width: 22 },
-      { header: 'Photo Direct Link', key: 'photoLink', width: 26 },
-      { header: 'Resume (PDF Document)', key: 'resumeLink', width: 28 },
+      { header: 'Photograph (Click to Open)', key: 'photoHyperlink', width: 24 },
+      { header: 'Resume (PDF Document)', key: 'resumeHyperlink', width: 26 },
+      { header: 'Photo Direct URL', key: 'photoRawUrl', width: 34 },
     ];
 
     // Style the header row
@@ -1387,18 +1387,18 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
     employees.forEach((emp, index) => {
       const rowNum = index + 2;
       const row = sheet.getRow(rowNum);
-      row.height = 100;
+      row.height = 32;
 
       const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toISOString().slice(0, 10) : '';
       const empType = emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting');
 
-      // Resolve Photo URL
+      // Resolve Photo URL (absolute link)
       let photoUrl = emp.photoUrl || '';
       if (photoUrl && !photoUrl.startsWith('http')) {
         photoUrl = `${origin}${photoUrl.startsWith('/') ? '' : '/'}${photoUrl}`;
       }
 
-      // Resolve Resume URL (ensure absolute link)
+      // Resolve Resume URL (absolute link)
       let resumeUrl = emp.resumeUrl || '';
       if (!resumeUrl && emp.resumeData) {
         resumeUrl = `${origin}/api/public/employees/${emp._id}/resume.pdf`;
@@ -1406,16 +1406,12 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
         resumeUrl = `${origin}${resumeUrl.startsWith('/') ? '' : '/'}${resumeUrl}`;
       }
 
-      // Cells values & formulas
-      const photoFormulaCell = photoUrl
-        ? { formula: `IMAGE("${photoUrl}", 1)` }
+      // Safe Clickable Hyperlink cells (Works 100% in ALL Excel versions & Google Sheets without #NAME? errors)
+      const photoHyperlinkCell = photoUrl
+        ? { formula: `HYPERLINK("${photoUrl}", "🖼️ View Photograph")` }
         : 'No Photo';
 
-      const photoLinkCell = photoUrl
-        ? { formula: `HYPERLINK("${photoUrl}", "🖼️ Open Photo")` }
-        : '—';
-
-      const resumeLinkCell = resumeUrl
+      const resumeHyperlinkCell = resumeUrl
         ? { formula: `HYPERLINK("${resumeUrl}", "📄 View Resume PDF")` }
         : '—';
 
@@ -1431,9 +1427,9 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
         emp.contact,
         emp.email,
         dateStr,
-        photoFormulaCell,
-        photoLinkCell,
-        resumeLinkCell,
+        photoHyperlinkCell,
+        resumeHyperlinkCell,
+        photoUrl || '—',
       ];
 
       // Formatting and zebra-striping
