@@ -485,7 +485,9 @@
             const joiningStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
             const resumeUrl = emp.resumeUrl || '';
             const qualification = emp.highestQualification || 'Post-Graduate';
-            const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
+            const emailLower = (emp.email || '').toLowerCase().trim();
+            const isOfficial = emailLower.endsWith('@iuhimachal.edu.in') || emailLower.endsWith('@iuhp.edu.in');
+            const isVisiting = emp.employmentType === 'Visiting' || (!isOfficial && emp.employmentType !== 'Regular');
             const statusBadge = isVisiting
               ? `<span style="font-size:0.72rem;font-weight:700;background:#f3e8ff;color:#7e22ce;border:1px solid #d8b4fe;padding:1px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:3px;" title="Visiting Faculty (External Organization / Guest)">🤝 Visiting Faculty</span>`
               : '';
@@ -592,7 +594,9 @@
                 ${employees.map(emp => {
                   const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB') : '—';
                   const resumeUrl = emp.resumeUrl || '';
-                  const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
+                  const emailLower = (emp.email || '').toLowerCase().trim();
+                  const isOfficial = emailLower.endsWith('@iuhimachal.edu.in') || emailLower.endsWith('@iuhp.edu.in');
+                  const isVisiting = emp.employmentType === 'Visiting' || (!isOfficial && emp.employmentType !== 'Regular');
                   return `
                     <tr>
                       <td>

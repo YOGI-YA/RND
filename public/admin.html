@@ -1238,9 +1238,9 @@
         const lastAlert = emp.lastAlert || {};
         const hasAlert = lastAlert.sentAt;
         const alertDateStr = hasAlert ? new Date(lastAlert.sentAt).toLocaleDateString('en-GB') : '';
-        const isThankYou = ['thankyou', 'approved', 'success', 'welcome'].includes(lastAlert.alertType);
-        const isChecked = selectedEmpIds.has(emp._id);
-        const isVisiting = emp.employmentType === 'Visiting' || (!emp.email?.toLowerCase().endsWith('@iuhimachal.edu.in'));
+        const emailLower = (emp.email || '').toLowerCase().trim();
+        const isOfficial = emailLower.endsWith('@iuhimachal.edu.in') || emailLower.endsWith('@iuhp.edu.in');
+        const isVisiting = emp.employmentType === 'Visiting' || (!isOfficial && emp.employmentType !== 'Regular');
 
         return `
           <tr class="employee-row ${isChecked ? 'row-selected' : ''}">

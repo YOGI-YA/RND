@@ -117,10 +117,11 @@ const registrationRequestSchema = new mongoose.Schema({
 
 const RegistrationRequest = mongoose.models.RegistrationRequest || mongoose.model('RegistrationRequest', registrationRequestSchema);
 
-// Helper to check if email belongs to official university domain (@iuhimachal.edu.in)
+// Helper to check if email belongs to official university domain (@iuhimachal.edu.in or @iuhp.edu.in)
 const isOfficialDomain = (email) => {
   if (!email || typeof email !== 'string') return false;
-  return email.trim().toLowerCase().endsWith('@iuhimachal.edu.in');
+  const clean = email.trim().toLowerCase();
+  return clean.endsWith('@iuhimachal.edu.in') || clean.endsWith('@iuhp.edu.in');
 };
 
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
@@ -857,17 +858,35 @@ app.post('/api/admin/requests/:id/reject', requireAdmin, async (req, res) => {
 app.get('/api/admin/employees', requireAdmin, async (req, res) => {
   try {
     const { department, q, employmentType } = req.query;
-    const filter = {};
+    const andClauses = [];
+
     if (department && DEPARTMENTS.includes(department)) {
-      filter.department = department;
+      andClauses.push({ department });
     }
-    if (employmentType && ['Regular', 'Visiting'].includes(employmentType)) {
-      filter.employmentType = employmentType;
+
+    if (employmentType === 'Regular') {
+      andClauses.push({
+        $or: [
+          { email: { $regex: /@(iuhimachal\.edu\.in|iuhp\.edu\.in)$/i } },
+          { employmentType: 'Regular' },
+        ],
+      });
+    } else if (employmentType === 'Visiting') {
+      andClauses.push({
+        email: { $not: { $regex: /@(iuhimachal\.edu\.in|iuhp\.edu\.in)$/i } },
+        employmentType: { $ne: 'Regular' },
+      });
     }
+
     if (q) {
       const regex = new RegExp(q.trim(), 'i');
-      filter.$or = [{ name: regex }, { email: regex }, { contact: regex }, { designation: regex }];
+      andClauses.push({
+        $or: [{ name: regex }, { email: regex }, { contact: regex }, { designation: regex }],
+      });
     }
+
+    const filter = andClauses.length > 0 ? { $and: andClauses } : {};
+
     const employees = await Employee.find(filter)
       .select('-resumeData.data')
       .lean();
@@ -885,8 +904,10 @@ app.get('/api/admin/employees', requireAdmin, async (req, res) => {
       if (!resumeUrl && emp.resumeData) {
         resumeUrl = `/api/public/employees/${emp._id}/resume.pdf`;
       }
+      const isRegular = isOfficialDomain(emp.email) || emp.employmentType === 'Regular';
       return {
         ...emp,
+        employmentType: isRegular ? 'Regular' : 'Visiting',
         resumeUrl,
       };
     });
@@ -1310,14 +1331,25 @@ app.post('/api/admin/employees/bulk-delete', requireAdmin, async (req, res) => {
 // Includes full absolute links for Photograph and Resume PDF, cell image formulas, and rich styling
 app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
   try {
-    const q = {};
+    const andClauses = [];
     if (req.query.department && req.query.department !== 'ALL' && req.query.department.trim() !== '') {
-      q.department = req.query.department.trim();
+      andClauses.push({ department: req.query.department.trim() });
     }
-    if (req.query.employmentType && req.query.employmentType !== 'ALL' && req.query.employmentType.trim() !== '') {
-      q.employmentType = req.query.employmentType.trim();
+    if (req.query.employmentType === 'Regular') {
+      andClauses.push({
+        $or: [
+          { email: { $regex: /@(iuhimachal\.edu\.in|iuhp\.edu\.in)$/i } },
+          { employmentType: 'Regular' },
+        ],
+      });
+    } else if (req.query.employmentType === 'Visiting') {
+      andClauses.push({
+        email: { $not: { $regex: /@(iuhimachal\.edu\.in|iuhp\.edu\.in)$/i } },
+        employmentType: { $ne: 'Regular' },
+      });
     }
 
+    const q = andClauses.length > 0 ? { $and: andClauses } : {};
     const employees = await Employee.find(q).lean();
     employees.sort((a, b) => {
       if (a.department !== b.department) return a.department.localeCompare(b.department);
@@ -1476,14 +1508,25 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
 // ---------- CSV Export ----------
 app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
   try {
-    const q = {};
+    const andClauses = [];
     if (req.query.department && req.query.department !== 'ALL' && req.query.department.trim() !== '') {
-      q.department = req.query.department.trim();
+      andClauses.push({ department: req.query.department.trim() });
     }
-    if (req.query.employmentType && req.query.employmentType !== 'ALL' && req.query.employmentType.trim() !== '') {
-      q.employmentType = req.query.employmentType.trim();
+    if (req.query.employmentType === 'Regular') {
+      andClauses.push({
+        $or: [
+          { email: { $regex: /@(iuhimachal\.edu\.in|iuhp\.edu\.in)$/i } },
+          { employmentType: 'Regular' },
+        ],
+      });
+    } else if (req.query.employmentType === 'Visiting') {
+      andClauses.push({
+        email: { $not: { $regex: /@(iuhimachal\.edu\.in|iuhp\.edu\.in)$/i } },
+        employmentType: { $ne: 'Regular' },
+      });
     }
 
+    const q = andClauses.length > 0 ? { $and: andClauses } : {};
     const rows = await Employee.find(q).lean();
     rows.sort((a, b) => {
       if (a.department !== b.department) return a.department.localeCompare(b.department);
