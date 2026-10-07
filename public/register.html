@@ -619,10 +619,16 @@
       }
     }
 
-    // Client-side image compression to prevent payload > 4.5MB Vercel serverless limit
-    function compressImage(file, maxDim = 1200, quality = 0.85) {
+    // Client-side image compression: ONLY runs for large files (> 1.5MB) to protect against Vercel's 4.5MB limit
+    function compressImage(file, maxDim = 1400, quality = 0.88) {
       return new Promise((resolve) => {
         if (!file || !file.type.startsWith('image/')) return resolve(file);
+        
+        // If file is already normal/small (<= 1.5MB), do NOT touch it - keep original file
+        if (file.size <= 1.5 * 1024 * 1024) {
+          return resolve(file);
+        }
+
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
