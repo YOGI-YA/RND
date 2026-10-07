@@ -134,6 +134,16 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
+// Explicit clean HTML page routes
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+
 // Ensure database-backed API routes wait for MongoDB, including on Vercel.
 app.use('/api', async (req, res, next) => {
   if (['/admin/login', '/admin/logout', '/admin/me'].includes(req.path)) {
