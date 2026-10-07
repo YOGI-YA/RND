@@ -136,6 +136,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
 // Explicit clean HTML page routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
@@ -266,47 +270,15 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
 });
 
 // ---------- Public Directory Endpoint ----------
-// Anyone can view all departments and faculty profiles, but cannot edit or export
+// Confidential directory: General public cannot view all employees' private details.
+// Faculty members look up their own profile via /api/public/faculty/lookup.
 app.get('/api/public/employees', async (req, res) => {
   try {
-    const employees = await Employee.find({})
-      .select('name department designation employmentType highestQualification totalExperience contact email joiningDate photoUrl resumeUrl resumeData.data')
-      .lean();
-
-    // Sort by department, then by experience (highest experience / seniority first)
-    employees.sort((a, b) => {
-      if (a.department !== b.department) return a.department.localeCompare(b.department);
-      const expDiff = getFacultyExperienceYears(b) - getFacultyExperienceYears(a);
-      if (Math.abs(expDiff) > 0.05) return expDiff;
-      return (a.name || '').localeCompare(b.name || '');
-    });
-
-    const formattedEmployees = employees.map((emp) => {
-      let resumeUrl = emp.resumeUrl || '';
-      // Backward compatibility: If resume is stored in MongoDB buffer, point to resume.pdf route
-      if (!resumeUrl && emp.resumeData?.data) {
-        resumeUrl = `/api/public/employees/${emp._id}/resume.pdf`;
-      }
-      return {
-        _id: emp._id,
-        name: emp.name,
-        department: emp.department,
-        designation: emp.designation,
-        employmentType: emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting'),
-        highestQualification: emp.highestQualification,
-        totalExperience: emp.totalExperience || '',
-        contact: emp.contact,
-        email: emp.email,
-        joiningDate: emp.joiningDate,
-        photoUrl: emp.photoUrl || '',
-        resumeUrl,
-      };
-    });
-
     res.json({
       departments: DEPARTMENTS,
       departmentDetails: DEPARTMENT_DETAILS,
-      employees: formattedEmployees,
+      message: 'Faculty records are confidential. Individual faculty members can access their own profile via lookup.',
+      employees: [],
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch directory: ' + err.message });
@@ -339,37 +311,76 @@ app.get('/api/public/employees/:id/resume.pdf', async (req, res) => {
   }
 });
 
-// Lookup existing faculty by email (for self-service profile autofill & resume status check)
+// Lookup existing faculty by email or phone contact (for self-service profile viewing, autofill & status check)
 app.get('/api/public/faculty/lookup', async (req, res) => {
   try {
-    const email = req.query.email?.trim().toLowerCase();
-    if (!email) return res.status(400).json({ error: 'Email parameter is required' });
+    const queryStr = (req.query.email || req.query.contact || req.query.q || '').trim();
+    if (!queryStr) return res.status(400).json({ error: 'Email address or contact number is required' });
 
-    const emp = await Employee.findOne({ email }).lean();
-    if (!emp) return res.json({ found: false });
+    const cleanEmail = queryStr.toLowerCase();
+    const cleanPhone = queryStr.replace(/[^\d+]/g, '');
 
-    // Exclude foreign sample URLs so users are only shown their real resume
-    let cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
-    // Backward compatibility for existing MongoDB buffer records
-    if (!cleanResume && emp.resumeData?.data) {
-      cleanResume = `/api/public/employees/${emp._id}/resume.pdf`;
+    // 1. Search in verified Employee records
+    const orConditions = [{ email: cleanEmail }];
+    if (cleanPhone.length >= 7) {
+      orConditions.push({ contact: new RegExp(cleanPhone.slice(-10), 'i') });
     }
 
-    res.json({
-      found: true,
-      employee: {
-        id: emp._id,
-        name: emp.name,
-        department: emp.department,
-        designation: emp.designation,
-        highestQualification: emp.highestQualification,
-        contact: emp.contact,
-        email: emp.email,
-        joiningDate: emp.joiningDate ? emp.joiningDate.toISOString().slice(0, 10) : '',
-        photoUrl: emp.photoUrl || '',
-        resumeUrl: cleanResume,
-      },
-    });
+    const emp = await Employee.findOne({ $or: orConditions }).lean();
+    if (emp) {
+      let cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
+      if (!cleanResume && emp.resumeData?.data) {
+        cleanResume = `/api/public/employees/${emp._id}/resume.pdf`;
+      }
+
+      return res.json({
+        found: true,
+        type: 'active',
+        employee: {
+          id: emp._id,
+          name: emp.name,
+          department: emp.department,
+          designation: emp.designation,
+          employmentType: emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting'),
+          highestQualification: emp.highestQualification,
+          totalExperience: emp.totalExperience || '',
+          contact: emp.contact,
+          email: emp.email,
+          joiningDate: emp.joiningDate ? emp.joiningDate.toISOString().slice(0, 10) : '',
+          tenure: calcIuhpTenure(emp.joiningDate),
+          photoUrl: emp.photoUrl || '',
+          resumeUrl: cleanResume,
+        },
+      });
+    }
+
+    // 2. Check pending/reviewed Registration Requests
+    const reqDoc = await RegistrationRequest.findOne({ $or: orConditions }).sort({ createdAt: -1 }).lean();
+    if (reqDoc) {
+      return res.json({
+        found: true,
+        type: 'request',
+        status: reqDoc.status,
+        adminRemarks: reqDoc.adminRemarks || '',
+        employee: {
+          id: reqDoc._id,
+          name: reqDoc.name,
+          department: reqDoc.department,
+          designation: reqDoc.designation,
+          employmentType: reqDoc.employmentType || 'Visiting',
+          highestQualification: reqDoc.highestQualification,
+          totalExperience: reqDoc.totalExperience || '',
+          contact: reqDoc.contact,
+          email: reqDoc.email,
+          joiningDate: reqDoc.joiningDate ? reqDoc.joiningDate.toISOString().slice(0, 10) : '',
+          tenure: calcIuhpTenure(reqDoc.joiningDate),
+          photoUrl: reqDoc.photoUrl || '',
+          resumeUrl: reqDoc.resumeUrl || '',
+        },
+      });
+    }
+
+    return res.json({ found: false });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -379,12 +390,25 @@ app.get('/api/public/faculty/lookup', async (req, res) => {
 // 1. Send OTP to Official Faculty Email
 app.post('/api/public/otp/send', async (req, res) => {
   try {
-    const { email } = req.body || {};
+    const { email, requireExisting } = req.body || {};
     if (!email || !email.trim() || !email.includes('@')) {
       return res.status(400).json({ error: 'Please provide a valid official email address.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
+    // If requireExisting is specified (e.g. profile lookup), verify profile exists in DB first
+    if (requireExisting) {
+      const existsInDb = await Employee.exists({ email: cleanEmail })
+        || await RegistrationRequest.exists({ email: cleanEmail });
+
+      if (!existsInDb) {
+        return res.status(404).json({
+          notFound: true,
+          error: `No faculty profile was found matching "${cleanEmail}". Please register your faculty profile first.`,
+        });
+      }
+    }
 
     // Generate secure 6-digit random code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -395,7 +419,7 @@ app.post('/api/public/otp/send', async (req, res) => {
 
     // Send professional IUHP branded email
     const mailOptions = {
-      from: `"IUHP Faculty Portal" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
+      from: `"IUHP Faculty Portal" <${process.env.EMAIL_USER || 'facultydetails@iuhimachal.edu.in'}>`,
       to: cleanEmail,
       subject: `IUHP Faculty Verification Code: ${otpCode}`,
       html: `
@@ -437,7 +461,7 @@ app.post('/api/public/otp/send', async (req, res) => {
   }
 });
 
-// 2. Verify OTP
+// 2. Verify OTP and return faculty profile
 app.post('/api/public/otp/verify', async (req, res) => {
   try {
     const { email, otp } = req.body || {};
@@ -450,7 +474,7 @@ app.post('/api/public/otp/verify', async (req, res) => {
 
     const record = await Otp.findOne({ email: cleanEmail, otp: cleanOtp });
     if (!record) {
-      return res.status(400).json({ error: 'Invalid or expired OTP. Please check the code or request a new one.' });
+      return res.status(400).json({ error: 'Invalid or expired OTP code. Please check your inbox or request a new code.' });
     }
 
     // Generate verification token (valid for 30 minutes)
@@ -463,14 +487,151 @@ app.post('/api/public/otp/verify', async (req, res) => {
     // Delete used OTP
     await Otp.deleteMany({ email: cleanEmail });
 
+    // Look up active Employee record
+    const emp = await Employee.findOne({ email: cleanEmail }).lean();
+    if (emp) {
+      let cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
+      if (!cleanResume && emp.resumeData?.data) {
+        cleanResume = `/api/public/employees/${emp._id}/resume.pdf`;
+      }
+
+      return res.json({
+        ok: true,
+        otpToken,
+        found: true,
+        type: 'active',
+        message: 'Email successfully verified!',
+        employee: {
+          id: emp._id,
+          name: emp.name,
+          department: emp.department,
+          designation: emp.designation,
+          employmentType: emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting'),
+          highestQualification: emp.highestQualification,
+          totalExperience: emp.totalExperience || '',
+          contact: emp.contact,
+          email: emp.email,
+          joiningDate: emp.joiningDate ? emp.joiningDate.toISOString().slice(0, 10) : '',
+          tenure: calcIuhpTenure(emp.joiningDate),
+          photoUrl: emp.photoUrl || '',
+          resumeUrl: cleanResume,
+        },
+      });
+    }
+
+    // Look up pending/reviewed Registration Request
+    const reqDoc = await RegistrationRequest.findOne({ email: cleanEmail }).sort({ createdAt: -1 }).lean();
+    if (reqDoc) {
+      return res.json({
+        ok: true,
+        otpToken,
+        found: true,
+        type: 'request',
+        status: reqDoc.status,
+        adminRemarks: reqDoc.adminRemarks || '',
+        message: 'Email successfully verified!',
+        employee: {
+          id: reqDoc._id,
+          name: reqDoc.name,
+          department: reqDoc.department,
+          designation: reqDoc.designation,
+          employmentType: reqDoc.employmentType || 'Visiting',
+          highestQualification: reqDoc.highestQualification,
+          totalExperience: reqDoc.totalExperience || '',
+          contact: reqDoc.contact,
+          email: reqDoc.email,
+          joiningDate: reqDoc.joiningDate ? reqDoc.joiningDate.toISOString().slice(0, 10) : '',
+          tenure: calcIuhpTenure(reqDoc.joiningDate),
+          photoUrl: reqDoc.photoUrl || '',
+          resumeUrl: reqDoc.resumeUrl || '',
+        },
+      });
+    }
+
     res.json({
       ok: true,
       otpToken,
-      message: 'Email successfully verified!',
+      found: false,
+      message: 'Email verified! No prior profile was found for this email address.',
     });
   } catch (err) {
     console.error('OTP verify error:', err);
     res.status(500).json({ error: err.message || 'Failed to verify OTP' });
+  }
+});
+
+// Authenticated session profile retrieval via verified OTP token
+app.get('/api/public/faculty/my-profile', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = req.query.token || authHeader.replace(/^Bearer\s+/, '');
+    if (!token) {
+      return res.status(401).json({ error: 'Verification token required' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iuhp-jwt-secret-key-2026');
+    if (!decoded || !decoded.email || !decoded.verified) {
+      return res.status(401).json({ error: 'Invalid or expired session token' });
+    }
+
+    const cleanEmail = decoded.email.toLowerCase();
+
+    const emp = await Employee.findOne({ email: cleanEmail }).lean();
+    if (emp) {
+      let cleanResume = (emp.resumeUrl && emp.resumeUrl !== SAMPLE_RESUME) ? emp.resumeUrl : '';
+      if (!cleanResume && emp.resumeData?.data) {
+        cleanResume = `/api/public/employees/${emp._id}/resume.pdf`;
+      }
+
+      return res.json({
+        found: true,
+        type: 'active',
+        employee: {
+          id: emp._id,
+          name: emp.name,
+          department: emp.department,
+          designation: emp.designation,
+          employmentType: emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting'),
+          highestQualification: emp.highestQualification,
+          totalExperience: emp.totalExperience || '',
+          contact: emp.contact,
+          email: emp.email,
+          joiningDate: emp.joiningDate ? emp.joiningDate.toISOString().slice(0, 10) : '',
+          tenure: calcIuhpTenure(emp.joiningDate),
+          photoUrl: emp.photoUrl || '',
+          resumeUrl: cleanResume,
+        },
+      });
+    }
+
+    const reqDoc = await RegistrationRequest.findOne({ email: cleanEmail }).sort({ createdAt: -1 }).lean();
+    if (reqDoc) {
+      return res.json({
+        found: true,
+        type: 'request',
+        status: reqDoc.status,
+        adminRemarks: reqDoc.adminRemarks || '',
+        employee: {
+          id: reqDoc._id,
+          name: reqDoc.name,
+          department: reqDoc.department,
+          designation: reqDoc.designation,
+          employmentType: reqDoc.employmentType || 'Visiting',
+          highestQualification: reqDoc.highestQualification,
+          totalExperience: reqDoc.totalExperience || '',
+          contact: reqDoc.contact,
+          email: reqDoc.email,
+          joiningDate: reqDoc.joiningDate ? reqDoc.joiningDate.toISOString().slice(0, 10) : '',
+          tenure: calcIuhpTenure(reqDoc.joiningDate),
+          photoUrl: reqDoc.photoUrl || '',
+          resumeUrl: reqDoc.resumeUrl || '',
+        },
+      });
+    }
+
+    res.json({ found: false });
+  } catch (err) {
+    res.status(401).json({ error: 'Session expired or invalid: ' + err.message });
   }
 });
 
@@ -481,7 +642,7 @@ app.post(
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'resume', maxCount: 1 }]),
   async (req, res) => {
     try {
-      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, otpToken, otp, photoUrl: bodyPhotoUrl, resumeUrl: bodyResumeUrl } = req.body;
+      const { name, department, contact, email, joiningDate, designation, highestQualification, totalExperience, employmentType, otpToken, otp, photoUrl: bodyPhotoUrl, resumeUrl: bodyResumeUrl } = req.body;
 
       if (!name || !department || !contact || !email || !joiningDate) {
         return res.status(400).json({
@@ -521,6 +682,11 @@ app.post(
           error: '🔒 Please verify your official email address with OTP before saving your faculty profile.',
         });
       }
+
+      // Determine selected employment cadre (Regular vs Visiting)
+      const selectedCadre = (employmentType === 'Visiting' || employmentType === 'Regular')
+        ? employmentType
+        : (isOfficialDomain(cleanEmail) ? 'Regular' : 'Visiting');
 
       let existingEmp = await Employee.findOne({ email: cleanEmail });
 
@@ -578,8 +744,8 @@ app.post(
         existingReq.department = department;
         existingReq.contact = contact.trim();
         existingReq.joiningDate = new Date(joiningDate);
-        existingReq.employmentType = 'Visiting';
-        existingReq.designation = designation && designation !== 'Faculty Member' ? designation.trim() : 'Visiting Faculty';
+        existingReq.employmentType = selectedCadre;
+        existingReq.designation = designation && designation !== 'Faculty Member' ? designation.trim() : (selectedCadre === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member');
         existingReq.highestQualification = highestQualification ? highestQualification.trim() : 'Post-Graduate';
         existingReq.totalExperience = totalExperience ? totalExperience.trim() : '';
         if (photoUrl) existingReq.photoUrl = photoUrl;
@@ -591,11 +757,11 @@ app.post(
         return res.status(200).json({
           ok: true,
           isRequest: true,
-          message: 'Your registration request as Visiting Faculty has been submitted successfully! Since your email is not on the official @iuhimachal.edu.in domain, it has been forwarded to the Administrator for verification. Your profile will appear in the directory as Visiting Faculty once approved.',
+          message: `Your registration request as ${selectedCadre} Faculty has been submitted successfully! Since your email is not on the official @iuhimachal.edu.in domain, it has been forwarded to the Administrator for verification. Your profile will be activated once approved.`,
           request: {
             id: existingReq._id,
             email: existingReq.email,
-            employmentType: 'Visiting',
+            employmentType: existingReq.employmentType,
             status: existingReq.status,
           },
         });
@@ -630,6 +796,7 @@ app.post(
         existingEmp.department = department;
         existingEmp.contact = contact.trim();
         existingEmp.joiningDate = new Date(joiningDate);
+        existingEmp.employmentType = selectedCadre;
         if (designation) existingEmp.designation = designation.trim();
         if (highestQualification) existingEmp.highestQualification = highestQualification.trim();
         if (totalExperience !== undefined) existingEmp.totalExperience = totalExperience.trim();
@@ -653,6 +820,7 @@ app.post(
             name: existingEmp.name,
             department: existingEmp.department,
             designation: existingEmp.designation,
+            employmentType: existingEmp.employmentType,
             highestQualification: existingEmp.highestQualification,
             totalExperience: existingEmp.totalExperience,
             contact: existingEmp.contact,
@@ -683,8 +851,8 @@ app.post(
           contact: contact.trim(),
           email: cleanEmail,
           joiningDate: new Date(joiningDate),
-          employmentType: 'Regular',
-          designation: designation ? designation.trim() : 'Faculty Member',
+          employmentType: selectedCadre,
+          designation: designation ? designation.trim() : (selectedCadre === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member'),
           highestQualification: highestQualification ? highestQualification.trim() : 'Post-Graduate',
           totalExperience: totalExperience ? totalExperience.trim() : '',
           photoUrl,
@@ -701,6 +869,7 @@ app.post(
             name: newEmp.name,
             department: newEmp.department,
             designation: newEmp.designation,
+            employmentType: newEmp.employmentType,
             highestQualification: newEmp.highestQualification,
             totalExperience: newEmp.totalExperience,
             contact: newEmp.contact,

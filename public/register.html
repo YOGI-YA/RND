@@ -130,6 +130,28 @@
           </div>
         </div>
 
+        <!-- Faculty Cadre / Employment Type (Regular or Visiting) -->
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label style="font-weight:700;margin-bottom:0.5rem;display:block;color:var(--text-primary);">Faculty Cadre / Employment Type *</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="grid-2">
+            <label class="cadre-select-card" id="cadreCardRegular" onclick="selectCadre('Regular')" style="cursor:pointer;border:2px solid var(--brand-primary);border-radius:var(--radius-md);padding:0.85rem 1rem;background:var(--brand-light);display:flex;align-items:flex-start;gap:0.75rem;transition:all 0.2s ease;">
+              <input type="radio" name="employmentType" id="cadreRegular" value="Regular" checked style="margin-top:0.25rem;">
+              <div>
+                <strong style="display:block;font-size:0.95rem;color:var(--text-primary);">🏛️ Regular Faculty</strong>
+                <span style="font-size:0.78rem;color:var(--text-secondary);">Permanent / Full-Time University Faculty</span>
+              </div>
+            </label>
+
+            <label class="cadre-select-card" id="cadreCardVisiting" onclick="selectCadre('Visiting')" style="cursor:pointer;border:2px solid var(--surface-border);border-radius:var(--radius-md);padding:0.85rem 1rem;background:var(--bg-secondary);display:flex;align-items:flex-start;gap:0.75rem;transition:all 0.2s ease;">
+              <input type="radio" name="employmentType" id="cadreVisiting" value="Visiting" style="margin-top:0.25rem;">
+              <div>
+                <strong style="display:block;font-size:0.95rem;color:var(--text-primary);">🤝 Visiting Faculty</strong>
+                <span style="font-size:0.78rem;color:var(--text-secondary);">Guest / Adjunct / Visiting Faculty Member</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="grid-2">
           <div class="form-group">
             <label for="designation">Academic Designation / Role *</label>
@@ -546,6 +568,22 @@
       $('emailAddress').focus();
     };
 
+    window.selectCadre = (type) => {
+      if (type === 'Visiting') {
+        $('cadreVisiting').checked = true;
+        $('cadreCardVisiting').style.borderColor = 'var(--brand-primary)';
+        $('cadreCardVisiting').style.background = 'var(--brand-light)';
+        $('cadreCardRegular').style.borderColor = 'var(--surface-border)';
+        $('cadreCardRegular').style.background = 'var(--bg-secondary)';
+      } else {
+        $('cadreRegular').checked = true;
+        $('cadreCardRegular').style.borderColor = 'var(--brand-primary)';
+        $('cadreCardRegular').style.background = 'var(--brand-light)';
+        $('cadreCardVisiting').style.borderColor = 'var(--surface-border)';
+        $('cadreCardVisiting').style.background = 'var(--bg-secondary)';
+      }
+    };
+
     async function checkExistingProfile(email) {
       try {
         const res = await fetch('/api/public/faculty/lookup?email=' + encodeURIComponent(email));
@@ -553,7 +591,7 @@
         const data = await res.json();
         if (data.found && data.employee) {
           const emp = data.employee;
-          // Autofill fields if they are empty
+          // Autofill fields
           if (!$('fullName').value && emp.name) $('fullName').value = emp.name;
           if (!$('deptSelect').value && emp.department) $('deptSelect').value = emp.department;
           if (!$('designation').value && emp.designation) $('designation').value = emp.designation;
@@ -563,6 +601,12 @@
           if (!$('joiningDate').value && emp.joiningDate) {
             $('joiningDate').value = emp.joiningDate;
             $('joiningDate').dispatchEvent(new Event('input'));
+          }
+
+          if (emp.employmentType === 'Visiting') {
+            selectCadre('Visiting');
+          } else {
+            selectCadre('Regular');
           }
 
           $('submitBtn').textContent = 'Update My Faculty Profile';
@@ -856,7 +900,8 @@
         </div>
       `;
 
-      $('viewDirectoryBtn').href = `/#section-${emp.department}`;
+      $('viewDirectoryBtn').textContent = '👤 View My Profile Card →';
+      $('viewDirectoryBtn').href = `/?lookup=${encodeURIComponent(emp.email)}`;
     }
 
     window.resetFormForNewSubmission = () => {
@@ -864,6 +909,7 @@
       resetPhotoInput();
       resetResumeInput();
       changeEmailAddress();
+      selectCadre('Regular');
       $('currentResumeStatus').style.display = 'none';
       $('submissionError').textContent = '';
       $('submitBtn').textContent = 'Submit My Faculty Profile';
@@ -876,6 +922,7 @@
     const initialEmail = urlParams.get('email');
     if (initialEmail) {
       $('emailAddress').value = initialEmail;
+      checkExistingProfile(initialEmail);
     }
 
     initTheme();
