@@ -856,10 +856,13 @@ app.post('/api/admin/requests/:id/reject', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/employees', requireAdmin, async (req, res) => {
   try {
-    const { department, q } = req.query;
+    const { department, q, employmentType } = req.query;
     const filter = {};
     if (department && DEPARTMENTS.includes(department)) {
       filter.department = department;
+    }
+    if (employmentType && ['Regular', 'Visiting'].includes(employmentType)) {
+      filter.employmentType = employmentType;
     }
     if (q) {
       const regex = new RegExp(q.trim(), 'i');
@@ -1303,10 +1306,18 @@ app.post('/api/admin/employees/bulk-delete', requireAdmin, async (req, res) => {
 });
 
 // ---------- Google Sheets & Excel Export (.xlsx) ----------
-// Includes Name, Contact, Email, Date of Joining, Photograph (standard cell size with =IMAGE formula), Resume (=HYPERLINK)
+// Supports filtering by Department and Employment Type (Regular, Visiting, or All)
+// Includes full absolute links for Photograph and Resume PDF, cell image formulas, and rich styling
 app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
   try {
-    const q = req.query.department ? { department: req.query.department } : {};
+    const q = {};
+    if (req.query.department && req.query.department !== 'ALL' && req.query.department.trim() !== '') {
+      q.department = req.query.department.trim();
+    }
+    if (req.query.employmentType && req.query.employmentType !== 'ALL' && req.query.employmentType.trim() !== '') {
+      q.employmentType = req.query.employmentType.trim();
+    }
+
     const employees = await Employee.find(q).lean();
     employees.sort((a, b) => {
       if (a.department !== b.department) return a.department.localeCompare(b.department);
@@ -1315,38 +1326,49 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
       return (a.name || '').localeCompare(b.name || '');
     });
 
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'iuhp.vercel.app';
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const origin = `${protocol}://${host}`;
+
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'IUHP Employee Portal';
+    workbook.creator = 'The ICFAI University Himachal Pradesh';
     workbook.created = new Date();
 
-    const sheet = workbook.addWorksheet('Employee Directory', {
+    const sheetName = req.query.employmentType && req.query.employmentType !== 'ALL'
+      ? `${req.query.employmentType} Faculty`
+      : 'Faculty Directory';
+
+    const sheet = workbook.addWorksheet(sheetName, {
       views: [{ state: 'frozen', ySplit: 1 }],
-      properties: { defaultRowHeight: 115 }, // Standard ~150px height for photo rows
+      properties: { defaultRowHeight: 110 },
     });
 
-    // Column definitions with standard sizes (Photograph column width ~22 gives ~120px)
+    // Comprehensive column definitions
     sheet.columns = [
-      { header: 'Name', key: 'name', width: 25 },
+      { header: 'Sr. No.', key: 'srNo', width: 10 },
+      { header: 'Full Name', key: 'name', width: 26 },
+      { header: 'Cadre / Type', key: 'employmentType', width: 16 },
       { header: 'Department', key: 'department', width: 16 },
-      { header: 'Designation', key: 'designation', width: 22 },
-      { header: 'Highest Qualification', key: 'highestQualification', width: 25 },
-      { header: 'IUHP Experience (Tenure)', key: 'iuhpExperience', width: 22 },
-      { header: 'Overall Experience', key: 'totalExperience', width: 22 },
-      { header: 'Contact', key: 'contact', width: 18 },
-      { header: 'Email', key: 'email', width: 28 },
-      { header: 'Date of Joining', key: 'joiningDate', width: 18 },
-      { header: 'Photograph', key: 'photo', width: 22 }, // ~120px standard width
-      { header: 'Resume', key: 'resume', width: 28 },
+      { header: 'Designation', key: 'designation', width: 24 },
+      { header: 'Highest Qualification', key: 'highestQualification', width: 26 },
+      { header: 'IUHP Experience', key: 'iuhpExperience', width: 18 },
+      { header: 'Overall Experience', key: 'totalExperience', width: 20 },
+      { header: 'Contact Number', key: 'contact', width: 18 },
+      { header: 'Email Address', key: 'email', width: 28 },
+      { header: 'Date of Joining', key: 'joiningDate', width: 16 },
+      { header: 'Photograph (Preview)', key: 'photoPreview', width: 22 },
+      { header: 'Photo Direct Link', key: 'photoLink', width: 26 },
+      { header: 'Resume (PDF Document)', key: 'resumeLink', width: 28 },
     ];
 
     // Style the header row
     const headerRow = sheet.getRow(1);
-    headerRow.height = 32;
+    headerRow.height = 36;
     headerRow.eachCell((cell) => {
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF0F4C5C' }, // Brand navy
+        fgColor: { argb: 'FF0F4C5C' }, // Brand Navy Blue
       };
       cell.font = {
         name: 'Segoe UI',
@@ -1357,6 +1379,7 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
       cell.border = {
         bottom: { style: 'medium', color: { argb: 'FFE09F3E' } },
+        right: { style: 'thin', color: { argb: 'FF1E293B' } },
       };
     });
 
@@ -1364,46 +1387,71 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
     employees.forEach((emp, index) => {
       const rowNum = index + 2;
       const row = sheet.getRow(rowNum);
-      row.height = 115; // Passport-style 150px cell height
+      row.height = 100;
 
       const dateStr = emp.joiningDate ? new Date(emp.joiningDate).toISOString().slice(0, 10) : '';
+      const empType = emp.employmentType || (isOfficialDomain(emp.email) ? 'Regular' : 'Visiting');
 
-      // Photograph in cell: uses Google Sheets / Excel =IMAGE(url, 1) formula for direct cell image rendering!
-      const photoCellVal = emp.photoUrl
-        ? { formula: `IMAGE("${emp.photoUrl}", 1)` }
-        : 'No Photo';
-
-      let effectiveResumeUrl = emp.resumeUrl || '';
-      if (!effectiveResumeUrl && emp.resumeData) {
-        effectiveResumeUrl = `/api/public/employees/${emp._id}/resume.pdf`;
+      // Resolve Photo URL
+      let photoUrl = emp.photoUrl || '';
+      if (photoUrl && !photoUrl.startsWith('http')) {
+        photoUrl = `${origin}${photoUrl.startsWith('/') ? '' : '/'}${photoUrl}`;
       }
 
-      const resumeCellVal = effectiveResumeUrl
-        ? { formula: `HYPERLINK("${effectiveResumeUrl}", "📄 View Resume")` }
+      // Resolve Resume URL (ensure absolute link)
+      let resumeUrl = emp.resumeUrl || '';
+      if (!resumeUrl && emp.resumeData) {
+        resumeUrl = `${origin}/api/public/employees/${emp._id}/resume.pdf`;
+      } else if (resumeUrl && !resumeUrl.startsWith('http')) {
+        resumeUrl = `${origin}${resumeUrl.startsWith('/') ? '' : '/'}${resumeUrl}`;
+      }
+
+      // Cells values & formulas
+      const photoFormulaCell = photoUrl
+        ? { formula: `IMAGE("${photoUrl}", 1)` }
+        : 'No Photo';
+
+      const photoLinkCell = photoUrl
+        ? { formula: `HYPERLINK("${photoUrl}", "🖼️ Open Photo")` }
+        : '—';
+
+      const resumeLinkCell = resumeUrl
+        ? { formula: `HYPERLINK("${resumeUrl}", "📄 View Resume PDF")` }
         : '—';
 
       row.values = [
+        index + 1,
         emp.name,
+        empType === 'Regular' ? '🏛️ Regular' : '🤝 Visiting',
         emp.department,
-        emp.designation || 'Faculty Member',
+        emp.designation || (empType === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member'),
         emp.highestQualification || 'Post-Graduate',
         calcIuhpTenure(emp.joiningDate),
         emp.totalExperience || '—',
         emp.contact,
         emp.email,
         dateStr,
-        photoCellVal,
-        resumeCellVal,
+        photoFormulaCell,
+        photoLinkCell,
+        resumeLinkCell,
       ];
 
-      // Align cells
+      // Formatting and zebra-striping
+      const isEven = index % 2 === 0;
       row.eachCell((cell, colNumber) => {
         cell.alignment = {
           vertical: 'middle',
-          horizontal: colNumber === 1 || colNumber === 3 || colNumber === 4 || colNumber === 6 || colNumber === 8 ? 'left' : 'center',
+          horizontal: [2, 5, 6, 8, 10].includes(colNumber) ? 'left' : 'center',
           wrapText: true,
         };
         cell.font = { name: 'Segoe UI', size: 10 };
+        if (!isEven) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFF8FAFC' },
+          };
+        }
         cell.border = {
           bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
           right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
@@ -1411,13 +1459,20 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
       });
     });
 
+    const fileSuffix = req.query.employmentType && req.query.employmentType !== 'ALL'
+      ? `_${req.query.employmentType}`
+      : '';
+    const deptSuffix = req.query.department && req.query.department !== 'ALL'
+      ? `_${req.query.department}`
+      : '';
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="IUHP_Employee_Directory_${Date.now()}.xlsx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="IUHP_Faculty_Directory${fileSuffix}${deptSuffix}_${Date.now()}.xlsx"`);
 
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
-    console.error('Export error:', err);
+    console.error('Export Excel error:', err);
     res.status(500).json({ error: 'Export failed: ' + err.message });
   }
 });
@@ -1425,7 +1480,14 @@ app.get('/api/admin/export.xlsx', requireAdmin, async (req, res) => {
 // ---------- CSV Export ----------
 app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
   try {
-    const q = req.query.department ? { department: req.query.department } : {};
+    const q = {};
+    if (req.query.department && req.query.department !== 'ALL' && req.query.department.trim() !== '') {
+      q.department = req.query.department.trim();
+    }
+    if (req.query.employmentType && req.query.employmentType !== 'ALL' && req.query.employmentType.trim() !== '') {
+      q.employmentType = req.query.employmentType.trim();
+    }
+
     const rows = await Employee.find(q).lean();
     rows.sort((a, b) => {
       if (a.department !== b.department) return a.department.localeCompare(b.department);
@@ -1433,33 +1495,73 @@ app.get('/api/admin/export.csv', requireAdmin, async (req, res) => {
       if (Math.abs(expDiff) > 0.05) return expDiff;
       return (a.name || '').localeCompare(b.name || '');
     });
+
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'iuhp.vercel.app';
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const origin = `${protocol}://${host}`;
+
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const head = ['Name', 'Department', 'Designation', 'Highest Qualification', 'IUHP Experience', 'Overall Experience', 'Contact', 'Email', 'Date of Joining', 'Photograph', 'Resume'];
-    const lines = rows.map((r) => {
+    const head = [
+      'Sr No',
+      'Full Name',
+      'Employment Type',
+      'Department',
+      'Designation',
+      'Highest Qualification',
+      'IUHP Experience',
+      'Overall Experience',
+      'Contact',
+      'Email',
+      'Date of Joining',
+      'Photograph URL',
+      'Resume PDF URL',
+    ];
+
+    const lines = rows.map((r, i) => {
+      let photoUrl = r.photoUrl || '';
+      if (photoUrl && !photoUrl.startsWith('http')) {
+        photoUrl = `${origin}${photoUrl.startsWith('/') ? '' : '/'}${photoUrl}`;
+      }
+
       let effectiveResumeUrl = r.resumeUrl || '';
       if (!effectiveResumeUrl && r.resumeData) {
-        effectiveResumeUrl = `/api/public/employees/${r._id}/resume.pdf`;
+        effectiveResumeUrl = `${origin}/api/public/employees/${r._id}/resume.pdf`;
+      } else if (effectiveResumeUrl && !effectiveResumeUrl.startsWith('http')) {
+        effectiveResumeUrl = `${origin}${effectiveResumeUrl.startsWith('/') ? '' : '/'}${effectiveResumeUrl}`;
       }
+
+      const empType = r.employmentType || (isOfficialDomain(r.email) ? 'Regular' : 'Visiting');
+
       return [
+        i + 1,
         r.name,
+        empType,
         r.department,
-        r.designation || 'Faculty Member',
+        r.designation || (empType === 'Visiting' ? 'Visiting Faculty' : 'Faculty Member'),
         r.highestQualification || 'Post-Graduate',
         calcIuhpTenure(r.joiningDate),
         r.totalExperience || '—',
         r.contact,
         r.email,
-        r.joiningDate?.toISOString().slice(0, 10),
-        r.photoUrl,
+        r.joiningDate ? new Date(r.joiningDate).toISOString().slice(0, 10) : '',
+        photoUrl,
         effectiveResumeUrl,
       ].map(esc).join(',');
     });
 
+    const fileSuffix = req.query.employmentType && req.query.employmentType !== 'ALL'
+      ? `_${req.query.employmentType}`
+      : '';
+    const deptSuffix = req.query.department && req.query.department !== 'ALL'
+      ? `_${req.query.department}`
+      : '';
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="employees.csv"');
+    res.setHeader('Content-Disposition', `attachment; filename="IUHP_Faculty_Directory${fileSuffix}${deptSuffix}.csv"`);
     res.send('\ufeff' + [head.map(esc).join(','), ...lines].join('\n'));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Export CSV error:', err);
+    res.status(500).json({ error: 'CSV export failed: ' + err.message });
   }
 });
 

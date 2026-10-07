@@ -254,12 +254,16 @@
             🔄 Refresh
           </button>
           
-          <!-- Download Spreadsheets -->
-          <a class="btn btn-accent" id="exportXlsxBtn" href="/api/admin/export.xlsx" title="Download Excel/Google Sheets with embedded cell photos">
-            📗 Google Sheet (.xlsx)
+          <!-- Download Spreadsheets Hub -->
+          <button class="btn btn-accent" onclick="openExportModal()" title="Download custom Excel/CSV by cadre (Regular/Visiting) & department">
+            📥 Export Directory ▾
+          </button>
+
+          <a class="btn btn-outline" id="exportXlsxBtn" href="/api/admin/export.xlsx" title="Quick download Excel with photos & resumes for current view">
+            📗 Excel (.xlsx)
           </a>
 
-          <a class="btn btn-outline" id="exportCsvBtn" href="/api/admin/export.csv" title="Download CSV">
+          <a class="btn btn-outline" id="exportCsvBtn" href="/api/admin/export.csv" title="Quick download CSV for current view">
             📄 CSV
           </a>
 
@@ -269,8 +273,15 @@
         </div>
 
         <div class="filter-group">
+          <!-- Cadre Filter (Regular / Visiting / Both) -->
+          <select id="cadreFilter" class="form-control" style="width:auto;min-width:160px;" onchange="loadEmployees()" title="Filter by Faculty Cadre">
+            <option value="">All Cadres (Regular + Visiting)</option>
+            <option value="Regular">🏛️ Regular Faculty Only</option>
+            <option value="Visiting">🤝 Visiting Faculty Only</option>
+          </select>
+
           <!-- Department Filter -->
-          <select id="deptFilter" class="form-control" style="width:auto;min-width:170px;">
+          <select id="deptFilter" class="form-control" style="width:auto;min-width:165px;" onchange="loadEmployees()">
             <option value="">All Departments</option>
             <option value="FPS">FPS - Pharmaceutical</option>
             <option value="FMS">FMS - Management</option>
@@ -667,6 +678,81 @@
     </div>
   </div>
 
+  <!-- ================================================================= -->
+  <!-- 6. EXPORT DIRECTORY MODAL (CUSTOM CADRE & FORMAT SELECTION)       -->
+  <!-- ================================================================= -->
+  <div class="modal-backdrop" id="exportModal">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header">
+        <h3 style="display:flex;align-items:center;gap:0.5rem;">
+          <span>📥</span> Export Faculty Directory
+        </h3>
+        <button class="modal-close" onclick="closeModal('exportModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.5;">
+          Download a complete spreadsheet with faculty credentials, contact info, standard 3:4 passport photos, and direct links to official PDF resumes.
+        </p>
+
+        <!-- Cadre Selector -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="exportCadreSelect" style="font-weight:700;">1. Faculty Cadre / Category *</label>
+          <select id="exportCadreSelect" class="form-control" style="font-weight:600;">
+            <option value="ALL">🏛️ Both Regular & Visiting Faculty (All Records)</option>
+            <option value="Regular">🏛️ Regular Faculty Only (@iuhimachal.edu.in)</option>
+            <option value="Visiting">🤝 Visiting Faculty Only (External / Guest)</option>
+          </select>
+        </div>
+
+        <!-- Department Selector -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="exportDeptSelect" style="font-weight:700;">2. Department Scope *</label>
+          <select id="exportDeptSelect" class="form-control">
+            <option value="ALL">🏢 All Departments (FPS, FMS, FLA, FOL, FST)</option>
+            <option value="FPS">💊 FPS - Faculty of Pharmaceutical Sciences</option>
+            <option value="FMS">📊 FMS - Faculty of Management Studies</option>
+            <option value="FLA">🎨 FLA - Faculty of Liberal Arts</option>
+            <option value="FOL">⚖️ FOL - Faculty of Law</option>
+            <option value="FST">💻 FST - Faculty of Science & Technology</option>
+          </select>
+        </div>
+
+        <!-- Format Selector -->
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label style="font-weight:700;display:block;margin-bottom:0.5rem;">3. File Format *</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border:2px solid var(--brand-primary);border-radius:var(--radius-md);background:var(--bg-secondary);cursor:pointer;">
+              <input type="radio" name="exportFormat" value="xlsx" checked>
+              <div>
+                <strong style="display:block;font-size:0.9rem;color:var(--text-primary);">📗 Excel (.xlsx)</strong>
+                <span style="font-size:0.75rem;color:var(--text-muted);">With photos & PDF links</span>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border:1px solid var(--surface-border);border-radius:var(--radius-md);background:var(--bg-secondary);cursor:pointer;">
+              <input type="radio" name="exportFormat" value="csv">
+              <div>
+                <strong style="display:block;font-size:0.9rem;color:var(--text-primary);">📄 CSV File</strong>
+                <span style="font-size:0.75rem;color:var(--text-muted);">Standard raw CSV</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-md);padding:0.75rem 1rem;font-size:0.8rem;color:#166534;line-height:1.45;">
+          ✨ <strong>Enhanced Compatibility:</strong> The Excel export includes embedded Google Sheets image formulas, active Cloudinary photograph links, and 1-click clickable PDF resume URLs.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('exportModal')">Cancel</button>
+        <button type="button" class="btn btn-primary" id="startExportBtn" onclick="triggerCustomExport()" style="font-weight:700;">
+          ⬇️ Download Spreadsheet
+        </button>
+      </div>
+    </div>
+  </div>
+
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -1030,14 +1116,44 @@
       }
     };
 
+    // Export Hub Modal Handlers
+    window.openExportModal = () => {
+      if ($('deptFilter') && $('exportDeptSelect')) {
+        $('exportDeptSelect').value = $('deptFilter').value || 'ALL';
+      }
+      if ($('cadreFilter') && $('exportCadreSelect')) {
+        $('exportCadreSelect').value = $('cadreFilter').value || 'ALL';
+      }
+      openModal('exportModal');
+    };
+
+    window.triggerCustomExport = () => {
+      const cadre = $('exportCadreSelect').value;
+      const dept = $('exportDeptSelect').value;
+      const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'xlsx';
+
+      const params = new URLSearchParams();
+      if (dept && dept !== 'ALL') params.set('department', dept);
+      if (cadre && cadre !== 'ALL') params.set('employmentType', cadre);
+
+      const queryStr = params.toString() ? '?' + params.toString() : '';
+      const downloadUrl = `/api/admin/export.${format}${queryStr}`;
+
+      closeModal('exportModal');
+      showToast(`Generating ${format.toUpperCase()} export with photo & PDF links...`, 'success');
+      window.location.href = downloadUrl;
+    };
+
     // Load Employees
     async function loadEmployees() {
       const dept = $('deptFilter').value;
+      const cadre = $('cadreFilter') ? $('cadreFilter').value : '';
       const q = $('adminSearchInput').value.trim();
 
       // Update export links to respect active filters
       const params = new URLSearchParams();
       if (dept) params.set('department', dept);
+      if (cadre) params.set('employmentType', cadre);
       if (q) params.set('q', q);
       const queryStr = params.toString() ? '?' + params.toString() : '';
 
