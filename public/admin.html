@@ -291,9 +291,11 @@
           </select>
 
           <!-- Experience / Seniority Sort Selector -->
-          <select id="adminSortSelect" class="form-control" style="width:auto;min-width:175px;" title="Order Faculty List by ICFAI Experience">
+          <select id="adminSortSelect" class="form-control" style="width:auto;min-width:185px;" title="Order Faculty List by Experience">
             <option value="exp-desc" selected>⏳ ICFAI Exp: Highest First</option>
             <option value="exp-asc">🌱 ICFAI Exp: Newest First</option>
+            <option value="overall-desc">💼 Overall Exp: Highest First</option>
+            <option value="overall-asc">💼 Overall Exp: Lowest First</option>
             <option value="name-asc">🔤 Name (A - Z)</option>
           </select>
 
@@ -792,6 +794,19 @@
       return Math.max(0, diffMs / (1000 * 60 * 60 * 24 * 365.25));
     }
 
+    // Helper to calculate overall career experience in years (from totalExperience or fallback to IUHP tenure)
+    function getFacultyOverallExpYears(emp) {
+      if (!emp) return 0;
+      if (emp.totalExperience) {
+        const match = String(emp.totalExperience).match(/(\d+(?:\.\d+)?)/);
+        if (match) {
+          const val = parseFloat(match[1]);
+          if (!isNaN(val) && val > 0) return val;
+        }
+      }
+      return getFacultyExpYears(emp);
+    }
+
     // Toast notification helper
     function showToast(message, type = 'success') {
       const container = $('toastContainer');
@@ -1220,6 +1235,18 @@
         if (sortBy === 'exp-asc') {
           const expB = getFacultyExpYears(b);
           const expA = getFacultyExpYears(a);
+          if (Math.abs(expA - expB) > 0.05) return expA - expB;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        if (sortBy === 'overall-desc') {
+          const expB = getFacultyOverallExpYears(b);
+          const expA = getFacultyOverallExpYears(a);
+          if (Math.abs(expB - expA) > 0.05) return expB - expA;
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        if (sortBy === 'overall-asc') {
+          const expB = getFacultyOverallExpYears(b);
+          const expA = getFacultyOverallExpYears(a);
           if (Math.abs(expA - expB) > 0.05) return expA - expB;
           return (a.name || '').localeCompare(b.name || '');
         }
