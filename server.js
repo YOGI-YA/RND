@@ -126,6 +126,9 @@ const isOfficialDomain = (email) => {
 
 const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
 
+const { CampusAIService, AI_MODEL_URL, AI_MODEL_NAME } = require('./campus-ai-service');
+const campusAIService = new CampusAIService({ Employee, RegistrationRequest });
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -146,6 +149,10 @@ app.get('/register', (req, res) => {
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/campus-ai', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'campus-ai.html'));
 });
 
 
@@ -269,7 +276,140 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
   res.json({ ok: true, admin: req.admin });
 });
 
+// ---------- Campus AI Endpoints (Local Model / Cloudflare Tunnel) ----------
+app.get('/api/campus-ai/health', async (req, res) => {
+  try {
+    const health = await campusAIService.checkHealth();
+    res.json(health);
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
+app.get('/api/campus-ai/stats', async (req, res) => {
+  try {
+    const stats = await campusAIService.getCampusStats();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/campus-ai/action', async (req, res) => {
+  try {
+    const { action, params = {} } = req.body;
+    switch (action) {
+      case 'search_faculty': {
+        const results = await campusAIService.searchFaculty(params.query, params.department, params.limit || 8);
+        return res.json({ success: true, count: results.length, employees: results });
+      }
+      case 'campus_stats': {
+        const stats = await campusAIService.getCampusStats();
+        return res.json({ success: true, stats });
+      }
+      case 'calculate_tenure': {
+        const tenure = await campusAIService.calculateTenure(params.joiningDate, params.empId);
+        return res.json({ success: true, tenure });
+      }
+      case 'draft_document': {
+        const draft = campusAIService.draftDocument(params.type, params);
+        return res.json({ success: true, draft });
+      }
+      case 'check_profile': {
+        const profile = await campusAIService.checkProfile(params.identifier);
+        return res.json({ success: true, profile });
+      }
+      default:
+        return res.status(400).json({ error: `Unknown action: ${action}` });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/campus-ai/chat', async (req, res) => {
+  try {
+    const { messages = [], stream = true } = req.body;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'Messages array is required.' });
+    }
+
+    // Detect action intent from latest user message and query live MongoDB for RAG
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    const userText = lastUserMsg ? lastUserMsg.content : '';
+
+    const { actionResult, extraContext } = await campusAIService.detectAndExecuteAction(userText);
+    const systemPrompt = campusAIService.getSystemPrompt(extraContext);
+
+    const cleanMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant');
+    const finalMessages = [
+      { role: 'system', content: systemPrompt },
+      ...cleanMessages
+    ];
+
+    if (stream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      campusAIService.streamCompletions(finalMessages, res, actionResult);
+    } else {
+      const parsed = new URL(`${AI_MODEL_URL}/v1/chat/completions`);
+      const client = parsed.protocol === 'https:' ? https : http;
+      const postData = JSON.stringify({
+        model: AI_MODEL_NAME,
+        messages: finalMessages,
+        stream: false
+      });
+
+      const aiReq = client.request(parsed, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        },
+        timeout: 30000,
+        family: 4
+      }, (aiRes) => {
+        let data = '';
+        aiRes.on('data', chunk => data += chunk);
+        aiRes.on('end', () => {
+          try {
+            const parsedRes = JSON.parse(data);
+            res.json({
+              actionResult,
+              content: parsedRes.choices?.[0]?.message?.content || '',
+              usage: parsedRes.usage || null
+            });
+          } catch (e) {
+            res.json({ actionResult, content: data });
+          }
+        });
+      });
+
+      aiReq.on('error', (err) => {
+        res.json({
+          actionResult,
+          content: `Live campus database action completed. Local model unreachable: ${err.message}`
+        });
+      });
+
+      aiReq.write(postData);
+      aiReq.end();
+    }
+  } catch (err) {
+    console.error('Campus AI chat error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.end();
+    }
+  }
+});
+
 // ---------- Public Directory Endpoint ----------
+
 // Confidential directory: General public cannot view all employees' private details.
 // Faculty members look up their own profile via /api/public/faculty/lookup.
 app.get('/api/public/employees', async (req, res) => {
@@ -1869,7 +2009,14 @@ app.get('/admin', (req, res) => {
   });
 });
 
+app.get('/campus-ai', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'campus-ai.html'), (err) => {
+    if (err) res.sendFile(path.join(__dirname, 'campus-ai.html'));
+  });
+});
+
 app.get('/', (req, res) => {
+
   res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
     if (err) res.sendFile(path.join(__dirname, 'index.html'));
   });
