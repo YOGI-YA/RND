@@ -1,14 +1,13 @@
 /**
- * Campus AI Floating Copilot Widget
+ * NJ.AI Floating Copilot Widget
  * The ICFAI University, Himachal Pradesh (IUHP)
+ * Name: NJ.AI
  * Ubiquitous assistant embedded into index.html, admin.html, and register.html.
  */
 
 (function () {
-  // Prevent duplicate insertion
   if (document.getElementById('campus-ai-launcher')) return;
 
-  // Dynamically load widget CSS if not present
   if (!document.querySelector('link[href*="campus-ai-widget.css"]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -16,37 +15,37 @@
     document.head.appendChild(link);
   }
 
-  // Create Backdrop
+  // Backdrop
   const backdrop = document.createElement('div');
   backdrop.id = 'campus-ai-backdrop';
   backdrop.className = 'drawer-backdrop';
   document.body.appendChild(backdrop);
 
-  // Create Launcher Button
+  // Launcher Button
   const launcher = document.createElement('button');
   launcher.id = 'campus-ai-launcher';
-  launcher.title = 'Open Campus AI Copilot';
+  launcher.title = 'Open NJ.AI Copilot';
   launcher.innerHTML = `
     <span class="launcher-icon">✨</span>
-    <span>Campus AI</span>
+    <span>NJ.AI</span>
     <span class="launcher-ping"></span>
   `;
   document.body.appendChild(launcher);
 
-  // Create Drawer Modal
+  // Drawer
   const drawer = document.createElement('aside');
   drawer.id = 'campus-ai-drawer';
   drawer.innerHTML = `
     <div class="drawer-header">
       <div class="drawer-header-left">
-        <span style="font-size:1.3rem;">✨</span>
+        <div style="width:30px;height:30px;border-radius:8px;background:#ffffff;color:#0f4c5c;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">NJ</div>
         <div class="drawer-header-title">
-          <span>Campus AI Copilot</span>
-          <span class="drawer-header-sub">The ICFAI University, HP</span>
+          <span>NJ.AI Copilot</span>
+          <span class="drawer-header-sub">IUHP Intelligence Engine</span>
         </div>
       </div>
       <div class="drawer-header-actions">
-        <a href="/campus-ai" class="drawer-btn-icon" title="Open Fullscreen ChatGPT Mode" target="_blank">
+        <a href="/campus-ai" class="drawer-btn-icon" title="Expand Fullscreen NJ.AI" target="_blank">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </a>
         <button class="drawer-btn-icon" id="campus-ai-close-btn" title="Close Drawer">
@@ -55,28 +54,28 @@
       </div>
     </div>
 
-    <!-- Quick Tools Bar -->
+    <!-- Quick Tool Chips -->
     <div class="drawer-tools-bar">
-      <button class="drawer-tool-chip" data-prompt="Show all professors in FST department">💻 FST Faculty</button>
-      <button class="drawer-tool-chip" data-prompt="Give me live campus department statistics">📊 Campus Stats</button>
-      <button class="drawer-tool-chip" data-prompt="Draft a Casual Leave application for 2 days">📝 Draft Leave</button>
-      <button class="drawer-tool-chip" data-prompt="Draft an End-Term Exam duty circular">📢 Exam Circular</button>
+      <button class="drawer-tool-chip" data-prompt="/faculty FST">💻 /faculty FST</button>
+      <button class="drawer-tool-chip" data-prompt="/stats">📊 /stats</button>
+      <button class="drawer-tool-chip" data-prompt="/leave 2 days">📝 /leave</button>
+      <button class="drawer-tool-chip" data-prompt="/exam">📢 /exam</button>
     </div>
 
-    <!-- Messages Container -->
+    <!-- Message Stream -->
     <div class="drawer-messages" id="drawer-messages">
       <div class="drawer-msg bot">
-        <div class="drawer-msg-avatar">✨</div>
+        <div class="drawer-msg-avatar">NJ</div>
         <div class="drawer-msg-bubble">
-          Hello! I am <strong>Campus AI</strong>, your institutional copilot for <strong>The ICFAI University, Himachal Pradesh</strong>.<br><br>
-          Ask me to search faculty members, draft university leave memos, or view real-time department statistics!
+          Hello! I am <strong>NJ.AI</strong>, your institutional copilot for <strong>The ICFAI University, Himachal Pradesh</strong>.<br><br>
+          Ask me to look up faculty members, draft university leave memos, or view real-time department statistics!
         </div>
       </div>
     </div>
 
-    <!-- Input Composer -->
+    <!-- Composer -->
     <div class="drawer-composer">
-      <input type="text" class="drawer-input" id="drawer-input" placeholder="Ask Campus AI or perform an action...">
+      <input type="text" class="drawer-input" id="drawer-input" placeholder="Ask NJ.AI or type '/' (e.g. /faculty, /leave)...">
       <button class="drawer-btn-send" id="drawer-send-btn" title="Send">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </button>
@@ -84,21 +83,59 @@
   `;
   document.body.appendChild(drawer);
 
-  // Elements
   const closeBtn = document.getElementById('campus-ai-close-btn');
   const messagesBox = document.getElementById('drawer-messages');
   const inputEl = document.getElementById('drawer-input');
   const sendBtn = document.getElementById('drawer-send-btn');
 
   let drawerMessages = [
-    { role: 'assistant', content: 'Hello! I am Campus AI, your institutional copilot for The ICFAI University, Himachal Pradesh.' }
+    { role: 'assistant', content: 'Hello! I am NJ.AI, your institutional copilot for The ICFAI University, Himachal Pradesh.' }
   ];
   let isDrawerStreaming = false;
+  let widgetUser = null;
 
-  // Toggle Drawer Open/Close
+  async function checkWidgetAuth() {
+    try {
+      const token = localStorage.getItem('nj_ai_token') || '';
+      const res = await fetch('/api/campus-ai/auth/me', {
+        headers: token ? { 'x-nj-token': token } : {},
+        credentials: 'include'
+      });
+      const data = await res.json();
+      const subEl = drawer.querySelector('.drawer-header-sub');
+      if (data && data.authenticated && data.user) {
+        widgetUser = data.user;
+        if (subEl) subEl.textContent = `🛡️ ${data.user.name} (7-Day Active)`;
+      } else {
+        widgetUser = null;
+        if (subEl) subEl.textContent = '🔒 Verification Required';
+      }
+    } catch (_) {
+      widgetUser = null;
+    }
+  }
+
+  function showAuthGateInWidget() {
+    const gateDiv = document.createElement('div');
+    gateDiv.className = 'drawer-msg bot';
+    gateDiv.innerHTML = `
+      <div class="drawer-msg-avatar">NJ</div>
+      <div class="drawer-msg-bubble" style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;">
+        <strong style="display:block;margin-bottom:6px;font-size:0.9rem;">🔒 Institutional Verification Required</strong>
+        Access to NJ.AI is restricted to registered university faculty and staff members with verified accounts.<br><br>
+        <a href="/campus-ai" target="_blank" style="display:inline-block;padding:7px 14px;background:#0f4c5c;color:#ffffff;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;">
+          Verify with OTP (Start 7-Day Session) →
+        </a>
+      </div>
+    `;
+    messagesBox.appendChild(gateDiv);
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  }
+
   function openDrawer() {
     drawer.classList.add('open');
     backdrop.classList.add('show');
+    checkWidgetAuth();
     inputEl.focus();
   }
 
@@ -111,14 +148,20 @@
   closeBtn.addEventListener('click', closeDrawer);
   backdrop.addEventListener('click', closeDrawer);
 
-  // Send message from drawer
   async function sendDrawerMessage(text) {
     const query = (text || inputEl.value).trim();
     if (!query || isDrawerStreaming) return;
 
+    if (!widgetUser) {
+      await checkWidgetAuth();
+      if (!widgetUser) {
+        showAuthGateInWidget();
+        return;
+      }
+    }
+
     inputEl.value = '';
 
-    // Add user message to UI
     drawerMessages.push({ role: 'user', content: query });
     const userDiv = document.createElement('div');
     userDiv.className = 'drawer-msg user';
@@ -129,11 +172,10 @@
     messagesBox.appendChild(userDiv);
     messagesBox.scrollTop = messagesBox.scrollHeight;
 
-    // Add placeholder bot message
     const botDiv = document.createElement('div');
     botDiv.className = 'drawer-msg bot';
     botDiv.innerHTML = `
-      <div class="drawer-msg-avatar">✨</div>
+      <div class="drawer-msg-avatar">NJ</div>
       <div class="drawer-msg-bubble"><span style="opacity:0.6;">Thinking...</span></div>
     `;
     messagesBox.appendChild(botDiv);
@@ -145,14 +187,24 @@
     try {
       const res = await fetch('/api/campus-ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-nj-token': localStorage.getItem('nj_ai_token') || ''
+        },
+        credentials: 'include',
         body: JSON.stringify({
           messages: drawerMessages.map(m => ({ role: m.role, content: m.content })),
           stream: true
         })
       });
 
-      if (!res.ok) throw new Error('Model temporarily unavailable');
+      if (res.status === 401 || res.status === 403) {
+        widgetUser = null;
+        showAuthGateInWidget();
+        return;
+      }
+
+      if (!res.ok) throw new Error('NJ.AI is reconnecting');
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -189,7 +241,7 @@
       drawerMessages.push({ role: 'assistant', content: botContent });
 
     } catch (err) {
-      botBubble.innerHTML = `<span style="color:#ef4444;">Error: ${err.message}</span>`;
+      botBubble.innerHTML = `<span style="color:#ef4444;">Notice: ${err.message}</span>`;
     } finally {
       isDrawerStreaming = false;
       messagesBox.scrollTop = messagesBox.scrollHeight;
@@ -204,7 +256,6 @@
     }
   });
 
-  // Tool chips in drawer
   document.querySelectorAll('.drawer-tool-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       const prompt = btn.getAttribute('data-prompt');

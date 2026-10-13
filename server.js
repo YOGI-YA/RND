@@ -276,7 +276,272 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
   res.json({ ok: true, admin: req.admin });
 });
 
-// ---------- Campus AI Endpoints (Local Model / Cloudflare Tunnel) ----------
+// ---------- NJ.AI Authentication Middleware (7-Day Verified Session) ----------
+const requireNJAIAuth = async (req, res, next) => {
+  try {
+    const token = req.cookies.nj_ai_token
+      || req.headers['x-nj-token']
+      || req.headers.authorization?.replace(/^Bearer\s+/, '')
+      || req.cookies.token;
+
+    if (!token) {
+      return res.status(401).json({
+        unauthorized: true,
+        error: 'NJ.AI is restricted to registered university faculty. Please verify your account with OTP.'
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iuhp-jwt-secret-key-2026');
+
+    // Admin pass-through
+    if (decoded.role === 'admin' || decoded.username === 'admin') {
+      req.user = { name: 'Administrator', email: 'admin@iuhimachal.edu.in', role: 'admin', department: 'ADMIN' };
+      return next();
+    }
+
+    // Verify user in Employee collection
+    if (decoded.email) {
+      const emp = await Employee.findOne({ email: decoded.email.toLowerCase() }).lean();
+      if (!emp) {
+        return res.status(403).json({
+          unauthorized: true,
+          error: 'Access Denied: Only registered university accounts can use NJ.AI. No active record found.'
+        });
+      }
+
+      req.user = {
+        id: emp._id,
+        name: emp.name,
+        email: emp.email,
+        department: emp.department,
+        designation: emp.designation,
+        employmentType: emp.employmentType,
+        contact: emp.contact,
+        photoUrl: emp.photoUrl || '',
+        role: 'faculty'
+      };
+      return next();
+    }
+
+    throw new Error('Invalid token');
+  } catch (err) {
+    return res.status(401).json({
+      unauthorized: true,
+      error: 'Your 7-day NJ.AI session has expired or is invalid. Please verify with OTP to renew.'
+    });
+  }
+};
+
+// ---------- NJ.AI Authentication Endpoints ----------
+// 1. Send OTP for 7-Day Session (Restricted to Registered Accounts Only)
+app.post('/api/campus-ai/auth/send-otp', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || !email.trim() || !email.includes('@')) {
+      return res.status(400).json({ error: 'Please enter a valid official email address.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if user has an account in the database (Employee or Admin)
+    const emp = await Employee.findOne({ email: cleanEmail }).lean();
+    const isAdmin = (cleanEmail === 'admin@iuhimachal.edu.in' || cleanEmail === 'yogender@iuhimachal.edu.in');
+
+    if (!emp && !isAdmin) {
+      return res.status(403).json({
+        notFound: true,
+        error: `Access Denied: Only users with a registered university account can access NJ.AI. No employee record was found for "${cleanEmail}". Please register your profile or contact administration.`
+      });
+    }
+
+    const userName = emp ? emp.name : 'University Administrator';
+
+    // Generate secure 6-digit OTP code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Upsert OTP with 10-minute expiry
+    await Otp.deleteMany({ email: cleanEmail });
+    await Otp.create({ email: cleanEmail, otp: otpCode });
+
+    // Send professional branded email
+    try {
+      const mailOptions = {
+        from: `"NJ.AI Institutional Copilot" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
+        to: cleanEmail,
+        subject: `NJ.AI 7-Day Access Code: ${otpCode} - The ICFAI University HP`,
+        html: `
+          <div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width:560px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+            <div style="background:linear-gradient(135deg, #0f4c5c 0%, #059669 100%); padding:28px 20px; text-align:center; color:#ffffff;">
+              <div style="width:40px;height:40px;border-radius:10px;background:#ffffff;color:#0f4c5c;font-size:18px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;">NJ</div>
+              <h2 style="margin:0; font-size:22px; font-weight:800; letter-spacing:-0.02em;">NJ.AI Copilot Verification</h2>
+              <div style="font-size:12px; color:#e0f2fe; font-weight:600; margin-top:4px; letter-spacing:0.5px;">THE ICFAI UNIVERSITY, HIMACHAL PRADESH</div>
+            </div>
+            <div style="padding:32px 24px; color:#334155;">
+              <p style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#0f172a;">
+                Dear <strong>${userName}</strong>,
+              </p>
+              <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#475569;">
+                Please enter the 6-digit verification code below to authorize your access to <strong>NJ.AI</strong>. Once verified, your authenticated session will remain active for <strong>7 days</strong> on this device.
+              </p>
+              <div style="background:#f0fdf4; border:2px dashed #059669; border-radius:12px; padding:20px; text-align:center; margin:24px 0;">
+                <div style="font-size:11px; color:#059669; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Your 7-Day Access Code</div>
+                <span style="font-size:36px; font-weight:800; letter-spacing:8px; color:#0f4c5c; font-family:'Courier New', monospace; display:inline-block; margin-left:8px;">${otpCode}</span>
+              </div>
+              <p style="margin:0; font-size:12px; color:#94a3b8; text-align:center; line-height:1.5;">
+                ⏰ Code valid for 10 minutes. Your session will remain valid for 7 full days.
+              </p>
+            </div>
+            <div style="background:#f8fafc; padding:14px 24px; text-align:center; font-size:12px; color:#94a3b8; border-top:1px solid #e2e8f0;">
+              © 2026 The ICFAI University, Himachal Pradesh. Verified Institutional Portal.
+            </div>
+          </div>
+        `
+      };
+      const mailTransporter = getMailTransporter();
+      mailTransporter.sendMail(mailOptions).catch(mailErr => {
+        console.warn('Mail delivery warning:', mailErr.message);
+      });
+    } catch (mailErr) {
+      console.warn('Mail delivery warning:', mailErr.message);
+    }
+
+    res.json({
+      ok: true,
+      email: cleanEmail,
+      message: `A 6-digit verification code has been sent to ${cleanEmail}. Please enter it to start your 7-day session.`
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Verify OTP and Issue 7-Day JWT Token
+app.post('/api/campus-ai/auth/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and 6-digit OTP are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.trim();
+
+    const record = await Otp.findOne({ email: cleanEmail, otp: cleanOtp });
+    if (!record) {
+      return res.status(400).json({ error: 'Invalid or expired OTP code. Please enter the latest code or request a new one.' });
+    }
+
+    // Verify account in Employee collection
+    const emp = await Employee.findOne({ email: cleanEmail }).lean();
+    let role = 'faculty';
+    let userName = emp?.name || 'Faculty Member';
+
+    if (!emp && (cleanEmail === 'admin@iuhimachal.edu.in' || cleanEmail === 'yogender@iuhimachal.edu.in')) {
+      role = 'admin';
+      userName = 'Administrator';
+    }
+
+    if (!emp && role !== 'admin') {
+      return res.status(403).json({ error: 'No active employee account found for this email address.' });
+    }
+
+    // Delete used OTP
+    await Otp.deleteMany({ email: cleanEmail });
+
+    // Issue 7-Day Session Token
+    const sessionToken = jwt.sign(
+      {
+        email: cleanEmail,
+        name: userName,
+        department: emp?.department || 'ADMIN',
+        designation: emp?.designation || 'Administrator',
+        role,
+        type: 'nj_ai_7d_session'
+      },
+      process.env.JWT_SECRET || 'iuhp-jwt-secret-key-2026',
+      { expiresIn: '7d' }
+    );
+
+    // Set 7-day HTTP cookie
+    res.cookie('nj_ai_token', sessionToken, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
+
+    res.json({
+      ok: true,
+      token: sessionToken,
+      expiresInDays: 7,
+      user: {
+        name: userName,
+        email: cleanEmail,
+        department: emp?.department || 'ADMIN',
+        designation: emp?.designation || 'Administrator',
+        photoUrl: emp?.photoUrl || '',
+        role
+      },
+      message: `Welcome, ${userName}! Your NJ.AI session has been verified for 7 days.`
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Current Session Check (Validates 7-Day Token)
+app.get('/api/campus-ai/auth/me', async (req, res) => {
+  try {
+    const token = req.cookies.nj_ai_token
+      || req.headers['x-nj-token']
+      || req.headers.authorization?.replace(/^Bearer\s+/, '')
+      || req.cookies.token;
+
+    if (!token) return res.json({ authenticated: false });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iuhp-jwt-secret-key-2026');
+
+    if (decoded.role === 'admin' || decoded.username === 'admin') {
+      return res.json({
+        authenticated: true,
+        expiresInDays: 7,
+        user: { name: 'Administrator', email: 'admin@iuhimachal.edu.in', role: 'admin', department: 'ADMIN' }
+      });
+    }
+
+    if (decoded.email) {
+      const emp = await Employee.findOne({ email: decoded.email.toLowerCase() }).lean();
+      if (!emp) return res.json({ authenticated: false, error: 'Account inactive in directory' });
+
+      return res.json({
+        authenticated: true,
+        expiresInDays: 7,
+        user: {
+          id: emp._id,
+          name: emp.name,
+          email: emp.email,
+          department: emp.department,
+          designation: emp.designation,
+          photoUrl: emp.photoUrl || '',
+          contact: emp.contact,
+          role: 'faculty'
+        }
+      });
+    }
+
+    res.json({ authenticated: false });
+  } catch {
+    res.json({ authenticated: false });
+  }
+});
+
+// 4. Logout from NJ.AI
+app.post('/api/campus-ai/auth/logout', (req, res) => {
+  res.clearCookie('nj_ai_token');
+  res.json({ ok: true, message: 'Logged out from NJ.AI.' });
+});
+
+// ---------- Campus AI Endpoints (Protected with 7-Day Session Auth) ----------
 app.get('/api/campus-ai/health', async (req, res) => {
   try {
     const health = await campusAIService.checkHealth();
@@ -286,7 +551,7 @@ app.get('/api/campus-ai/health', async (req, res) => {
   }
 });
 
-app.get('/api/campus-ai/stats', async (req, res) => {
+app.get('/api/campus-ai/stats', requireNJAIAuth, async (req, res) => {
   try {
     const stats = await campusAIService.getCampusStats();
     res.json(stats);
@@ -295,7 +560,7 @@ app.get('/api/campus-ai/stats', async (req, res) => {
   }
 });
 
-app.post('/api/campus-ai/action', async (req, res) => {
+app.post('/api/campus-ai/action', requireNJAIAuth, async (req, res) => {
   try {
     const { action, params = {} } = req.body;
     switch (action) {
@@ -312,7 +577,7 @@ app.post('/api/campus-ai/action', async (req, res) => {
         return res.json({ success: true, tenure });
       }
       case 'draft_document': {
-        const draft = campusAIService.draftDocument(params.type, params);
+        const draft = campusAIService.draftDocument(params.type, { ...params, ...(req.user || {}) });
         return res.json({ success: true, draft });
       }
       case 'check_profile': {
@@ -327,9 +592,9 @@ app.post('/api/campus-ai/action', async (req, res) => {
   }
 });
 
-app.post('/api/campus-ai/chat', async (req, res) => {
+app.post('/api/campus-ai/chat', requireNJAIAuth, async (req, res) => {
   try {
-    const { messages = [], stream = true } = req.body;
+    const { messages = [], stream = true, persona = 'auto' } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required.' });
     }
@@ -338,8 +603,9 @@ app.post('/api/campus-ai/chat', async (req, res) => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
     const userText = lastUserMsg ? lastUserMsg.content : '';
 
-    const { actionResult, extraContext } = await campusAIService.detectAndExecuteAction(userText);
-    const systemPrompt = campusAIService.getSystemPrompt(extraContext);
+    const { actionResult, extraContext } = await campusAIService.detectAndExecuteAction(userText, req.user);
+    const systemPrompt = campusAIService.getSystemPrompt(extraContext, persona, req.user);
+
 
     const cleanMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant');
     const finalMessages = [
