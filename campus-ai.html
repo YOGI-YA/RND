@@ -1778,11 +1778,429 @@
       cursor: not-allowed;
       text-decoration: none;
     }
+
+    /* ==========================================================================
+       UNDER ACTIVE DEVELOPMENT SCREEN & CONTROLS
+       ========================================================================== */
+    .under-dev-container {
+      min-height: 100vh;
+      background: var(--nj-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 50;
+      color: var(--nj-text-main);
+      overflow-x: hidden;
+    }
+
+    .under-dev-header {
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--nj-card-border);
+      background: var(--nj-sidebar-bg);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .under-dev-content {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 4rem;
+      width: 100%;
+      text-align: center;
+    }
+
+    .dev-badge-pulse {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #d97706;
+      padding: 0.35rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 1.5rem;
+    }
+
+    [data-theme="dark"] .dev-badge-pulse {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: #fbbf24;
+    }
+
+    .dev-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 10px #f59e0b;
+      animation: devPulse 1.8s infinite;
+    }
+
+    @keyframes devPulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.35); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+
+    .dev-hero-title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #0f4c5c 0%, #0284c7 50%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="dark"] .dev-hero-title {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dev-hero-sub {
+      font-size: 1.12rem;
+      color: var(--nj-text-sub);
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.65;
+    }
+
+    .dev-features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+      text-align: left;
+    }
+
+    .dev-feature-card {
+      background: var(--nj-card-bg);
+      border: 1px solid var(--nj-card-border);
+      border-radius: 16px;
+      padding: 1.4rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s ease;
+    }
+
+    .dev-feature-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--nj-card-hover-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .dev-feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 0.85rem;
+      background: var(--nj-bg);
+      border: 1px solid var(--nj-card-border);
+    }
+
+    .dev-feature-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--nj-text-main);
+      margin-bottom: 0.35rem;
+    }
+
+    .dev-feature-desc {
+      font-size: 0.82rem;
+      color: var(--nj-text-muted);
+      line-height: 1.5;
+    }
+
+    .dev-timeline-box {
+      background: var(--nj-card-bg);
+      border: 1px dashed var(--nj-card-border);
+      border-radius: 16px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2.5rem;
+      text-align: left;
+    }
+
+    .dev-timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .dev-timeline-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--nj-text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .dev-progress-bar-wrap {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--nj-bg);
+      border: 1px solid var(--nj-card-border);
+      overflow: hidden;
+      margin-bottom: 0.85rem;
+    }
+
+    .dev-progress-bar-fill {
+      height: 100%;
+      width: 82%;
+      background: linear-gradient(90deg, #f59e0b, #059669);
+      border-radius: 999px;
+      transition: width 1s ease;
+    }
+
+    .dev-steps-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--nj-text-muted);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .dev-actions-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .dev-btn-primary {
+      background: linear-gradient(135deg, #0f4c5c 0%, #1a6d82 100%);
+      color: #ffffff;
+      padding: 0.85rem 1.6rem;
+      border-radius: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 16px rgba(15, 76, 92, 0.25);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dev-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(15, 76, 92, 0.35);
+      color: #ffffff;
+    }
+
+    .dev-btn-outline {
+      background: var(--nj-card-bg);
+      border: 1px solid var(--nj-card-border);
+      color: var(--nj-text-main);
+      padding: 0.85rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dev-btn-outline:hover {
+      border-color: var(--nj-primary);
+      background: var(--nj-bg);
+    }
+
+    .dev-sandbox-strip {
+      display: none;
+      background: #fef3c7;
+      color: #92400e;
+      border-bottom: 1px solid #fde68a;
+      padding: 0.55rem 1.5rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+    }
+
+    [data-theme="dark"] .dev-sandbox-strip {
+      background: #451a03;
+      color: #fde68a;
+      border-color: #78350f;
+    }
   </style>
 </head>
 <body>
 
-  <div class="nj-shell">
+  <!-- ==========================================================================
+       1. NJ.AI UNDER ACTIVE DEVELOPMENT PRESENTATION (ACTIVE BY DEFAULT)
+       ========================================================================== -->
+  <div id="underDevScreen" class="under-dev-container">
+    
+    <!-- Top Branded Navigation Bar -->
+    <header class="under-dev-header">
+      <div style="display:flex;align-items:center;gap:0.85rem;">
+        <a href="/" title="The ICFAI University, Himachal Pradesh">
+          <img src="https://iuhimachal.edu.in/assets/img/Logo.svg" alt="ICFAI University" style="height:42px;object-fit:contain;" onerror="this.src='/Logo.svg'">
+        </a>
+        <div style="border-left:1px solid var(--nj-card-border);padding-left:0.85rem;">
+          <div style="font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:0.45rem;">
+            <span>NJ.AI</span>
+            <span style="font-size:0.68rem;background:rgba(245,158,11,0.18);color:#d97706;border:1px solid rgba(245,158,11,0.35);padding:1px 7px;border-radius:999px;font-weight:800;">IN DEVELOPMENT</span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--nj-text-muted);">The ICFAI University, Himachal Pradesh • Campus Intelligence Suite</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="btn-icon-subtle" id="devThemeToggleBtn" title="Toggle Light/Dark Theme" style="font-size:1.1rem;padding:6px 10px;border-radius:10px;border:1px solid var(--nj-card-border);background:var(--nj-card-bg);cursor:pointer;">
+          🌙
+        </button>
+        <a href="/" class="dev-btn-outline" style="padding:0.5rem 1rem;font-size:0.85rem;">
+          <span>🌐</span> Directory
+        </a>
+        <a href="/admin" class="dev-btn-outline" style="padding:0.5rem 1rem;font-size:0.85rem;">
+          <span>🔒</span> Admin
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Hero Presentation -->
+    <main class="under-dev-content">
+      
+      <!-- Pulsing Status Badge -->
+      <div class="dev-badge-pulse">
+        <span class="dev-pulse-dot"></span>
+        <span>CAMPUS AI COPILOT • UNDER ACTIVE DEVELOPMENT</span>
+      </div>
+
+      <!-- Hero Heading & Summary -->
+      <h1 class="dev-hero-title">
+        NJ.AI Institutional Intelligence
+      </h1>
+      <p class="dev-hero-sub">
+        We are actively developing and fine-tuning <strong>NJ.AI</strong> — the official campus copilot and institutional intelligence engine for <strong>The ICFAI University, Himachal Pradesh</strong>. The platform is undergoing proprietary academic model training, ERP database integration, and security compliance.
+      </p>
+
+      <!-- Key Capabilities Under Development -->
+      <div class="dev-features-grid">
+        <div class="dev-feature-card">
+          <div class="dev-feature-icon" style="color:#0284c7;background:rgba(2,132,199,0.08);border-color:rgba(2,132,199,0.2);">
+            🎓
+          </div>
+          <div class="dev-feature-title">Faculty Knowledge Graph</div>
+          <div class="dev-feature-desc">
+            Natural language lookup of university educators, qualifications, teaching tenures, research publications, and departmental distributions.
+          </div>
+        </div>
+
+        <div class="dev-feature-card">
+          <div class="dev-feature-icon" style="color:#059669;background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.2);">
+            📑
+          </div>
+          <div class="dev-feature-title">Smart Administrative Drafting</div>
+          <div class="dev-feature-desc">
+            Autonomous drafting of official university circulars, casual leave memorandums, exam invigilation schedules, and meeting agendas.
+          </div>
+        </div>
+
+        <div class="dev-feature-card">
+          <div class="dev-feature-icon" style="color:#d97706;background:rgba(217,119,6,0.08);border-color:rgba(217,119,6,0.2);">
+            📊
+          </div>
+          <div class="dev-feature-title">Real-Time Campus Analytics</div>
+          <div class="dev-feature-desc">
+            Instant insights on department staffing, faculty-student ratios, experience benchmarks, and institutional accreditation readiness.
+          </div>
+        </div>
+
+        <div class="dev-feature-card">
+          <div class="dev-feature-icon" style="color:#7c3aed;background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.2);">
+            🛡️
+          </div>
+          <div class="dev-feature-title">7-Day Verified Domain Security</div>
+          <div class="dev-feature-desc">
+            Enterprise-grade data isolation with 7-day verified sessions restricted strictly to authenticated <code>@iuhimachal.edu.in</code> accounts.
+          </div>
+        </div>
+      </div>
+
+      <!-- Development Progress Tracker -->
+      <div class="dev-timeline-box">
+        <div class="dev-timeline-header">
+          <div class="dev-timeline-title">
+            <span>⚙️</span> Institutional Engineering Roadmap & Progress
+          </div>
+          <span style="font-size:0.8rem;font-weight:700;color:#059669;background:rgba(5,150,105,0.1);padding:3px 10px;border-radius:999px;">
+            Active Sprint: 85% Complete
+          </span>
+        </div>
+
+        <div class="dev-progress-bar-wrap">
+          <div class="dev-progress-bar-fill"></div>
+        </div>
+
+        <div class="dev-steps-row">
+          <span>✅ Core Architecture & Interface</span>
+          <span>✅ Prompt Engineering & Personas</span>
+          <span>⏳ ERP Database Sync (In Progress)</span>
+          <span>⏳ Official Campus Rollout</span>
+        </div>
+      </div>
+
+      <!-- Action Navigation Buttons -->
+      <div class="dev-actions-row">
+        <a href="/" class="dev-btn-primary">
+          <span>🌐</span> Explore Faculty Directory
+        </a>
+        <a href="/admin" class="dev-btn-outline">
+          <span>🔒</span> Admin Portal
+        </a>
+        <button type="button" class="dev-btn-outline" onclick="toggleSandboxMode(true)" title="Access Internal Testing Sandbox">
+          <span>⚡</span> Preview Sandbox Workspace
+        </button>
+      </div>
+
+      <div style="margin-top:2.5rem;font-size:0.78rem;color:var(--nj-text-muted);">
+        © 2026 The ICFAI University, Himachal Pradesh. All institutional rights reserved. • Internal Pilot Phase
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Persistent Warning Strip when in Developer Sandbox Mode -->
+  <div id="sandboxDevStrip" class="dev-sandbox-strip">
+    <div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;flex:1;">
+      <span>🚧</span>
+      <span><strong>Developer Sandbox Mode:</strong> NJ.AI is currently under active institutional development. Data feeds and AI responses are in internal staging.</span>
+    </div>
+    <button type="button" onclick="toggleSandboxMode(false)" style="background:rgba(0,0,0,0.08);border:1px solid rgba(0,0,0,0.15);border-radius:6px;padding:3px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;color:inherit;">
+      ← Back to Overview
+    </button>
+  </div>
+
+  <div class="nj-shell" id="njShell" style="display:none;">
 
     <!-- ==================== SIDEBAR ==================== -->
     <aside class="nj-sidebar" id="sidebar">
@@ -2217,8 +2635,40 @@
       const authGateSubtitle = document.getElementById('authGateSubtitle');
       const userSessionContainer = document.getElementById('userSessionContainer');
 
+      let isInSandboxMode = false;
+
+      // Sandbox Mode Toggle (Under Development vs Interactive Chat)
+      window.toggleSandboxMode = function(enable) {
+        isInSandboxMode = Boolean(enable);
+        const devScreen = document.getElementById('underDevScreen');
+        const shell = document.getElementById('njShell');
+        const sandboxStrip = document.getElementById('sandboxDevStrip');
+
+        if (isInSandboxMode) {
+          if (devScreen) devScreen.style.display = 'none';
+          if (shell) shell.style.display = 'flex';
+          if (sandboxStrip) sandboxStrip.style.display = 'flex';
+          if (!currentUser) {
+            showAuthModal();
+          }
+          if (chatMessagesArea) chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+        } else {
+          hideAuthModal();
+          if (devScreen) devScreen.style.display = 'flex';
+          if (shell) shell.style.display = 'none';
+          if (sandboxStrip) sandboxStrip.style.display = 'none';
+        }
+      };
+
       async function init() {
         setupTheme();
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('sandbox') === 'true') {
+          toggleSandboxMode(true);
+        } else {
+          toggleSandboxMode(false);
+        }
+
         checkModelHealth();
         await checkAuthStatus();
         if (chats.length === 0) {
@@ -2251,12 +2701,16 @@
           } else {
             currentUser = null;
             renderUserSessionPill();
-            showAuthModal();
+            if (isInSandboxMode) {
+              showAuthModal();
+            }
           }
         } catch (err) {
           currentUser = null;
           renderUserSessionPill();
-          showAuthModal();
+          if (isInSandboxMode) {
+            showAuthModal();
+          }
         }
       }
 
@@ -2487,15 +2941,23 @@
       function setupTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        themeToggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        const icon = savedTheme === 'dark' ? '☀️' : '🌙';
+        if (themeToggleBtn) themeToggleBtn.textContent = icon;
+        const devThemeBtn = document.getElementById('devThemeToggleBtn');
+        if (devThemeBtn) devThemeBtn.textContent = icon;
 
-        themeToggleBtn.addEventListener('click', () => {
+        function toggleTheme() {
           const current = document.documentElement.getAttribute('data-theme') || 'light';
           const next = current === 'dark' ? 'light' : 'dark';
           document.documentElement.setAttribute('data-theme', next);
           localStorage.setItem('theme', next);
-          themeToggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
-        });
+          const newIcon = next === 'dark' ? '☀️' : '🌙';
+          if (themeToggleBtn) themeToggleBtn.textContent = newIcon;
+          if (devThemeBtn) devThemeBtn.textContent = newIcon;
+        }
+
+        if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+        if (devThemeBtn) devThemeBtn.addEventListener('click', toggleTheme);
       }
 
       function setupSpeechRecognition() {

@@ -24,10 +24,11 @@
   // Launcher Button
   const launcher = document.createElement('button');
   launcher.id = 'campus-ai-launcher';
-  launcher.title = 'Open NJ.AI Copilot';
+  launcher.title = 'Open NJ.AI Copilot (Under Development)';
   launcher.innerHTML = `
     <span class="launcher-icon">✨</span>
     <span>NJ.AI</span>
+    <span style="font-size:0.62rem;background:rgba(245,158,11,0.25);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);padding:1px 5px;border-radius:999px;font-weight:800;letter-spacing:0.3px;">In Dev</span>
     <span class="launcher-ping"></span>
   `;
   document.body.appendChild(launcher);
@@ -40,8 +41,11 @@
       <div class="drawer-header-left">
         <div style="width:30px;height:30px;border-radius:8px;background:#ffffff;color:#0f4c5c;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">NJ</div>
         <div class="drawer-header-title">
-          <span>NJ.AI Copilot</span>
-          <span class="drawer-header-sub">IUHP Intelligence Engine</span>
+          <div style="display:flex;align-items:center;gap:0.4rem;">
+            <span>NJ.AI Copilot</span>
+            <span style="font-size:0.62rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:1px 6px;border-radius:999px;font-weight:700;">Under Development</span>
+          </div>
+          <span class="drawer-header-sub">IUHP Intelligence Engine • Coming Soon</span>
         </div>
       </div>
       <div class="drawer-header-actions">
@@ -67,8 +71,8 @@
       <div class="drawer-msg bot">
         <div class="drawer-msg-avatar">NJ</div>
         <div class="drawer-msg-bubble">
-          Hello! I am <strong>NJ.AI</strong>, your institutional copilot for <strong>The ICFAI University, Himachal Pradesh</strong>.<br><br>
-          Ask me to look up faculty members, draft university leave memos, or view real-time department statistics!
+          👋 Hello! <strong>NJ.AI</strong> is currently <strong>under active institutional development</strong> for <strong>The ICFAI University, Himachal Pradesh</strong>.<br><br>
+          Our technical team is fine-tuning the campus knowledge models, testing ERP data synchronization, and polishing faculty tools. Stay tuned for the upcoming official release!
         </div>
       </div>
     </div>
