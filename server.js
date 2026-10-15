@@ -1673,7 +1673,7 @@ app.delete('/api/admin/employees/:id', requireAdmin, async (req, res) => {
 });
 
 // Helper function to send alert / message email to a single employee
-async function sendAlertEmailToEmployee(employee, alertType, customMessage, baseUrl) {
+async function sendAlertEmailToEmployee(employee, alertType, customMessage, baseUrl, customSubject) {
   const type = alertType || 'both';
   let subject = 'Action Required: Please update your IUHP Faculty Profile details';
   let title = 'Faculty Profile Revision Required';
@@ -1687,7 +1687,7 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
 
   if (type === 'thankyou' || type === 'approved' || type === 'success' || type === 'message') {
     isSuccess = true;
-    subject = `Official Notice: Faculty Profile Verified & Active - ${employee.name} (IUHP)`;
+    subject = (customSubject && customSubject.trim()) || `Official Notice: Faculty Profile Verified & Active - ${employee.name} (IUHP)`;
     title = '📋 Faculty Profile Verified & Officially Active';
     mainMessage = 'We are pleased to inform you that your faculty profile, passport photograph, and academic curriculum vitae have been reviewed, verified, and officially published in the University Faculty Directory.';
     guidelinesHtml = `
@@ -1698,9 +1698,41 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
     `;
     actionUrl = `${baseUrl}/#section-${employee.department}`;
     actionBtnText = '🌐 View Your Profile in Public Directory';
+  } else if (type === 'revision_resolved' || type === 'revision_approved' || type === 'resolved') {
+    // Dedicated appreciative acknowledgement for faculty who submitted corrections following a revision alert
+    isSuccess = true;
+    subject = (customSubject && customSubject.trim()) || `Official Confirmation: Profile Revisions Verified & Approved - ${employee.name} (IUHP)`;
+    title = '🌟 Academic Profile Revisions Successfully Verified & Approved';
+    mainMessage = 'We sincerely appreciate your prompt cooperation and valuable time in updating your faculty profile and academic credentials. Following our administrative review, we are pleased to confirm that your revised photograph and academic curriculum vitae now fully comply with all official university standards and have been published in the University Faculty Directory.';
+    guidelinesHtml = `
+      • <strong>Verification Status:</strong> Revisions Successfully Resolved & Officially Verified<br>
+      • <strong>Directory Status:</strong> Active & Publicly Showcased<br>
+      • <strong>Department:</strong> ${employee.department}<br>
+      • <strong>Designation:</strong> ${employee.designation || 'Faculty Member'}<br>
+      • <strong>Academic Assets:</strong> Passport photograph (3:4 portrait) and academic curriculum vitae verified and active on Cloudinary.<br>
+      • <strong>Faculty Acknowledgement:</strong> Thank you, Respected Professor / Faculty Member, for your cooperation and commitment to academic excellence at The ICFAI University, Himachal Pradesh.
+    `;
+    actionUrl = `${baseUrl}/#section-${employee.department}`;
+    actionBtnText = '🌐 View Your Verified Profile in Public Directory';
+  } else if (type === 'custom') {
+    // Direct custom administrative message (presets deselected)
+    isSuccess = true;
+    subject = (customSubject && customSubject.trim()) || `Official Administrative Notice - ${employee.name} (IUHP)`;
+    title = '📋 Official University Administrative Communication';
+    mainMessage = (customMessage && customMessage.trim())
+      ? customMessage.trim()
+      : 'We have an official administrative update regarding your faculty profile in the University Directory.';
+    guidelinesHtml = `
+      • <strong>Recipient:</strong> ${employee.name}<br>
+      • <strong>Department:</strong> ${employee.department}<br>
+      • <strong>Designation:</strong> ${employee.designation || 'Faculty Member'}<br>
+      • <strong>Official Email:</strong> ${employee.email}
+    `;
+    actionUrl = `${baseUrl}/#section-${employee.department}`;
+    actionBtnText = '🌐 Visit University Faculty Directory';
   } else if (type === 'welcome') {
     isSuccess = true;
-    subject = `Welcome to ICFAI University Himachal Pradesh: Faculty Profile Verified`;
+    subject = (customSubject && customSubject.trim()) || `Welcome to ICFAI University Himachal Pradesh: Faculty Profile Verified`;
     title = '🎓 Welcome to IUHP Faculty Directory';
     mainMessage = 'Welcome to The ICFAI University, Himachal Pradesh! Your faculty onboarding profile has been approved and added to the official institutional directory.';
     guidelinesHtml = `
@@ -1712,7 +1744,7 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
     actionUrl = `${baseUrl}/#section-${employee.department}`;
     actionBtnText = '🌐 Explore University Faculty Directory';
   } else if (type === 'photo') {
-    subject = 'Action Required: Update Passport Photograph - IUHP Faculty Portal';
+    subject = (customSubject && customSubject.trim()) || 'Action Required: Update Passport Photograph - IUHP Faculty Portal';
     title = '📸 Passport Photograph Format Revision Required';
     mainMessage = 'Your uploaded profile photograph does not match the university official standard. Please upload a formal passport-sized portrait photograph (3:4 aspect ratio, plain/neutral background, frontal face view).';
     guidelinesHtml = `
@@ -1721,7 +1753,7 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
       • <strong>Appearance:</strong> Formal university attire, neutral background, centered face. Avoid casual selfies or group pictures.
     `;
   } else if (type === 'resume') {
-    subject = 'Action Required: Update Academic CV according to Official Template - IUHP Faculty Portal';
+    subject = (customSubject && customSubject.trim()) || 'Action Required: Update Academic CV according to Official Template - IUHP Faculty Portal';
     title = '📄 Academic CV / Resume Format Revision Required';
     mainMessage = `Your uploaded Curriculum Vitae / Resume must strictly follow the official university reference template. Please review the provided example template and revise your CV document accordingly.`;
     guidelinesHtml = `
@@ -1731,7 +1763,7 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
     `;
   } else {
     // type === 'both'
-    subject = 'Action Required: Update Photograph & Resume (Official Template) - IUHP Faculty Portal';
+    subject = (customSubject && customSubject.trim()) || 'Action Required: Update Photograph & Resume (Official Template) - IUHP Faculty Portal';
     title = '🔄 Profile Photograph & Resume Format Revisions Required';
     mainMessage = `Both your profile photograph and curriculum vitae (resume) require revisions to align with the official standards of The ICFAI University, Himachal Pradesh. Your resume must follow the university's official reference template.`;
     guidelinesHtml = `
@@ -1740,12 +1772,24 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
     `;
   }
 
-  const badgeHtml = isSuccess
-    ? `<div style="display:inline-block; background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px;">✨ PROFILE VERIFIED & APPROVED</div>`
-    : `<div style="display:inline-block; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px;">⚠️ ACTION REQUIRED: PROFILE REVISION</div>`;
+  const badgeHtml = type === 'custom'
+    ? `<div style="display:inline-block; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px; letter-spacing:0.5px;">✉️ OFFICIAL ADMINISTRATIVE NOTICE</div>`
+    : (isSuccess
+      ? (type === 'revision_resolved' || type === 'revision_approved' || type === 'resolved'
+          ? `<div style="display:inline-block; background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px; letter-spacing:0.5px;">🌟 REVISION VERIFIED & APPROVED</div>`
+          : `<div style="display:inline-block; background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px; letter-spacing:0.5px;">✨ PROFILE VERIFIED & APPROVED</div>`)
+      : `<div style="display:inline-block; background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; margin-bottom:14px; letter-spacing:0.5px;">⚠️ ACTION REQUIRED: PROFILE REVISION</div>`);
 
-  const borderColor = isSuccess ? '#10b981' : '#e09f3e';
-  const btnBg = isSuccess ? '#059669' : '#0f4c5c';
+  const borderColor = type === 'custom' ? '#0284c7' : (isSuccess ? '#10b981' : '#e09f3e');
+  const btnBg = type === 'custom' ? '#0f4c5c' : (isSuccess ? '#059669' : '#0f4c5c');
+
+  const introText = type === 'custom'
+    ? 'Please find below an official administrative communication regarding your faculty profile in the University Directory:'
+    : (isSuccess
+        ? (type === 'revision_resolved' || type === 'revision_approved' || type === 'resolved'
+            ? 'Thank you for your valuable response. We have completed the administrative review of your revised faculty profile in the official University Faculty Directory:'
+            : 'We have an administrative update regarding your profile status in the official University Faculty Directory:')
+        : 'During the administrative review of faculty records in the University Directory, the following items in your profile were flagged for revision:');
 
   const mailOptions = {
     from: `"IUHP Administration" <${process.env.EMAIL_USER || 'yogender@iuhimachal.edu.in'}>`,
@@ -1761,24 +1805,21 @@ async function sendAlertEmailToEmployee(employee, alertType, customMessage, base
           ${badgeHtml}
           <h3 style="margin:0 0 12px; font-size:18px; color:#0f172a; font-weight:700;">Dear ${employee.name},</h3>
           <p style="margin:0 0 16px; font-size:14px; line-height:1.6; color:#475569;">
-            ${isSuccess
-              ? 'We have an administrative update regarding your profile status in the official University Faculty Directory:'
-              : 'During the administrative review of faculty records in the University Directory, the following items in your profile were flagged for revision:'
-            }
+            ${introText}
           </p>
 
           <div style="background:#f8fafc; border-left:4px solid ${borderColor}; border-radius:4px; padding:16px; margin:16px 0;">
             <div style="font-weight:700; color:#0f4c5c; font-size:15px; margin-bottom:6px;">${title}</div>
-            <div style="font-size:13.5px; line-height:1.5; color:#334155;">${mainMessage}</div>
-            ${customMessage && customMessage.trim() ? `
-              <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; font-size:13px; color:#1e293b;">
+            <div style="font-size:13.5px; line-height:1.6; color:#334155; white-space:pre-wrap;">${type === 'custom' && customMessage && customMessage.trim() ? customMessage.trim() : mainMessage}</div>
+            ${type !== 'custom' && customMessage && customMessage.trim() ? `
+              <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1; font-size:13px; color:#1e293b; white-space:pre-wrap;">
                 <strong>Admin Remarks / Note:</strong> ${customMessage.trim()}
               </div>
             ` : ''}
           </div>
 
           <div style="background:#f1f5f9; border-radius:8px; padding:16px; margin:20px 0; font-size:13px; color:#475569; line-height:1.6;">
-            <strong style="color:#0f172a; display:block; margin-bottom:6px;">${isSuccess ? '📋 Verification Summary:' : '📋 Official Format Guidelines:'}</strong>
+            <strong style="color:#0f172a; display:block; margin-bottom:6px;">${type === 'custom' ? '📋 Recipient Information:' : (isSuccess ? '📋 Verification Summary:' : '📋 Official Format Guidelines:')}</strong>
             ${guidelinesHtml}
           </div>
 
@@ -1816,18 +1857,27 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
     const employee = await Employee.findById(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
 
-    const { alertType, customMessage } = req.body || {};
+    const { alertType, customMessage, customSubject } = req.body || {};
     const host = req.get('host') || 'localhost:3000';
     const protocol = req.protocol || 'http';
     const baseUrl = `${protocol}://${host}`;
 
-    const { isSuccess } = await sendAlertEmailToEmployee(employee, alertType, customMessage, baseUrl);
+    const { isSuccess } = await sendAlertEmailToEmployee(employee, alertType, customMessage, baseUrl, customSubject);
+
+    let successMsg = `Notification email sent successfully to ${employee.email}!`;
+    if (alertType === 'custom') {
+      successMsg = `Custom administrative notice sent successfully to ${employee.email}!`;
+    } else if (alertType === 'revision_resolved' || alertType === 'revision_approved') {
+      successMsg = `Revision approval notice sent successfully to ${employee.name} (${employee.email})!`;
+    } else if (isSuccess) {
+      successMsg = `Official verification notice sent successfully to ${employee.email}!`;
+    } else {
+      successMsg = `Revision alert email sent successfully to ${employee.email}!`;
+    }
 
     res.json({
       ok: true,
-      message: isSuccess
-        ? `Official message notice sent successfully to ${employee.email}!`
-        : `Revision alert email sent successfully to ${employee.email}!`,
+      message: successMsg,
     });
   } catch (err) {
     console.error('Failed to send faculty alert:', err);
@@ -1838,7 +1888,7 @@ app.post('/api/admin/employees/:id/alert', requireAdmin, async (req, res) => {
 // Bulk Send Quality Alert / Message Email to Multiple Faculty Members
 app.post('/api/admin/employees/bulk-alert', requireAdmin, async (req, res) => {
   try {
-    const { ids, alertType, customMessage } = req.body || {};
+    const { ids, alertType, customMessage, customSubject } = req.body || {};
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'No employee IDs selected' });
     }
@@ -1853,7 +1903,7 @@ app.post('/api/admin/employees/bulk-alert', requireAdmin, async (req, res) => {
 
     for (const emp of employees) {
       try {
-        await sendAlertEmailToEmployee(emp, alertType, customMessage, baseUrl);
+        await sendAlertEmailToEmployee(emp, alertType, customMessage, baseUrl, customSubject);
         sentCount++;
       } catch (e) {
         console.error(`Failed to send alert to ${emp.email}:`, e.message);

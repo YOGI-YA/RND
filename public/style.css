@@ -1429,6 +1429,12 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
 }
 
+.alert-option-card.selected-custom {
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+}
+
 @keyframes toastIn {
   from {
     opacity: 0;

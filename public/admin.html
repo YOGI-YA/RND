@@ -604,23 +604,44 @@
 
           <!-- Section A: Official Message & Approval Options (Active by Default) -->
           <div id="thankyouOptionsBlock">
-            <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.5rem;display:block;color:var(--text-primary);">
-              Select Message / Notification Type *
-            </label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.4rem;">
+              <label style="font-weight:700;font-size:0.85rem;color:var(--text-primary);margin:0;">
+                Select Message / Notification Type *
+              </label>
+              <button type="button" class="btn btn-sm btn-outline btn-deselect-presets" onclick="toggleCustomOnlyMode()" style="font-size:0.75rem;padding:2px 8px;border-radius:12px;" title="Deselect presets and send a custom message only">
+                ✍️ Deselect Presets (Custom Only)
+              </button>
+            </div>
             <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;">
-              <label class="alert-option-card selected-success" id="card-thankyou">
+              <label class="alert-option-card selected-success" id="card-thankyou" onclick="handleCardClick('thankyou', event)">
                 <input type="radio" name="alertType" value="thankyou" checked style="margin-top:0.2rem;" onchange="updateAlertPreview()">
                 <div>
-                  <strong style="font-size:0.9rem;display:block;color:#059669;">✅ 1. Profile Verified & Approved (Official Notice)</strong>
+                  <strong style="font-size:0.9rem;display:block;color:#059669;">✅ 1. Profile Verified & Approved (Initial Notice)</strong>
                   <span style="font-size:0.78rem;color:var(--text-muted);">Notify faculty that their profile, 3:4 passport photo & CV are verified and active in the directory.</span>
                 </div>
               </label>
 
-              <label class="alert-option-card" id="card-welcome">
+              <label class="alert-option-card" id="card-revision-resolved" onclick="handleCardClick('revision_resolved', event)">
+                <input type="radio" name="alertType" value="revision_resolved" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;color:#047857;">🌟 2. Revision Completed & Approved (Post-Correction Notice)</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">For faculty/professors who revised their details. Sends a respectful, dignified acknowledgement confirming their profile now satisfies all university standards.</span>
+                </div>
+              </label>
+
+              <label class="alert-option-card" id="card-welcome" onclick="handleCardClick('welcome', event)">
                 <input type="radio" name="alertType" value="welcome" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
                 <div>
-                  <strong style="font-size:0.9rem;display:block;">🎓 2. Welcome & Directory Onboarding Notice</strong>
+                  <strong style="font-size:0.9rem;display:block;">🎓 3. Welcome & Directory Onboarding Notice</strong>
                   <span style="font-size:0.78rem;color:var(--text-muted);">Welcome new faculty and confirm their published status across official university records.</span>
+                </div>
+              </label>
+
+              <label class="alert-option-card" id="card-custom-msg" onclick="handleCardClick('custom', event)">
+                <input type="radio" name="alertType" value="custom" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;color:#0284c7;">✍️ 4. Custom Message Only (Deselect Presets)</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Send only your personalized message without preset guidelines or verification bullets, framed in official university letterhead.</span>
                 </div>
               </label>
             </div>
@@ -628,11 +649,16 @@
 
           <!-- Section B: Revision Request Options (Shown when Revision Tab is clicked) -->
           <div id="revisionOptionsBlock" style="display:none;">
-            <label style="font-weight:700;font-size:0.85rem;margin-bottom:0.5rem;display:block;color:var(--text-primary);">
-              Select Revision Preset Issue *
-            </label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.4rem;">
+              <label style="font-weight:700;font-size:0.85rem;color:var(--text-primary);margin:0;">
+                Select Revision Preset Issue *
+              </label>
+              <button type="button" class="btn btn-sm btn-outline btn-deselect-presets" onclick="toggleCustomOnlyMode()" style="font-size:0.75rem;padding:2px 8px;border-radius:12px;" title="Deselect presets and send custom instructions">
+                ✍️ Deselect Presets (Custom Only)
+              </button>
+            </div>
             <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;">
-              <label class="alert-option-card" id="card-photo">
+              <label class="alert-option-card" id="card-photo" onclick="handleCardClick('photo', event)">
                 <input type="radio" name="alertType" value="photo" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
                 <div>
                   <strong style="font-size:0.9rem;display:block;">📸 1. Professional Photograph Issue</strong>
@@ -640,7 +666,7 @@
                 </div>
               </label>
 
-              <label class="alert-option-card" id="card-resume">
+              <label class="alert-option-card" id="card-resume" onclick="handleCardClick('resume', event)">
                 <input type="radio" name="alertType" value="resume" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
                 <div>
                   <strong style="font-size:0.9rem;display:block;">📄 2. Resume Must Follow Official Academic Template</strong>
@@ -648,20 +674,44 @@
                 </div>
               </label>
 
-              <label class="alert-option-card" id="card-both">
+              <label class="alert-option-card" id="card-both" onclick="handleCardClick('both', event)">
                 <input type="radio" name="alertType" value="both" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
                 <div>
                   <strong style="font-size:0.9rem;display:block;color:#d97706;">🔄 3. Combine Both (Photograph & Resume Template)</strong>
                   <span style="font-size:0.78rem;color:var(--text-muted);">Both the passport photograph (3:4 portrait) and academic resume require updates.</span>
                 </div>
               </label>
+
+              <label class="alert-option-card" id="card-custom-rev" onclick="handleCardClick('custom', event)">
+                <input type="radio" name="alertType" value="custom" style="margin-top:0.2rem;" onchange="updateAlertPreview()">
+                <div>
+                  <strong style="font-size:0.9rem;display:block;color:#0284c7;">✍️ 4. Custom Revision Instructions Only</strong>
+                  <span style="font-size:0.78rem;color:var(--text-muted);">Deselect presets and send specific custom instructions directly without preset template bullets.</span>
+                </div>
+              </label>
             </div>
+          </div>
+
+          <!-- Email Subject Line Field (Optional) -->
+          <div class="form-group" id="alertCustomSubjectGroup" style="margin-bottom:0.75rem;">
+            <label for="alertCustomSubject" style="font-weight:700;font-size:0.85rem;color:var(--text-primary);display:flex;justify-content:space-between;align-items:center;">
+              <span>Email Subject Line (Optional)</span>
+              <span style="font-size:0.75rem;font-weight:normal;color:var(--text-muted);" id="alertSubjectHint">Uses official default if blank</span>
+            </label>
+            <input type="text" id="alertCustomSubject" class="form-control" placeholder="e.g. Official Update: Academic Profile Verified" style="font-size:0.85rem;">
           </div>
 
           <!-- Custom Remarks / Notes -->
           <div class="form-group" style="margin-bottom:1rem;">
-            <label for="alertCustomNotes" id="alertCustomNotesLabel">Optional Message Notes / Specific Remarks</label>
-            <textarea id="alertCustomNotes" class="form-control" rows="2" placeholder="e.g. Profile verified successfully. Welcome to the department directory!" style="resize:vertical;"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;flex-wrap:wrap;gap:0.4rem;">
+              <label for="alertCustomNotes" id="alertCustomNotesLabel" style="font-weight:700;font-size:0.85rem;color:var(--text-primary);margin:0;">
+                Optional Message Notes / Specific Remarks
+              </label>
+              <span id="customModeBadge" style="display:none;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;padding:1px 8px;border-radius:12px;font-size:0.75rem;font-weight:700;">
+                ✍️ Custom Message Mode Active
+              </span>
+            </div>
+            <textarea id="alertCustomNotes" class="form-control" rows="3" placeholder="e.g. Profile verified successfully. Welcome to the department directory!" style="resize:vertical;font-size:0.875rem;"></textarea>
           </div>
 
           <!-- Dynamic Email Preview Box -->
@@ -1268,7 +1318,7 @@
         const lastAlert = emp.lastAlert || {};
         const hasAlert = lastAlert.sentAt;
         const alertDateStr = hasAlert ? new Date(lastAlert.sentAt).toLocaleDateString('en-GB') : '';
-        const isThankYou = ['thankyou', 'approved', 'success', 'welcome'].includes(lastAlert.alertType);
+        const isThankYou = ['thankyou', 'approved', 'success', 'welcome', 'revision_resolved', 'revision_approved', 'custom'].includes(lastAlert.alertType);
         const isChecked = selectedEmpIds.has(emp._id);
         const emailLower = (emp.email || '').toLowerCase().trim();
         const isOfficial = emailLower.endsWith('@iuhimachal.edu.in') || emailLower.endsWith('@iuhp.edu.in');
@@ -1297,7 +1347,15 @@
               </div>
               ${hasAlert ? `
                 <div style="margin-top:0.35rem;">
-                  ${isThankYou ? `
+                  ${lastAlert.alertType === 'revision_resolved' || lastAlert.alertType === 'revision_approved' ? `
+                    <span class="badge-thankyou" style="background:#ecfdf5;color:#047857;border-color:#a7f3d0;" title="${esc(lastAlert.message || '')}">
+                      🌟 Verified: ${esc(alertDateStr)}
+                    </span>
+                  ` : lastAlert.alertType === 'custom' ? `
+                    <span class="badge-thankyou" style="background:#eff6ff;color:#0284c7;border-color:#bae6fd;" title="${esc(lastAlert.message || '')}">
+                      ✉️ Custom: ${esc(alertDateStr)}
+                    </span>
+                  ` : isThankYou ? `
                     <span class="badge-thankyou" title="${esc(lastAlert.message || '')}">
                       ✉️ Messaged: ${esc(alertDateStr)}
                     </span>
@@ -1608,6 +1666,7 @@
       $('alertEmpId').value = emp._id;
       $('alertRecipientName').textContent = emp.name;
       $('alertRecipientEmail').textContent = emp.email;
+      if ($('alertCustomSubject')) $('alertCustomSubject').value = '';
       $('alertCustomNotes').value = '';
       $('alertFormError').textContent = '';
 
@@ -1629,6 +1688,7 @@
       const selectedEmps = employeesList.filter(e => selectedEmpIds.has(e._id));
       $('alertRecipientName').innerHTML = `<span style="color:#059669;font-weight:700;">Batch Mode: ${selectedEmpIds.size} Faculty Members Selected</span>`;
       $('alertRecipientEmail').textContent = selectedEmps.map(e => e.email).join(', ');
+      if ($('alertCustomSubject')) $('alertCustomSubject').value = '';
       $('alertCustomNotes').value = '';
       $('alertFormError').textContent = '';
 
@@ -1639,15 +1699,58 @@
     // Legacy fallback wrapper
     window.openAlertModal = (id) => openCommunicationModal(id, 'revision');
 
+    // Deselect Presets / Toggle Custom Message Only Mode
+    window.toggleCustomOnlyMode = (forceCustom = null) => {
+      const currentVal = document.querySelector('input[name="alertType"]:checked')?.value;
+      const isCurrentlyCustom = currentVal === 'custom';
+      const shouldBeCustom = forceCustom !== null ? forceCustom : !isCurrentlyCustom;
+
+      if (shouldBeCustom) {
+        // Select custom radio in the active tab block
+        const block = activeAlertTab === 'thankyou' ? $('thankyouOptionsBlock') : $('revisionOptionsBlock');
+        const customRadio = block?.querySelector('input[name="alertType"][value="custom"]');
+        if (customRadio) {
+          customRadio.checked = true;
+        } else {
+          const anyCustom = document.querySelector('input[name="alertType"][value="custom"]');
+          if (anyCustom) anyCustom.checked = true;
+        }
+        $('alertCustomNotes')?.focus();
+      } else {
+        // Restore default preset for the active tab
+        const defaultVal = activeAlertTab === 'thankyou' ? 'thankyou' : 'both';
+        const defaultRadio = document.querySelector(`input[name="alertType"][value="${defaultVal}"]`);
+        if (defaultRadio) defaultRadio.checked = true;
+      }
+      updateAlertPreview();
+    };
+
+    // Click handler on preset cards to allow toggling/deselecting
+    window.handleCardClick = (cardType, event) => {
+      if (event && event.target && event.target.tagName.toLowerCase() === 'input') {
+        return;
+      }
+      const currentRadio = document.querySelector('input[name="alertType"]:checked');
+      if (currentRadio && currentRadio.value === cardType) {
+        // Clicking an already selected preset card deselects presets and switches to Custom Only
+        if (cardType !== 'custom') {
+          toggleCustomOnlyMode(true);
+          return;
+        }
+      }
+      const targetRadio = document.querySelector(`input[name="alertType"][value="${cardType}"]`);
+      if (targetRadio) {
+        targetRadio.checked = true;
+        updateAlertPreview();
+      }
+    };
+
     window.switchAlertTab = (tab) => {
       activeAlertTab = tab;
       const tabThankyou = $('tabThankyouBtn');
       const tabRevision = $('tabRevisionBtn');
       const thankyouBlock = $('thankyouOptionsBlock');
       const revisionBlock = $('revisionOptionsBlock');
-      const submitBtn = $('sendAlertSubmitBtn');
-      const previewContainer = $('alertPreviewContainer');
-      const customLabel = $('alertCustomNotesLabel');
 
       if (tab === 'thankyou') {
         tabThankyou.classList.add('active');
@@ -1655,30 +1758,24 @@
         thankyouBlock.style.display = 'block';
         revisionBlock.style.display = 'none';
 
-        // Select thankyou radio
-        const radio = document.querySelector('input[name="alertType"][value="thankyou"]');
-        if (radio) radio.checked = true;
-
-        submitBtn.style.background = '#059669';
-        submitBtn.style.borderColor = '#059669';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Message to ${selectedEmpIds.size} Selected` : '📨 Send Message';
-        previewContainer.style.borderLeftColor = '#10b981';
-        customLabel.textContent = 'Optional Message Notes / Remarks';
+        // Select thankyou radio if coming from revision preset
+        const currentVal = document.querySelector('input[name="alertType"]:checked')?.value;
+        if (['photo', 'resume', 'both'].includes(currentVal) || !currentVal) {
+          const radio = thankyouBlock.querySelector('input[name="alertType"][value="thankyou"]');
+          if (radio) radio.checked = true;
+        }
       } else {
         tabRevision.classList.add('active');
         tabThankyou.classList.remove('active');
         revisionBlock.style.display = 'block';
         thankyouBlock.style.display = 'none';
 
-        // Select both radio by default for revision
-        const radio = document.querySelector('input[name="alertType"][value="both"]');
-        if (radio) radio.checked = true;
-
-        submitBtn.style.background = '#d97706';
-        submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Selected` : '📨 Send Revision Alert';
-        previewContainer.style.borderLeftColor = '#e09f3e';
-        customLabel.textContent = 'Optional Revision Remarks / Instructions';
+        // Select both radio by default for revision if coming from notice preset
+        const currentVal = document.querySelector('input[name="alertType"]:checked')?.value;
+        if (['thankyou', 'revision_resolved', 'welcome'].includes(currentVal) || !currentVal) {
+          const radio = revisionBlock.querySelector('input[name="alertType"][value="both"]');
+          if (radio) radio.checked = true;
+        }
       }
 
       updateAlertPreview();
@@ -1687,72 +1784,137 @@
     window.updateAlertPreview = () => {
       const type = document.querySelector('input[name="alertType"]:checked')?.value || 'thankyou';
       const customNotes = $('alertCustomNotes').value.trim();
+      const customSubject = $('alertCustomSubject') ? $('alertCustomSubject').value.trim() : '';
       const previewBox = $('alertPreviewText');
       const previewContainer = $('alertPreviewContainer');
       const submitBtn = $('sendAlertSubmitBtn');
+      const customBadge = $('customModeBadge');
+      const customLabel = $('alertCustomNotesLabel');
+      const customNotesInput = $('alertCustomNotes');
 
       // Update card active classes
       document.querySelectorAll('.alert-option-card').forEach(card => {
-        card.classList.remove('selected-success', 'selected-revision');
+        card.classList.remove('selected-success', 'selected-revision', 'selected-custom');
       });
 
+      const deselectBtns = document.querySelectorAll('.btn-deselect-presets');
+
       let text = '';
-      if (type === 'thankyou') {
-        $('card-thankyou')?.classList.add('selected-success');
-        text = '✅ <strong>Profile Verified & Approved:</strong> "We are pleased to inform you that your faculty profile, passport photograph, and CV have been reviewed, verified, and published in the University Directory."';
-        previewContainer.style.borderLeftColor = '#10b981';
-        submitBtn.style.background = '#059669';
-        submitBtn.style.borderColor = '#059669';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Message to ${selectedEmpIds.size} Faculty Members` : '📨 Send Message';
-      } else if (type === 'welcome') {
-        $('card-welcome')?.classList.add('selected-success');
-        text = '🎓 <strong>Welcome to IUHP:</strong> "Welcome to The ICFAI University, Himachal Pradesh! Your faculty onboarding profile has been formally approved and added to the university directory."';
-        previewContainer.style.borderLeftColor = '#10b981';
-        submitBtn.style.background = '#059669';
-        submitBtn.style.borderColor = '#059669';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Welcome to ${selectedEmpIds.size} Faculty Members` : '📨 Send Message';
-      } else if (type === 'photo') {
-        $('card-photo')?.classList.add('selected-revision');
-        text = '📸 <strong>Photograph Quality Issue:</strong> "Your uploaded profile photo does not match the official standard. Please upload a formal 3:4 portrait passport photo with neutral background."';
-        previewContainer.style.borderLeftColor = '#e09f3e';
-        submitBtn.style.background = '#d97706';
-        submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
-      } else if (type === 'resume') {
-        $('card-resume')?.classList.add('selected-revision');
-        text = '📄 <strong>Resume Template Mismatch:</strong> "Your uploaded resume must strictly follow the official university reference template (<a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template PDF ↗</a>) including academic degrees, experience, and publications."';
-        previewContainer.style.borderLeftColor = '#e09f3e';
-        submitBtn.style.background = '#d97706';
-        submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
+      if (type === 'custom') {
+        // Custom Message Mode (All presets deselected)
+        $('card-custom-msg')?.classList.add('selected-custom');
+        $('card-custom-rev')?.classList.add('selected-custom');
+        if (customBadge) customBadge.style.display = 'inline-block';
+        if (customLabel) customLabel.innerHTML = '<strong>Your Custom Message to Faculty *</strong> <span style="font-size:0.75rem;color:var(--text-muted);">(Presets deselected — this custom message will be the central memorandum)</span>';
+        customNotesInput.placeholder = 'Dear Professor / Faculty Member,\n\nWe would like to formally communicate regarding...';
+
+        previewContainer.style.borderLeftColor = '#0284c7';
+        submitBtn.style.background = '#0f4c5c';
+        submitBtn.style.borderColor = '#0f4c5c';
+        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Custom Message to ${selectedEmpIds.size} Faculty Members` : '📨 Send Custom Message';
+
+        deselectBtns.forEach(btn => {
+          btn.textContent = '✓ Presets Deselected (Custom Active)';
+          btn.style.borderColor = '#0284c7';
+          btn.style.color = '#0284c7';
+        });
+
+        if (customNotes) {
+          text = `📬 <strong>Official Administrative Notice:</strong><br><br><span style="white-space:pre-wrap;display:block;background:var(--bg-primary);padding:0.6rem;border-radius:4px;border:1px dashed var(--surface-border);">${esc(customNotes)}</span>`;
+        } else {
+          text = `📬 <strong>Custom Message Mode:</strong> Presets deselected. Enter your custom message above to preview the outgoing official communication.`;
+        }
       } else {
-        $('card-both')?.classList.add('selected-revision');
-        text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait) and academic resume (must follow official example template: <a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template ↗</a>) require revisions."';
-        previewContainer.style.borderLeftColor = '#e09f3e';
-        submitBtn.style.background = '#d97706';
-        submitBtn.style.borderColor = '#d97706';
-        submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
+        if (customBadge) customBadge.style.display = 'none';
+        if (customLabel) customLabel.textContent = 'Optional Message Notes / Specific Remarks';
+        customNotesInput.placeholder = 'e.g. Profile verified successfully. Welcome to the department directory!';
+
+        deselectBtns.forEach(btn => {
+          btn.textContent = '✍️ Deselect Presets (Custom Only)';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        });
+
+        if (type === 'thankyou') {
+          $('card-thankyou')?.classList.add('selected-success');
+          text = '✅ <strong>Profile Verified & Approved:</strong> "We are pleased to inform you that your faculty profile, passport photograph, and CV have been reviewed, verified, and published in the University Directory."';
+          previewContainer.style.borderLeftColor = '#10b981';
+          submitBtn.style.background = '#059669';
+          submitBtn.style.borderColor = '#059669';
+          submitBtn.innerHTML = isBulkCommunication ? `📨 Send Notice to ${selectedEmpIds.size} Faculty Members` : '📨 Send Verified Notice';
+        } else if (type === 'revision_resolved') {
+          $('card-revision-resolved')?.classList.add('selected-success');
+          text = '🌟 <strong>Revision Verified & Approved:</strong> "We sincerely appreciate your prompt cooperation and valuable time in updating your faculty credentials. Following our administrative review, we are pleased to confirm that your revised photograph and academic curriculum vitae now fully comply with all official university standards and have been published in the University Faculty Directory."';
+          previewContainer.style.borderLeftColor = '#10b981';
+          submitBtn.style.background = '#047857';
+          submitBtn.style.borderColor = '#047857';
+          submitBtn.innerHTML = isBulkCommunication ? `📨 Send Approval to ${selectedEmpIds.size} Faculty Members` : '📨 Send Approval Notice';
+        } else if (type === 'welcome') {
+          $('card-welcome')?.classList.add('selected-success');
+          text = '🎓 <strong>Welcome to IUHP:</strong> "Welcome to The ICFAI University, Himachal Pradesh! Your faculty onboarding profile has been formally approved and added to the university directory."';
+          previewContainer.style.borderLeftColor = '#10b981';
+          submitBtn.style.background = '#059669';
+          submitBtn.style.borderColor = '#059669';
+          submitBtn.innerHTML = isBulkCommunication ? `📨 Send Welcome to ${selectedEmpIds.size} Faculty Members` : '📨 Send Welcome Notice';
+        } else if (type === 'photo') {
+          $('card-photo')?.classList.add('selected-revision');
+          text = '📸 <strong>Photograph Quality Issue:</strong> "Your uploaded profile photo does not match the official standard. Please upload a formal 3:4 portrait passport photo with neutral background."';
+          previewContainer.style.borderLeftColor = '#e09f3e';
+          submitBtn.style.background = '#d97706';
+          submitBtn.style.borderColor = '#d97706';
+          submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
+        } else if (type === 'resume') {
+          $('card-resume')?.classList.add('selected-revision');
+          text = '📄 <strong>Resume Template Mismatch:</strong> "Your uploaded resume must strictly follow the official university reference template (<a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template PDF ↗</a>) including academic degrees, experience, and publications."';
+          previewContainer.style.borderLeftColor = '#e09f3e';
+          submitBtn.style.background = '#d97706';
+          submitBtn.style.borderColor = '#d97706';
+          submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
+        } else {
+          // type === 'both'
+          $('card-both')?.classList.add('selected-revision');
+          text = '🔄 <strong>Both Photo & Resume:</strong> "Both your profile photograph (formal 3:4 portrait) and academic resume (must follow official example template: <a href=\'https://www.iuraipur.edu.in/FacultyImages/BMMrRk0yTwAmYW7ALh2azX6dRSN4HKvGFvzaGPVNrg47UO6pQZSnEExe0dATi8.pdf\' target=\'_blank\' style=\'color:var(--brand-primary);text-decoration:underline;\'>View Template ↗</a>) require revisions."';
+          previewContainer.style.borderLeftColor = '#e09f3e';
+          submitBtn.style.background = '#d97706';
+          submitBtn.style.borderColor = '#d97706';
+          submitBtn.innerHTML = isBulkCommunication ? `📨 Send Revision Alert to ${selectedEmpIds.size} Faculty Members` : '📨 Send Revision Alert';
+        }
+
+        if (customNotes) {
+          text += `<br><br><strong>Personalized Remark / Note:</strong> "${esc(customNotes)}"`;
+        }
       }
 
-      if (customNotes) {
-        text += `<br><br><strong>Personalized Remark:</strong> "${esc(customNotes)}"`;
+      if (customSubject) {
+        text = `<div style="margin-bottom:0.4rem;color:var(--brand-primary);font-weight:700;">📌 Subject: ${esc(customSubject)}</div>` + text;
       }
 
       previewBox.innerHTML = text;
     };
 
     $('alertCustomNotes').addEventListener('input', updateAlertPreview);
+    if ($('alertCustomSubject')) {
+      $('alertCustomSubject').addEventListener('input', updateAlertPreview);
+    }
 
     $('alertForm').onsubmit = async (e) => {
       e.preventDefault();
       const submitBtn = $('sendAlertSubmitBtn');
       const origText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `⏳ Sending Message Notification(s)...`;
       $('alertFormError').textContent = '';
 
       const alertType = document.querySelector('input[name="alertType"]:checked')?.value || 'thankyou';
       const customMessage = $('alertCustomNotes').value.trim();
+      const customSubject = $('alertCustomSubject') ? $('alertCustomSubject').value.trim() : '';
+
+      if (alertType === 'custom' && !customMessage) {
+        $('alertFormError').textContent = 'Please enter your custom message before sending.';
+        $('alertCustomNotes').focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `⏳ Sending Message Notification(s)...`;
 
       try {
         let res;
@@ -1761,7 +1923,7 @@
           res = await fetch('/api/admin/employees/bulk-alert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids, alertType, customMessage }),
+            body: JSON.stringify({ ids, alertType, customMessage, customSubject }),
           });
         } else {
           const id = $('alertEmpId').value;
@@ -1769,7 +1931,7 @@
           res = await fetch(`/api/admin/employees/${id}/alert`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ alertType, customMessage }),
+            body: JSON.stringify({ alertType, customMessage, customSubject }),
           });
         }
 
