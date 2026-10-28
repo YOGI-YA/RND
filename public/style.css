@@ -92,6 +92,12 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-primary);
@@ -102,6 +108,9 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 .wrap {
@@ -2177,20 +2186,122 @@ input, select, textarea {
   }
 }
 
-@media (max-width: 480px) {
-  .navbar .nav-links .nav-label {
-    display: none;
+@media (max-width: 640px) {
+  :root {
+    --header-height: 58px;
   }
 
-  .navbar .nav-links > a {
-    min-width: 44px;
-    padding: 0.65rem;
+  .wrap {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .navbar {
+    height: var(--header-height);
+  }
+
+  .navbar .nav-inner {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .brand-logo {
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .brand-logo-img {
+    height: 32px;
+    max-width: 100px;
+  }
+
+  .brand-title {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-links {
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .nav-links .btn,
+  .nav-links > a {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.78rem !important;
+    min-width: auto !important;
+  }
+
+  .nav-in-dev,
+  .in-dev-pill,
+  .nav-links .in-dev-badge {
+    display: none !important;
+  }
+
+  .portal-hero {
+    padding: 2.25rem 0 1.5rem !important;
+  }
+
+  .auth-card,
+  .profile-container,
+  .form-card,
+  .success-card {
+    padding: 1.25rem 1rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 100% !important;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .auth-input-group {
+    flex-direction: column !important;
+  }
+
+  .auth-input-group #sendOtpBtn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-title,
+  .navbar .nav-links .nav-label {
+    display: none !important;
+  }
+
+  .brand-logo-img {
+    height: 28px;
+    max-width: 82px;
+  }
+
+  .navbar .nav-inner {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    gap: 0.3rem;
+  }
+
+  .nav-links {
+    gap: 0.25rem;
+  }
+
+  .nav-links .btn,
+  .nav-links > a {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.75rem !important;
   }
 
   .navbar .nav-links #facultyJoinBtn,
   .navbar .nav-links #adminNavBtn {
-    width: 44px;
-    padding: 0.65rem;
+    width: auto;
+    padding: 0.35rem 0.5rem;
   }
 
   .form-card,

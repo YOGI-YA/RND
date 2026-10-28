@@ -173,7 +173,9 @@
         margin: 0 auto 1rem;
       }
       .auth-card, .profile-container {
-        padding: 1.5rem;
+        padding: 1.25rem 1rem !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
       }
       .info-row {
         flex-direction: column;
@@ -182,6 +184,14 @@
       .info-title {
         width: 100%;
         font-size: 0.8rem;
+      }
+    }
+    @media (max-width: 520px) {
+      .auth-input-group {
+        flex-direction: column !important;
+      }
+      .auth-input-group #sendOtpBtn {
+        width: 100% !important;
       }
     }
     @keyframes fadeIn {
@@ -216,7 +226,7 @@
           <span id="themeIcon">🌙</span>
         </button>
         <a href="/campus-ai" class="btn btn-primary" title="NJ.AI Intelligence Engine (Under Development)" style="background:linear-gradient(135deg, #0f4c5c, #1a6d82); border:1px solid rgba(56,189,248,0.4); box-shadow:0 0 14px rgba(56, 189, 248, 0.25); display:inline-flex; align-items:center; gap:0.4rem;">
-          <span>✨</span> NJ.AI <span style="font-size:0.65rem; background:rgba(245,158,11,0.25); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); padding:1px 6px; border-radius:999px; font-weight:800; letter-spacing:0.3px;">In Dev</span>
+          <span>✨</span> NJ.AI <span class="nav-in-dev" style="font-size:0.65rem; background:rgba(245,158,11,0.25); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); padding:1px 6px; border-radius:999px; font-weight:800; letter-spacing:0.3px;">In Dev</span>
         </a>
         <a href="/admin" class="btn btn-outline" title="Admin Portal">
           <span>🔒</span> Admin
@@ -258,8 +268,8 @@
           <label for="facultyEmail" style="font-weight:600;font-size:0.88rem;margin-bottom:0.4rem;display:block;">
             Official Faculty Email
           </label>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <input type="email" id="facultyEmail" class="form-control" required placeholder="your.name@iuhimachal.edu.in" style="flex:1;min-width:220px;">
+          <div class="auth-input-group" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <input type="email" id="facultyEmail" class="form-control" required placeholder="your.name@iuhimachal.edu.in" style="flex:1 1 180px;min-width:0;width:100%;">
             <button type="submit" class="btn btn-primary" id="sendOtpBtn" style="white-space:nowrap;padding:0.65rem 1.25rem;font-weight:700;">
               Send OTP
             </button>
