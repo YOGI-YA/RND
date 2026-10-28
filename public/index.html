@@ -221,7 +221,8 @@
         <span class="brand-title">Faculty Portal</span>
       </a>
 
-      <div class="nav-links">
+      <!-- Desktop Navigation Links -->
+      <div class="nav-links desktop-nav">
         <button class="btn btn-outline btn-icon" id="themeToggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
           <span id="themeIcon">🌙</span>
         </button>
@@ -230,6 +231,59 @@
         </a>
         <a href="/admin" class="btn btn-outline" title="Admin Portal">
           <span>🔒</span> Admin
+        </a>
+      </div>
+
+      <!-- Mobile Navigation Toggle Wrap -->
+      <div class="mobile-nav-toggle-wrap">
+        <button class="btn btn-outline btn-icon" id="mobileThemeToggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+          <span id="mobileThemeIcon">🌙</span>
+        </button>
+        <button class="btn btn-outline btn-icon" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" aria-expanded="false" title="Menu">
+          <svg id="hamburgerIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <svg id="closeMenuIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobileMenuDropdown" class="mobile-menu-dropdown">
+      <div class="mobile-menu-links">
+        <a href="/campus-ai" class="mobile-menu-link highlight-ai">
+          <span class="menu-icon">✨</span>
+          <div class="menu-text">
+            <strong>NJ.AI Copilot</strong>
+            <small>Campus Intelligence Engine <span class="badge-mini">In Dev</span></small>
+          </div>
+          <span class="menu-arrow">&rarr;</span>
+        </a>
+        <a href="/" class="mobile-menu-link">
+          <span class="menu-icon">🏛️</span>
+          <div class="menu-text">
+            <strong>Faculty Profile</strong>
+            <small>View & verify university credentials</small>
+          </div>
+        </a>
+        <a href="/register" class="mobile-menu-link">
+          <span class="menu-icon">📝</span>
+          <div class="menu-text">
+            <strong>Faculty Registration</strong>
+            <small>Self-service onboarding & updates</small>
+          </div>
+        </a>
+        <a href="/admin" class="mobile-menu-link">
+          <span class="menu-icon">🔒</span>
+          <div class="menu-text">
+            <strong>Admin Portal</strong>
+            <small>Directory management & verifications</small>
+          </div>
         </a>
       </div>
     </div>
@@ -422,20 +476,71 @@
     let activeEmail = '';
     let sessionToken = '';
 
-    // Theme Switcher
+    // Theme Switcher (Synced for Desktop & Mobile)
     function initTheme() {
       const saved = localStorage.getItem('iuhp_theme') || 'light';
       document.documentElement.setAttribute('data-theme', saved);
-      $('themeIcon').textContent = saved === 'dark' ? '☀️' : '🌙';
+      const icon = saved === 'dark' ? '☀️' : '🌙';
+      if ($('themeIcon')) $('themeIcon').textContent = icon;
+      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
     }
 
-    $('themeToggle').onclick = () => {
+    function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme') || 'light';
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('iuhp_theme', next);
-      $('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
-    };
+      const icon = next === 'dark' ? '☀️' : '🌙';
+      if ($('themeIcon')) $('themeIcon').textContent = icon;
+      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
+    }
+
+    if ($('themeToggle')) $('themeToggle').onclick = toggleTheme;
+    if ($('mobileThemeToggle')) $('mobileThemeToggle').onclick = toggleTheme;
+
+    // Mobile Navigation Menu Toggle Handler
+    const mobileMenuBtn = $('mobileMenuBtn');
+    const mobileMenuDropdown = $('mobileMenuDropdown');
+    const hamburgerIcon = $('hamburgerIcon');
+    const closeMenuIcon = $('closeMenuIcon');
+
+    function toggleMobileMenu(force) {
+      if (!mobileMenuDropdown) return;
+      const isOpen = force !== undefined ? force : !mobileMenuDropdown.classList.contains('open');
+      if (isOpen) {
+        mobileMenuDropdown.classList.add('open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'true');
+        if (hamburgerIcon) hamburgerIcon.style.display = 'none';
+        if (closeMenuIcon) closeMenuIcon.style.display = 'block';
+      } else {
+        mobileMenuDropdown.classList.remove('open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        if (hamburgerIcon) hamburgerIcon.style.display = 'block';
+        if (closeMenuIcon) closeMenuIcon.style.display = 'none';
+      }
+    }
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMobileMenu();
+      });
+    }
+
+    // Close mobile menu when clicking outside or clicking any nav link
+    document.addEventListener('click', (e) => {
+      if (mobileMenuDropdown && mobileMenuDropdown.classList.contains('open')) {
+        if (!mobileMenuDropdown.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+          toggleMobileMenu(false);
+        }
+      }
+    });
+
+    if (mobileMenuDropdown) {
+      mobileMenuDropdown.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => toggleMobileMenu(false));
+      });
+    }
 
     // Step 1: Send OTP (Only to existing profiles)
     async function handleSendOtp(e) {

@@ -219,6 +219,153 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.75rem;
 }
 
+/* ==========================================================================
+   MOBILE HEADER TOGGLE MENU
+   ========================================================================== */
+.mobile-nav-toggle-wrap {
+  display: none;
+}
+
+.mobile-menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: var(--surface);
+  border-bottom: 1px solid var(--surface-border);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  padding: 0.85rem 1rem 1.15rem;
+  z-index: 99;
+  transform: translateY(-8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .mobile-menu-dropdown {
+  background: rgba(15, 23, 42, 0.98);
+  border-color: var(--surface-border);
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.6);
+}
+
+.mobile-menu-dropdown.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-menu-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobile-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+  text-decoration: none !important;
+  transition: var(--transition);
+}
+
+.mobile-menu-link:hover,
+.mobile-menu-link:active {
+  background: var(--surface);
+  border-color: var(--brand-primary);
+  transform: translateX(3px);
+}
+
+.mobile-menu-link .menu-icon {
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  flex-shrink: 0;
+}
+
+.mobile-menu-link .menu-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-menu-link .menu-text strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.mobile-menu-link .menu-text small {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mobile-menu-link.highlight-ai {
+  background: linear-gradient(135deg, rgba(15, 76, 92, 0.08) 0%, rgba(26, 109, 130, 0.14) 100%);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.mobile-menu-link.highlight-ai strong {
+  color: var(--brand-primary);
+}
+
+.badge-mini {
+  font-size: 0.62rem;
+  background: rgba(245, 158, 11, 0.22);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+[data-theme="dark"] .badge-mini {
+  color: #fbbf24;
+}
+
+.menu-arrow {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.mobile-menu-link:hover .menu-arrow {
+  color: var(--brand-primary);
+  transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-nav-toggle-wrap {
+    display: flex !important;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .mobile-menu-dropdown {
+    display: block;
+  }
+}
+
 /* Sticky Department Bar */
 .dept-bar {
   position: sticky;

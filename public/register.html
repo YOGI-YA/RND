@@ -67,10 +67,11 @@
     <div class="wrap nav-inner">
       <a href="/" class="brand-logo" title="The ICFAI University, Himachal Pradesh">
         <img src="https://iuhimachal.edu.in/assets/img/Logo.svg" alt="ICFAI Himachal Logo" class="brand-logo-img" style="height:38px;object-fit:contain;" onerror="this.src='/Logo.svg'">
-        <span>Faculty Portal</span>
+        <span class="brand-title">Faculty Portal</span>
       </a>
 
-      <div class="nav-links">
+      <!-- Desktop Navigation Links -->
+      <div class="nav-links desktop-nav">
         <button class="btn btn-outline btn-icon" id="themeToggle" title="Toggle Light/Dark Theme">
           <span id="themeIcon">🌙</span>
         </button>
@@ -79,6 +80,59 @@
         </a>
         <a href="/" class="btn btn-outline">
           &larr; View Directory
+        </a>
+      </div>
+
+      <!-- Mobile Navigation Toggle Wrap -->
+      <div class="mobile-nav-toggle-wrap">
+        <button class="btn btn-outline btn-icon" id="mobileThemeToggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+          <span id="mobileThemeIcon">🌙</span>
+        </button>
+        <button class="btn btn-outline btn-icon" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" aria-expanded="false" title="Menu">
+          <svg id="hamburgerIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <svg id="closeMenuIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobileMenuDropdown" class="mobile-menu-dropdown">
+      <div class="mobile-menu-links">
+        <a href="/campus-ai" class="mobile-menu-link highlight-ai">
+          <span class="menu-icon">✨</span>
+          <div class="menu-text">
+            <strong>NJ.AI Copilot</strong>
+            <small>Campus Intelligence Engine <span class="badge-mini">In Dev</span></small>
+          </div>
+          <span class="menu-arrow">&rarr;</span>
+        </a>
+        <a href="/" class="mobile-menu-link">
+          <span class="menu-icon">🏛️</span>
+          <div class="menu-text">
+            <strong>Faculty Profile Directory</strong>
+            <small>View & verify faculty profiles</small>
+          </div>
+        </a>
+        <a href="/register" class="mobile-menu-link">
+          <span class="menu-icon">📝</span>
+          <div class="menu-text">
+            <strong>Faculty Registration</strong>
+            <small>Self-service onboarding & photo upload</small>
+          </div>
+        </a>
+        <a href="/admin" class="mobile-menu-link">
+          <span class="menu-icon">🔒</span>
+          <div class="menu-text">
+            <strong>Admin Portal</strong>
+            <small>Management & directory control</small>
+          </div>
         </a>
       </div>
     </div>
@@ -358,20 +412,70 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 
-    // Theme handling
+    // Theme handling (Synced for Desktop & Mobile)
     const initTheme = () => {
       const saved = localStorage.getItem('iuhp_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', saved);
-      $('themeIcon').textContent = saved === 'dark' ? '☀️' : '🌙';
+      const icon = saved === 'dark' ? '☀️' : '🌙';
+      if ($('themeIcon')) $('themeIcon').textContent = icon;
+      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
     };
 
-    $('themeToggle').addEventListener('click', () => {
+    const toggleTheme = () => {
       const current = document.documentElement.getAttribute('data-theme') || 'light';
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('iuhp_theme', next);
-      $('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+      const icon = next === 'dark' ? '☀️' : '🌙';
+      if ($('themeIcon')) $('themeIcon').textContent = icon;
+      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
+    };
+
+    if ($('themeToggle')) $('themeToggle').addEventListener('click', toggleTheme);
+    if ($('mobileThemeToggle')) $('mobileThemeToggle').addEventListener('click', toggleTheme);
+
+    // Mobile Navigation Menu Toggle Handler
+    const mobileMenuBtn = $('mobileMenuBtn');
+    const mobileMenuDropdown = $('mobileMenuDropdown');
+    const hamburgerIcon = $('hamburgerIcon');
+    const closeMenuIcon = $('closeMenuIcon');
+
+    function toggleMobileMenu(force) {
+      if (!mobileMenuDropdown) return;
+      const isOpen = force !== undefined ? force : !mobileMenuDropdown.classList.contains('open');
+      if (isOpen) {
+        mobileMenuDropdown.classList.add('open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'true');
+        if (hamburgerIcon) hamburgerIcon.style.display = 'none';
+        if (closeMenuIcon) closeMenuIcon.style.display = 'block';
+      } else {
+        mobileMenuDropdown.classList.remove('open');
+        if (mobileMenuBtn) mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        if (hamburgerIcon) hamburgerIcon.style.display = 'block';
+        if (closeMenuIcon) closeMenuIcon.style.display = 'none';
+      }
+    }
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMobileMenu();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (mobileMenuDropdown && mobileMenuDropdown.classList.contains('open')) {
+        if (!mobileMenuDropdown.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+          toggleMobileMenu(false);
+        }
+      }
     });
+
+    if (mobileMenuDropdown) {
+      mobileMenuDropdown.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => toggleMobileMenu(false));
+      });
+    }
 
     // Helper to calculate tenure / experience at IUHP based on Date of Joining in decimal years (e.g. 3.2 Years, 1.5 Years)
     function calcIuhpTenure(joiningDate) {
