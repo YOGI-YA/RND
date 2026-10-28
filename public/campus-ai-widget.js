@@ -24,11 +24,11 @@
   // Launcher Button
   const launcher = document.createElement('button');
   launcher.id = 'campus-ai-launcher';
-  launcher.title = 'Open NJ.AI Copilot (Under Development)';
+  launcher.title = 'Open NJ.AI Copilot';
   launcher.innerHTML = `
-    <span class="launcher-icon">✨</span>
-    <span>NJ.AI</span>
-    <span style="font-size:0.62rem;background:rgba(245,158,11,0.25);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);padding:1px 5px;border-radius:999px;font-weight:800;letter-spacing:0.3px;">In Dev</span>
+    <span class="launcher-icon">✦</span>
+    <span style="font-weight:600;">NJ.AI</span>
+    <span style="font-size:0.625rem;background:rgba(94,106,210,0.12);color:#5e6ad2;border:1px solid rgba(94,106,210,0.25);padding:1px 5px;border-radius:4px;font-weight:600;letter-spacing:0.04em;">BETA</span>
     <span class="launcher-ping"></span>
   `;
   document.body.appendChild(launcher);
@@ -39,13 +39,13 @@
   drawer.innerHTML = `
     <div class="drawer-header">
       <div class="drawer-header-left">
-        <div style="width:30px;height:30px;border-radius:8px;background:#ffffff;color:#0f4c5c;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">NJ</div>
+        <div style="width:26px;height:26px;border-radius:6px;background:#5e6ad2;color:#ffffff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">NJ</div>
         <div class="drawer-header-title">
           <div style="display:flex;align-items:center;gap:0.4rem;">
             <span>NJ.AI Copilot</span>
-            <span style="font-size:0.62rem;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:1px 6px;border-radius:999px;font-weight:700;">Under Development</span>
+            <span style="font-size:0.625rem;background:rgba(94,106,210,0.12);color:#5e6ad2;border:1px solid rgba(94,106,210,0.25);padding:1px 5px;border-radius:4px;font-weight:600;">Beta</span>
           </div>
-          <span class="drawer-header-sub">IUHP Intelligence Engine • Coming Soon</span>
+          <span class="drawer-header-sub">IUHP Intelligence Engine</span>
         </div>
       </div>
       <div class="drawer-header-actions">
