@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Faculty Profile - The ICFAI University, Himachal Pradesh</title>
   <meta name="description" content="Manage your university profile and academic documents securely. The ICFAI University, Himachal Pradesh.">
-  <link rel="stylesheet" href="/style.css">
   <link rel="icon" type="image/svg+xml" href="https://iuhimachal.edu.in/assets/img/Logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .portal-hero {
       padding: 3.5rem 0 2rem;
@@ -224,30 +228,31 @@
       <!-- Desktop Navigation Links -->
       <div class="nav-links desktop-nav">
         <button class="btn btn-outline btn-icon" id="themeToggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
-          <span id="themeIcon">🌙</span>
+          <i data-lucide="moon" id="themeIcon"></i>
         </button>
         <a href="/campus-ai" class="nav-nj-ai-btn" title="NJ.AI Intelligence Engine">
-          <span class="ai-sparkle">✦</span>
+          <i data-lucide="sparkles" class="lucide lucide-sm ai-sparkle"></i>
           <span>NJ.AI</span>
           <span class="ai-badge">Beta</span>
         </a>
         <a href="/admin" class="btn btn-outline" title="Admin Portal">
-          Admin
+          <i data-lucide="shield" class="lucide lucide-sm"></i>
+          <span>Admin</span>
         </a>
       </div>
 
       <!-- Mobile Navigation Toggle Wrap -->
       <div class="mobile-nav-toggle-wrap">
         <button class="btn btn-outline btn-icon" id="mobileThemeToggle" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
-          <span id="mobileThemeIcon">🌙</span>
+          <i data-lucide="moon" id="mobileThemeIcon"></i>
         </button>
         <button class="btn btn-outline btn-icon" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" aria-expanded="false" title="Menu">
-          <svg id="hamburgerIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="hamburgerIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
-          <svg id="closeMenuIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="closeMenuIcon" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -259,29 +264,29 @@
     <div id="mobileMenuDropdown" class="mobile-menu-dropdown">
       <div class="mobile-menu-links">
         <a href="/campus-ai" class="mobile-menu-link highlight-ai">
-          <span class="menu-icon" style="color:var(--brand-primary);font-weight:700;">✦</span>
+          <span class="menu-icon"><i data-lucide="sparkles" class="lucide" style="color:var(--brand-accent);"></i></span>
           <div class="menu-text">
             <strong>NJ.AI Copilot</strong>
             <small>Campus Intelligence Engine <span class="badge-mini">Beta</span></small>
           </div>
-          <span class="menu-arrow">&rarr;</span>
+          <i data-lucide="arrow-right" class="lucide lucide-sm menu-arrow"></i>
         </a>
         <a href="/" class="mobile-menu-link">
-          <span class="menu-icon">◈</span>
+          <span class="menu-icon"><i data-lucide="user" class="lucide"></i></span>
           <div class="menu-text">
             <strong>Faculty Profile</strong>
             <small>View & verify university credentials</small>
           </div>
         </a>
         <a href="/register" class="mobile-menu-link">
-          <span class="menu-icon">✎</span>
+          <span class="menu-icon"><i data-lucide="user-plus" class="lucide"></i></span>
           <div class="menu-text">
             <strong>Faculty Registration</strong>
             <small>Self-service onboarding & updates</small>
           </div>
         </a>
         <a href="/admin" class="mobile-menu-link">
-          <span class="menu-icon">⚙</span>
+          <span class="menu-icon"><i data-lucide="shield" class="lucide"></i></span>
           <div class="menu-text">
             <strong>Admin Portal</strong>
             <small>Directory management & verifications</small>
@@ -377,14 +382,18 @@
         <!-- Option 1: New Faculty -->
         <div class="option-card">
           <div>
-            <h4 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:0.35rem;">New Faculty</h4>
+            <div style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface-secondary);border:1px solid var(--surface-border);display:flex;align-items:center;justify-content:center;margin-bottom:0.85rem;color:var(--brand-accent);">
+              <i data-lucide="user-plus" class="lucide"></i>
+            </div>
+            <h4 style="font-size:1.05rem;font-weight:600;color:var(--text-primary);margin-bottom:0.35rem;">New Faculty</h4>
             <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;margin:0;">
               Submit your faculty profile, qualifications, photograph and academic CV.
             </p>
           </div>
           <div style="margin-top:1.25rem;">
             <a href="/register" class="btn btn-primary" style="width:100%;text-align:center;">
-              Register &rarr;
+              <span>Register</span>
+              <i data-lucide="arrow-right" class="lucide lucide-sm"></i>
             </a>
           </div>
         </div>
@@ -392,14 +401,18 @@
         <!-- Option 2: Existing Faculty -->
         <div class="option-card">
           <div>
-            <h4 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:0.35rem;">Existing Faculty</h4>
+            <div style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface-secondary);border:1px solid var(--surface-border);display:flex;align-items:center;justify-content:center;margin-bottom:0.85rem;color:var(--brand-accent);">
+              <i data-lucide="user-check" class="lucide"></i>
+            </div>
+            <h4 style="font-size:1.05rem;font-weight:600;color:var(--text-primary);margin-bottom:0.35rem;">Existing Faculty</h4>
             <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;margin:0;">
               Update your contact details, qualifications, photograph or academic CV.
             </p>
           </div>
           <div style="margin-top:1.25rem;">
             <a href="/register" class="btn btn-outline" style="width:100%;text-align:center;">
-              Update Profile &rarr;
+              <span>Update Profile</span>
+              <i data-lucide="arrow-right" class="lucide lucide-sm"></i>
             </a>
           </div>
         </div>
@@ -409,33 +422,38 @@
 
     <!-- 4. ACADEMIC FACULTIES SECTION -->
     <div id="facultiesSection" class="faculties-section no-print" style="margin-top:2.5rem;padding:1.5rem;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-lg);text-align:center;">
-      <h3 style="font-size:1.1rem;font-weight:700;color:var(--text-primary);margin-bottom:0.25rem;">
+      <h3 style="font-size:1.1rem;font-weight:600;color:var(--text-primary);margin-bottom:0.25rem;">
         Academic Faculties
       </h3>
       <p style="font-size:0.82rem;color:var(--text-muted);margin:0;">The ICFAI University, Himachal Pradesh</p>
 
       <div class="faculties-pills-wrap">
         <div class="faculty-pill">
+          <i data-lucide="pill" class="lucide lucide-sm" style="color:var(--dept-fps);"></i>
           <span class="faculty-code">FPS</span>
           <span>&middot;</span>
           <span>Pharmaceutical Sciences</span>
         </div>
         <div class="faculty-pill">
+          <i data-lucide="bar-chart-2" class="lucide lucide-sm" style="color:var(--dept-fms);"></i>
           <span class="faculty-code">FMS</span>
           <span>&middot;</span>
           <span>Management Studies</span>
         </div>
         <div class="faculty-pill">
+          <i data-lucide="book-open" class="lucide lucide-sm" style="color:var(--dept-fla);"></i>
           <span class="faculty-code">FLA</span>
           <span>&middot;</span>
           <span>Liberal Arts</span>
         </div>
         <div class="faculty-pill">
+          <i data-lucide="scale" class="lucide lucide-sm" style="color:var(--dept-fol);"></i>
           <span class="faculty-code">FOL</span>
           <span>&middot;</span>
           <span>Faculty of Law</span>
         </div>
         <div class="faculty-pill">
+          <i data-lucide="cpu" class="lucide lucide-sm" style="color:var(--dept-fst);"></i>
           <span class="faculty-code">FST</span>
           <span>&middot;</span>
           <span>Science & Technology</span>
@@ -478,13 +496,18 @@
     let activeEmail = '';
     let sessionToken = '';
 
-    // Theme Switcher (Synced for Desktop & Mobile)
+    // Theme Switcher (Synced for Desktop & Mobile with Lucide Icons)
+    function updateThemeIcon(theme) {
+      const iconName = theme === 'dark' ? 'sun' : 'moon';
+      if ($('themeIcon')) $('themeIcon').setAttribute('data-lucide', iconName);
+      if ($('mobileThemeIcon')) $('mobileThemeIcon').setAttribute('data-lucide', iconName);
+      if (window.lucide) lucide.createIcons();
+    }
+
     function initTheme() {
       const saved = localStorage.getItem('iuhp_theme') || 'light';
       document.documentElement.setAttribute('data-theme', saved);
-      const icon = saved === 'dark' ? '☀️' : '🌙';
-      if ($('themeIcon')) $('themeIcon').textContent = icon;
-      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
+      updateThemeIcon(saved);
     }
 
     function toggleTheme() {
@@ -492,9 +515,7 @@
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('iuhp_theme', next);
-      const icon = next === 'dark' ? '☀️' : '🌙';
-      if ($('themeIcon')) $('themeIcon').textContent = icon;
-      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
+      updateThemeIcon(next);
     }
 
     if ($('themeToggle')) $('themeToggle').onclick = toggleTheme;
@@ -663,8 +684,8 @@
       const dept = DEPT_INFO[emp.department] || { name: emp.department, icon: '🏛️', color: 'var(--brand-primary)', bg: 'var(--brand-light)' };
       const isRegular = emp.employmentType === 'Regular';
       const cadreBadge = isRegular
-        ? '<span class="badge-regular">🏛️ Regular Faculty</span>'
-        : '<span class="badge-visiting">🤝 Visiting Faculty</span>';
+        ? '<span class="badge-regular"><i data-lucide="building-2" class="lucide lucide-xs"></i> Regular Faculty</span>'
+        : '<span class="badge-visiting"><i data-lucide="briefcase" class="lucide lucide-xs"></i> Visiting Faculty</span>';
 
       const joiningDateStr = emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
       const resumeUrl = emp.resumeUrl || '';
@@ -673,7 +694,7 @@
       if (type === 'request') {
         statusNotice = `
           <div style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:0.85rem 1rem;border-radius:var(--radius-md);margin-bottom:1.5rem;font-size:0.875rem;">
-            <strong>📥 Request Status: ${reqStatus ? reqStatus.toUpperCase() : 'PENDING REVIEW'}</strong>
+            <strong>Request Status: ${reqStatus ? reqStatus.toUpperCase() : 'PENDING REVIEW'}</strong>
             <div style="margin-top:0.25rem;">Your registration request as Visiting Faculty is currently being reviewed by the university administrator.</div>
             ${adminRemarks ? `<div style="margin-top:0.35rem;font-weight:600;">Admin Remarks: ${esc(adminRemarks)}</div>` : ''}
           </div>
@@ -684,11 +705,11 @@
         <div class="profile-container">
           
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1px solid var(--surface-border);flex-wrap:wrap;gap:0.5rem;">
-            <div style="font-size:0.85rem;color:#059669;font-weight:700;display:flex;align-items:center;gap:0.4rem;">
-              <span>✅</span> Verified Faculty Profile
+            <div style="font-size:0.85rem;color:#059669;font-weight:600;display:flex;align-items:center;gap:0.4rem;">
+              <i data-lucide="check-circle-2" class="lucide lucide-sm" style="color:#059669;"></i> Verified Faculty Profile
             </div>
-            <button type="button" class="btn btn-outline btn-sm no-print" onclick="handleSignOutProfile()" style="font-size:0.8rem;">
-              🚪 Exit View
+            <button type="button" class="btn btn-outline btn-sm no-print" onclick="handleSignOutProfile()" style="font-size:0.8rem;gap:0.3rem;">
+              <i data-lucide="log-out" class="lucide lucide-xs"></i> Exit View
             </button>
           </div>
 
@@ -703,64 +724,64 @@
                   <img src="${esc(emp.photoUrl)}" alt="${esc(emp.name)}" title="Standard 3:4 Passport Portrait">
                 ` : `
                   <div style="text-align:center;color:var(--text-muted);">
-                    <div style="font-size:2.5rem;margin-bottom:0.25rem;">👤</div>
-                    <div style="font-size:0.8rem;font-weight:600;">No Photo Uploaded</div>
+                    <i data-lucide="user" class="lucide-xl" style="margin-bottom:0.4rem;"></i>
+                    <div style="font-size:0.8rem;font-weight:500;">No Photo Uploaded</div>
                   </div>
                 `}
               </div>
-              <div style="text-align:center;margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);">
-                📷 Standard 3:4 Passport Ratio
+              <div style="text-align:center;margin-top:0.5rem;font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:0.3rem;">
+                <i data-lucide="camera" class="lucide lucide-xs"></i> Standard 3:4 Ratio
               </div>
             </div>
 
             <!-- Right: Details -->
             <div>
               <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-                <span style="background:${dept.bg};color:${dept.color};padding:0.25rem 0.65rem;border-radius:var(--radius-full);font-size:0.78rem;font-weight:700;">
-                  ${dept.icon} ${esc(emp.department)}
+                <span style="background:${dept.bg};color:${dept.color};padding:0.25rem 0.65rem;border-radius:var(--radius-full);font-size:0.78rem;font-weight:600;">
+                  ${esc(emp.department)}
                 </span>
                 ${cadreBadge}
               </div>
 
-              <h2 style="font-size:clamp(1.4rem, 3vw, 1.85rem);font-weight:800;color:var(--text-primary);margin-bottom:0.2rem;">
+              <h2 style="font-size:clamp(1.4rem, 3vw, 1.85rem);font-weight:700;color:var(--text-primary);margin-bottom:0.2rem;">
                 ${esc(emp.name)}
               </h2>
               
-              <div style="font-size:1.05rem;font-weight:600;color:var(--brand-primary);margin-bottom:1rem;">
+              <div style="font-size:1.05rem;font-weight:500;color:var(--brand-accent);margin-bottom:1rem;">
                 ${esc(emp.designation || 'Faculty Member')}
               </div>
 
               <div style="background:var(--bg-secondary);border:1px solid var(--surface-border);border-radius:var(--radius-md);padding:0.85rem 1.15rem;margin-bottom:1.5rem;">
                 
                 <div class="info-row">
-                  <div class="info-title">🎓 Highest Degree:</div>
+                  <div class="info-title" style="display:flex;align-items:center;gap:0.35rem;"><i data-lucide="graduation-cap" class="lucide lucide-sm"></i> Degree:</div>
                   <div class="info-content"><strong>${esc(emp.highestQualification || 'Post-Graduate')}</strong></div>
                 </div>
 
                 <div class="info-row">
-                  <div class="info-title">🏛️ Department:</div>
+                  <div class="info-title" style="display:flex;align-items:center;gap:0.35rem;"><i data-lucide="building" class="lucide lucide-sm"></i> Department:</div>
                   <div class="info-content">${esc(dept.name)} (${esc(emp.department)})</div>
                 </div>
 
                 <div class="info-row">
-                  <div class="info-title">📅 University Joining:</div>
+                  <div class="info-title" style="display:flex;align-items:center;gap:0.35rem;"><i data-lucide="calendar" class="lucide lucide-sm"></i> Joining Date:</div>
                   <div class="info-content">${esc(joiningDateStr)} ${emp.tenure ? `(${esc(emp.tenure)} at IUHP)` : ''}</div>
                 </div>
 
                 ${emp.totalExperience ? `
                   <div class="info-row">
-                    <div class="info-title">⏳ Total Experience:</div>
+                    <div class="info-title" style="display:flex;align-items:center;gap:0.35rem;"><i data-lucide="briefcase" class="lucide lucide-sm"></i> Experience:</div>
                     <div class="info-content">${esc(emp.totalExperience)} (Teaching + Industry)</div>
                   </div>
                 ` : ''}
 
                 <div class="info-row">
-                  <div class="info-title">✉️ Official Email:</div>
-                  <div class="info-content"><a href="mailto:${esc(emp.email)}" style="color:var(--brand-primary);font-weight:600;">${esc(emp.email)}</a></div>
+                  <div class="info-title" style="display:flex;align-items:center;gap:0.35rem;"><i data-lucide="mail" class="lucide lucide-sm"></i> Email:</div>
+                  <div class="info-content"><a href="mailto:${esc(emp.email)}" style="color:var(--brand-accent);font-weight:500;">${esc(emp.email)}</a></div>
                 </div>
 
                 <div class="info-row">
-                  <div class="info-title">📞 Contact Number:</div>
+                  <div class="info-title" style="display:flex;align-items:center;gap:0.35rem;"><i data-lucide="phone" class="lucide lucide-sm"></i> Contact:</div>
                   <div class="info-content"><a href="tel:${esc(emp.contact)}" style="color:var(--text-primary);">${esc(emp.contact)}</a></div>
                 </div>
 
@@ -769,19 +790,23 @@
               <!-- Action Toolbar -->
               <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;" class="no-print">
                 ${resumeUrl ? `
-                  <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-weight:700;">
-                    📄 View Academic CV (PDF) ↗
+                  <a href="${esc(resumeUrl)}" target="_blank" rel="noopener" class="btn btn-primary" style="gap:0.4rem;">
+                    <i data-lucide="file-text" class="lucide lucide-sm"></i>
+                    <span>View Academic CV</span>
+                    <i data-lucide="arrow-up-right" class="lucide lucide-xs"></i>
                   </a>
                 ` : `
-                  <span style="font-size:0.85rem;color:var(--text-muted);font-weight:600;">📄 No CV Uploaded</span>
+                  <span style="font-size:0.85rem;color:var(--text-muted);font-weight:500;display:inline-flex;align-items:center;gap:0.3rem;"><i data-lucide="file-x" class="lucide lucide-sm"></i> No CV Uploaded</span>
                 `}
 
-                <a href="/register?email=${encodeURIComponent(emp.email)}" class="btn btn-outline">
-                  ✏️ Update Profile
+                <a href="/register?email=${encodeURIComponent(emp.email)}" class="btn btn-outline" style="gap:0.4rem;">
+                  <i data-lucide="edit-3" class="lucide lucide-sm"></i>
+                  <span>Edit Profile</span>
                 </a>
 
-                <button type="button" class="btn btn-outline" onclick="window.print()">
-                  🖨️ Print Summary
+                <button type="button" class="btn btn-outline" onclick="window.print()" style="gap:0.4rem;">
+                  <i data-lucide="printer" class="lucide lucide-sm"></i>
+                  <span>Print</span>
                 </button>
               </div>
 
@@ -791,6 +816,7 @@
         </div>
       `;
 
+      if (window.lucide) lucide.createIcons();
       container.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -798,17 +824,20 @@
     function renderNotFoundCard(email) {
       const container = $('profileViewContainer');
       container.innerHTML = `
-        <div class="profile-container" style="text-align:center;max-width:580px;">
-          <div style="font-size:3rem;margin-bottom:0.75rem;">🔍</div>
-          <h3 style="font-size:1.25rem;font-weight:700;color:var(--text-primary);margin-bottom:0.5rem;">
+        <div class="profile-container" style="text-align:center;max-width:560px;">
+          <div style="width:48px;height:48px;border-radius:var(--radius-md);background:var(--surface-secondary);border:1px solid var(--surface-border);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--text-muted);">
+            <i data-lucide="user-x" class="lucide lucide-lg"></i>
+          </div>
+          <h3 style="font-size:1.25rem;font-weight:600;color:var(--text-primary);margin-bottom:0.5rem;">
             No Prior Profile Found
           </h3>
           <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin-bottom:1.25rem;">
             Your email address (<strong>${esc(email)}</strong>) is verified, but no faculty record exists yet.
           </p>
           <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-            <a href="/register?email=${encodeURIComponent(email)}" class="btn btn-primary" style="font-weight:700;">
-              Register Profile Now &rarr;
+            <a href="/register?email=${encodeURIComponent(email)}" class="btn btn-primary" style="gap:0.4rem;">
+              <span>Register Profile Now</span>
+              <i data-lucide="arrow-right" class="lucide lucide-sm"></i>
             </a>
             <button type="button" class="btn btn-outline" onclick="handleSignOutProfile()">
               Check Another Email
@@ -816,6 +845,7 @@
           </div>
         </div>
       `;
+      if (window.lucide) lucide.createIcons();
     }
 
     function handleSignOutProfile() {

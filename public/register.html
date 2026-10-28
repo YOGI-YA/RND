@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Faculty Self-Service Onboarding - IUHP</title>
   <meta name="description" content="Official self-service registration for IUHP faculty members. Submit your profile, standard 3:4 passport photograph, and resume across FPS, FMS, FLA, FOL, and FST.">
-  <link rel="stylesheet" href="/style.css">
   <link rel="icon" type="image/svg+xml" href="https://iuhimachal.edu.in/assets/img/Logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .register-container {
       max-width: 680px;
@@ -75,15 +79,16 @@
       <!-- Desktop Navigation Links -->
       <div class="nav-links desktop-nav">
         <button class="btn btn-outline btn-icon" id="themeToggle" title="Toggle Light/Dark Theme">
-          <span id="themeIcon">🌙</span>
+          <i data-lucide="moon" id="themeIcon"></i>
         </button>
         <a href="/campus-ai" class="nav-nj-ai-btn" title="Launch NJ.AI Copilot">
-          <span class="ai-sparkle">✦</span>
+          <i data-lucide="sparkles" class="lucide lucide-sm ai-sparkle"></i>
           <span>NJ.AI</span>
           <span class="ai-badge">Beta</span>
         </a>
-        <a href="/" class="btn btn-outline">
-          &larr; View Directory
+        <a href="/" class="btn btn-outline" style="gap:0.4rem;">
+          <i data-lucide="arrow-left" class="lucide lucide-sm"></i>
+          <span>Directory</span>
         </a>
       </div>
 
@@ -110,29 +115,29 @@
     <div id="mobileMenuDropdown" class="mobile-menu-dropdown">
       <div class="mobile-menu-links">
         <a href="/campus-ai" class="mobile-menu-link highlight-ai">
-          <span class="menu-icon" style="color:var(--brand-primary);font-weight:700;">✦</span>
+          <span class="menu-icon"><i data-lucide="sparkles" class="lucide" style="color:var(--brand-accent);"></i></span>
           <div class="menu-text">
             <strong>NJ.AI Copilot</strong>
             <small>Campus Intelligence Engine <span class="badge-mini">Beta</span></small>
           </div>
-          <span class="menu-arrow">&rarr;</span>
+          <i data-lucide="arrow-right" class="lucide lucide-sm menu-arrow"></i>
         </a>
         <a href="/" class="mobile-menu-link">
-          <span class="menu-icon">◈</span>
+          <span class="menu-icon"><i data-lucide="user" class="lucide"></i></span>
           <div class="menu-text">
             <strong>Faculty Profile Directory</strong>
             <small>View & verify faculty profiles</small>
           </div>
         </a>
         <a href="/register" class="mobile-menu-link">
-          <span class="menu-icon">✎</span>
+          <span class="menu-icon"><i data-lucide="user-plus" class="lucide"></i></span>
           <div class="menu-text">
             <strong>Faculty Registration</strong>
             <small>Self-service onboarding & photo upload</small>
           </div>
         </a>
         <a href="/admin" class="mobile-menu-link">
-          <span class="menu-icon">⚙</span>
+          <span class="menu-icon"><i data-lucide="shield" class="lucide"></i></span>
           <div class="menu-text">
             <strong>Admin Portal</strong>
             <small>Management & directory control</small>
@@ -361,17 +366,21 @@
           <div class="file-dropzone" id="resumeDropzone">
             <input type="file" id="resumeFile" name="resume" accept="application/pdf,.pdf" required>
             <div id="resumeDropPrompt">
-              <div style="font-size:1.5rem;margin-bottom:0.35rem;color:var(--brand-primary);">📄</div>
+              <div style="margin-bottom:0.35rem;color:var(--brand-accent);">
+                <i data-lucide="file-up" class="lucide-lg"></i>
+              </div>
               <div style="font-weight:600;font-size:0.9rem;letter-spacing:-0.01em;">Click or drag & drop Resume PDF *</div>
               <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">
                 Official academic PDF curriculum vitae.
               </div>
             </div>
             <div class="dropzone-preview" id="resumePreviewBox" style="display:none;">
-              <div style="font-size:1.8rem;margin-right:0.75rem;color:var(--brand-primary);">📄</div>
+              <div style="margin-right:0.75rem;color:var(--brand-accent);">
+                <i data-lucide="file-text" class="lucide-lg"></i>
+              </div>
               <div style="text-align:left;">
                 <span id="resumeFileName" style="font-size:0.85rem;font-weight:600;display:block;"></span>
-                <span style="font-size:0.75rem;color:var(--success);font-weight:500;">✓ PDF file selected for upload</span><br>
+                <span style="font-size:0.75rem;color:var(--success);font-weight:500;display:inline-flex;align-items:center;gap:0.3rem;"><i data-lucide="check" class="lucide-xs"></i> PDF file selected for upload</span><br>
                 <button type="button" class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="resetResumeInput()">Choose Different PDF</button>
               </div>
             </div>
@@ -416,13 +425,18 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 
-    // Theme handling (Synced for Desktop & Mobile)
+    // Theme handling with Lucide
+    function updateThemeIcon(theme) {
+      const icon = theme === 'dark' ? 'sun' : 'moon';
+      if ($('themeIcon')) $('themeIcon').setAttribute('data-lucide', icon);
+      if ($('mobileThemeIcon')) $('mobileThemeIcon').setAttribute('data-lucide', icon);
+      if (window.lucide) lucide.createIcons();
+    }
+
     const initTheme = () => {
       const saved = localStorage.getItem('iuhp_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', saved);
-      const icon = saved === 'dark' ? '☀️' : '🌙';
-      if ($('themeIcon')) $('themeIcon').textContent = icon;
-      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
+      updateThemeIcon(saved);
     };
 
     const toggleTheme = () => {
@@ -430,9 +444,7 @@
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('iuhp_theme', next);
-      const icon = next === 'dark' ? '☀️' : '🌙';
-      if ($('themeIcon')) $('themeIcon').textContent = icon;
-      if ($('mobileThemeIcon')) $('mobileThemeIcon').textContent = icon;
+      updateThemeIcon(next);
     };
 
     if ($('themeToggle')) $('themeToggle').addEventListener('click', toggleTheme);

@@ -60,10 +60,10 @@
 
     <!-- Quick Tool Chips -->
     <div class="drawer-tools-bar">
-      <button class="drawer-tool-chip" data-prompt="/faculty FST">💻 /faculty FST</button>
-      <button class="drawer-tool-chip" data-prompt="/stats">📊 /stats</button>
-      <button class="drawer-tool-chip" data-prompt="/leave 2 days">📝 /leave</button>
-      <button class="drawer-tool-chip" data-prompt="/exam">📢 /exam</button>
+      <button class="drawer-tool-chip" data-prompt="/faculty FST">/faculty FST</button>
+      <button class="drawer-tool-chip" data-prompt="/stats">/stats</button>
+      <button class="drawer-tool-chip" data-prompt="/leave 2 days">/leave</button>
+      <button class="drawer-tool-chip" data-prompt="/exam">/exam</button>
     </div>
 
     <!-- Message Stream -->
@@ -71,8 +71,8 @@
       <div class="drawer-msg bot">
         <div class="drawer-msg-avatar">NJ</div>
         <div class="drawer-msg-bubble">
-          👋 Hello! <strong>NJ.AI</strong> is currently <strong>under active institutional development</strong> for <strong>The ICFAI University, Himachal Pradesh</strong>.<br><br>
-          Our technical team is fine-tuning the campus knowledge models, testing ERP data synchronization, and polishing faculty tools. Stay tuned for the upcoming official release!
+          <strong>NJ.AI Intelligence Engine</strong> is currently in institutional preview for <strong>The ICFAI University, Himachal Pradesh</strong>.<br><br>
+          Knowledge models, faculty records queries, and campus tool integrations are active in beta preview.
         </div>
       </div>
     </div>

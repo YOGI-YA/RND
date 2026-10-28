@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Portal - IUHP Faculty Management</title>
   <meta name="description" content="Administrative control panel for IUHP employee and faculty directory. Manage records, upload passport photos to Cloudinary, and export Google Sheets with embedded photo formulas.">
-  <link rel="stylesheet" href="/style.css">
   <link rel="icon" type="image/svg+xml" href="https://iuhimachal.edu.in/assets/img/Logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .admin-header {
       padding: 1.25rem 0;
@@ -141,18 +145,20 @@
 
         <div style="display:flex;align-items:center;gap:0.75rem;">
           <a href="/campus-ai" target="_blank" class="nav-nj-ai-btn" title="Launch NJ.AI Copilot">
-            <span class="ai-sparkle">✦</span>
+            <i data-lucide="sparkles" class="lucide lucide-sm ai-sparkle"></i>
             <span>NJ.AI</span>
             <span class="ai-badge">Beta</span>
           </a>
           <button class="btn btn-outline btn-icon" id="adminThemeToggle" title="Toggle Light/Dark Theme">
-            <span id="adminThemeIcon">🌙</span>
+            <i data-lucide="moon" id="adminThemeIcon"></i>
           </button>
-          <a href="/" class="btn btn-outline" target="_blank" title="Open Public Directory in New Tab">
-            View Directory &rarr;
+          <a href="/" class="btn btn-outline" target="_blank" title="Open Public Directory in New Tab" style="gap:0.35rem;">
+            <span>View Directory</span>
+            <i data-lucide="arrow-up-right" class="lucide lucide-xs"></i>
           </a>
-          <button class="btn btn-danger btn-sm" id="logoutBtn" title="Sign out of Admin panel">
-            Sign Out
+          <button class="btn btn-danger btn-sm" id="logoutBtn" title="Sign out of Admin panel" style="gap:0.35rem;">
+            <i data-lucide="log-out" class="lucide lucide-xs"></i>
+            <span>Sign Out</span>
           </button>
         </div>
       </div>
@@ -175,49 +181,49 @@
       <!-- Stats KPI Cards -->
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card" style="border-top:3px solid #0284c7;">
-          <div class="stat-icon" style="background:#e0f2fe;color:#0284c7;">👥</div>
+          <div class="stat-icon" style="background:#e0f2fe;color:#0284c7;"><i data-lucide="users" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statTotal">0</span>
             <span class="stat-label">Total Faculty</span>
           </div>
         </div>
         <div class="stat-card" style="border-top:3px solid #d97706;">
-          <div class="stat-icon" style="background:#fef3c7;color:#d97706;">💊</div>
+          <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i data-lucide="pill" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statFPS">0</span>
             <span class="stat-label">FPS (Pharmacy)</span>
           </div>
         </div>
         <div class="stat-card" style="border-top:3px solid #059669;">
-          <div class="stat-icon" style="background:#d1fae5;color:#059669;">📊</div>
+          <div class="stat-icon" style="background:#d1fae5;color:#059669;"><i data-lucide="bar-chart-2" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statFMS">0</span>
             <span class="stat-label">FMS (Management)</span>
           </div>
         </div>
         <div class="stat-card" style="border-top:3px solid #7c3aed;">
-          <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;">🎨</div>
+          <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i data-lucide="book-open" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statFLA">0</span>
             <span class="stat-label">FLA (Liberal Arts)</span>
           </div>
         </div>
         <div class="stat-card" style="border-top:3px solid #dc2626;">
-          <div class="stat-icon" style="background:#fee2e2;color:#dc2626;">⚖️</div>
+          <div class="stat-icon" style="background:#fee2e2;color:#dc2626;"><i data-lucide="scale" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statFOL">0</span>
             <span class="stat-label">FOL (Law)</span>
           </div>
         </div>
         <div class="stat-card" style="border-top:3px solid #0ea5e9;">
-          <div class="stat-icon" style="background:#e0f2fe;color:#0ea5e9;">💻</div>
+          <div class="stat-icon" style="background:#e0f2fe;color:#0ea5e9;"><i data-lucide="cpu" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statFST">0</span>
             <span class="stat-label">FST (Science & Tech)</span>
           </div>
         </div>
         <div class="stat-card" style="border-top:3px solid #dc2626;cursor:pointer;" onclick="switchAdminModule('requests')" title="View Pending Access Requests">
-          <div class="stat-icon" style="background:#fee2e2;color:#dc2626;">📥</div>
+          <div class="stat-icon" style="background:#fee2e2;color:#dc2626;"><i data-lucide="inbox" class="lucide lucide-lg"></i></div>
           <div class="stat-info">
             <span class="stat-value" id="statPendingRequests">0</span>
             <span class="stat-label">Pending Requests</span>
@@ -875,11 +881,17 @@
       }, 3500);
     }
 
-    // Theme handling
-    const initTheme = () => {
+    // Theme handling with Lucide
+    function updateAdminThemeIcon(theme) {
+      const icon = theme === 'dark' ? 'sun' : 'moon';
+      if ($('adminThemeIcon')) $('adminThemeIcon').setAttribute('data-lucide', icon);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    const initAdminTheme = () => {
       const saved = localStorage.getItem('iuhp_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', saved);
-      $('adminThemeIcon').textContent = saved === 'dark' ? '☀️' : '🌙';
+      updateAdminThemeIcon(saved);
     };
 
     $('adminThemeToggle').addEventListener('click', () => {
@@ -887,7 +899,7 @@
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('iuhp_theme', next);
-      $('adminThemeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
+      updateAdminThemeIcon(next);
     });
 
     // Check Admin Authentication
@@ -2026,7 +2038,8 @@
     });
 
     // Initialize
-    initTheme();
+    initAdminTheme();
+    if (window.lucide) lucide.createIcons();
     checkAuth();
   </script>
   <!-- Ubiquitous Campus AI Floating Copilot Widget -->
